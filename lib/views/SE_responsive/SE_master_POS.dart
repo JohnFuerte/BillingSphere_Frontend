@@ -10,6 +10,7 @@ import '../../data/repository/sales_pos_repository.dart';
 import 'SE_desktop_body_POS.dart';
 import 'SE_master.dart';
 import 'SE_pos_receipt.dart';
+import 'SE_pos_receipt_halfPage.dart';
 import 'SE_pos_receipt_notA4.dart';
 import 'Sales_pos_edit_screen.dart';
 
@@ -1221,7 +1222,7 @@ class _PosMasterState extends State<PosMaster> {
             borderRadius: BorderRadius.circular(12.0),
           ),
           child: SizedBox(
-            width: MediaQuery.of(context).size.width * 0.6,
+            width: MediaQuery.of(context).size.width * 0.8,
             height: MediaQuery.of(context).size.height * 0.6,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
@@ -1261,8 +1262,8 @@ class _PosMasterState extends State<PosMaster> {
                             children: [
                               Image.asset(
                                 'assets/images/pos.jpg', // Left image
-                                width: 300,
-                                height: 300,
+                                width: 200,
+                                height: 200,
                                 fit: BoxFit.cover,
                               ),
                               // Text
@@ -1300,12 +1301,50 @@ class _PosMasterState extends State<PosMaster> {
                             children: [
                               Image.asset(
                                 'assets/images/a4.jpg', // Right image
-                                width: 300,
-                                height: 300,
+                                width: 200,
+                                height: 200,
                                 fit: BoxFit.cover,
                               ),
                               Text(
                                 'A4',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SALESPOSReceiptHalfPage(
+                                sales: fetchedSalesPos[index],
+                                ledger: widget.fetchedLedger.firstWhere(
+                                    (ledger) =>
+                                        ledger.id == fetchedSalesPos[index].ac),
+                              ),
+                            ),
+                          );
+                        },
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.25,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                'assets/images/a3.jpg', // Right image
+                                width: 200,
+                                height: 200,
+                                fit: BoxFit.cover,
+                              ),
+                              Text(
+                                'HALF PAGE',
                                 style: GoogleFonts.poppins(
                                   fontSize: 24,
                                   fontWeight: FontWeight.bold,
