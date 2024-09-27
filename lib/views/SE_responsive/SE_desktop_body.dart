@@ -767,7 +767,7 @@ class _SEMyDesktopBodyState extends State<SEMyDesktopBody> {
 
   Future<void> fetchItems() async {
     try {
-      final List<Item> items = await itemsService.fetchITEMS();
+      final List<Item> items = await itemsService.fetchItems();
 
       setState(() {
         itemsList = items;

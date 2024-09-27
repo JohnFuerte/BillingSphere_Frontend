@@ -215,7 +215,6 @@ class _SALESPOSReceiptState extends State<SALESPOSReceipt> {
       version: PdfVersion.pdf_1_5,
       compress: true,
       pageMode: PdfPageMode.fullscreen,
-
     );
     // final font = await PdfGoogleFonts.nunitoExtraLight();
     int totalItems = _SalesEntry!.entries.length;
@@ -248,10 +247,10 @@ class _SALESPOSReceiptState extends State<SALESPOSReceipt> {
 
     // final image = pw.MemoryImage(_selectedImages[0]);
     final customFormat = PdfPageFormat.a4.copyWith(
-      marginLeft: 20,
-      marginRight: 20,
-      marginTop: 20,
-      marginBottom: 20,
+      marginLeft: 10,
+      marginRight: 10,
+      marginTop: 10,
+      marginBottom: 10,
     );
 
     final upi = selectedComapny
@@ -1037,9 +1036,6 @@ class _SALESPOSReceiptState extends State<SALESPOSReceipt> {
                 ),
               ),
 
-             
-             
-             
               pw.Container(
                 height: 25,
                 width: customFormat.availableWidth,

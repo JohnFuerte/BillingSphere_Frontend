@@ -356,7 +356,7 @@ class _SEntriesState extends State<SEntries> {
                               inputDecorationTheme: const InputDecorationTheme(
                                 border: InputBorder.none,
                                 contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 16),
+                                    horizontal: 8, vertical: 8),
                                 isDense: true,
                                 activeIndicatorBorder: BorderSide(
                                   color: Colors.transparent,
