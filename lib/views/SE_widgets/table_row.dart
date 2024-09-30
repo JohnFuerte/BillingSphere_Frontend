@@ -334,6 +334,21 @@ class _SEntriesState extends State<SEntries> {
                               ),
                               menuHeight: 300,
                               enableFilter: true,
+                              searchCallback:
+                                  (List<DropdownMenuEntry<Item>> entries,
+                                      String query) {
+                                if (query.isEmpty) {
+                                  return null;
+                                }
+
+                                final int index = entries.indexWhere(
+                                    (DropdownMenuEntry<Item> entry) {
+                                  return entry.label.toLowerCase() ==
+                                      query.toLowerCase();
+                                });
+
+                                return index != -1 ? index : null;
+                              },
                               filterCallback:
                                   (List<DropdownMenuEntry<Item>> entries,
                                       String filter) {
@@ -341,15 +356,20 @@ class _SEntriesState extends State<SEntries> {
                                     filter.trim().toLowerCase();
 
                                 if (trimmedFilter.isEmpty) {
-                                  return entries; 
+                                  return entries; // Return all entries if the filter is empty
                                 }
 
                                 // Filter the entries based on the query
-                                return entries.where((entry) {
+                                final filteredEntries = entries.where((entry) {
                                   return entry.value.itemName
                                       .toLowerCase()
                                       .contains(trimmedFilter);
                                 }).toList();
+
+                                // If no entries match, return an empty list
+                                return filteredEntries.isNotEmpty
+                                    ? filteredEntries
+                                    : [];
                               },
                               width: MediaQuery.of(context).size.width * 0.19,
                               selectedTrailingIcon: const SizedBox.shrink(),
@@ -488,11 +508,6 @@ class _SEntriesState extends State<SEntries> {
                               }).toList(),
                             ),
                           ),
-                        
-                        
-                        
-                        
-                        
                         ),
 
                         // Container(

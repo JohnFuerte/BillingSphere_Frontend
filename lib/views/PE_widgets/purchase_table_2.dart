@@ -214,6 +214,19 @@ class _PEntriesState extends State<PEntries2> {
                         : null,
                     enableSearch: true,
                     enableFilter: true,
+                    searchCallback:
+                        (List<DropdownMenuEntry<Item>> entries, String query) {
+                      if (query.isEmpty) {
+                        return null;
+                      }
+
+                      final int index =
+                          entries.indexWhere((DropdownMenuEntry<Item> entry) {
+                        return entry.label.toLowerCase() == query.toLowerCase();
+                      });
+
+                      return index != -1 ? index : null;
+                    },
                     filterCallback:
                         (List<DropdownMenuEntry<Item>> entries, String filter) {
                       final String trimmedFilter = filter.trim().toLowerCase();

@@ -157,6 +157,21 @@ class _IEntriesState extends State<IEntries> {
                           ),
                           menuHeight: 300,
                           enableFilter: true,
+                          searchCallback:
+                              (List<DropdownMenuEntry<Item>> entries,
+                                  String query) {
+                            if (query.isEmpty) {
+                              return null;
+                            }
+
+                            final int index = entries
+                                .indexWhere((DropdownMenuEntry<Item> entry) {
+                              return entry.label.toLowerCase() ==
+                                  query.toLowerCase();
+                            });
+
+                            return index != -1 ? index : null;
+                          },
                           filterCallback:
                               (List<DropdownMenuEntry<Item>> entries,
                                   String filter) {
