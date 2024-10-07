@@ -3,7 +3,6 @@ import 'package:billingsphere/views/SL_widgets/SL_M_appbar.dart';
 import 'package:flutter/material.dart';
 import 'package:searchfield/searchfield.dart';
 
-
 class BPMyMobileBody extends StatefulWidget {
   const BPMyMobileBody({super.key});
 
@@ -87,9 +86,12 @@ class _BPMyMobileBodyState extends State<BPMyMobileBody> {
                                     ),
                                     child: SearchField(
                                       suggestions: suggestionItems,
-                                      searchStyle: const TextStyle(
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.bold),
+                                      searchInputDecoration:
+                                          SearchInputDecoration(
+                                        searchStyle: const TextStyle(
+                                            fontSize: 17,
+                                            fontWeight: FontWeight.bold),
+                                      ),
                                     ),
                                   ),
                                 ],

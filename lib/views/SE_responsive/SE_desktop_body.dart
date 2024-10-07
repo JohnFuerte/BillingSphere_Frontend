@@ -1645,7 +1645,7 @@ class _SEMyDesktopBodyState extends State<SEMyDesktopBody> {
                                                 label: value,
                                                 style: ButtonStyle(
                                                   textStyle:
-                                                      WidgetStateProperty.all(
+                                                      MaterialStateProperty.all(
                                                     GoogleFonts.poppins(
                                                       fontSize: 16,
                                                       fontWeight:

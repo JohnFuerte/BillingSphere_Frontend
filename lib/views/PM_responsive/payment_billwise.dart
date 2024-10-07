@@ -292,7 +292,7 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
             width: 190,
             height: 40,
             decoration: BoxDecoration(border: Border.all()),
-            alignment: Alignment.centerRight,
+            alignment: Alignment.center,
             child: TextFormField(
               controller: rowDataList[index].amountController,
               onFieldSubmitted: (value) {
@@ -312,7 +312,7 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                   // Validate the amount
                   if (enteredAmount <= dueAmount &&
                       (remainingAmount - amountDifference) >= 0) {
-                    // If the amount is valid, update the amount and remaining amount
+                    // If the amount is valid, update the amount and remaining
                     rowDataList[index].amount = value;
                     saveValues(rowDataList[index].toMap());
                     remainingAmount -= amountDifference;

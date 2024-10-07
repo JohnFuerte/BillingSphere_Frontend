@@ -90,6 +90,7 @@ class _ChequeReturnEntryState extends State<ReceiptBillwise> {
 
   Future<void> getSale() async {
     final sale = await saleServices.fetchSalesEntries();
+    print("${widget.ledgerID}..............");
     setState(() {
       filteredSale = sale
           .where((element) =>

@@ -717,7 +717,7 @@ class _SalesHomeState extends State<SalesHome> {
                         7: FlexColumnWidth(2),
                         8: FlexColumnWidth(1),
                       },
-                      border: const TableBorder.symmetric(
+                      border:  TableBorder.symmetric(
                         inside: BorderSide(color: Colors.black),
                         outside: BorderSide(color: Colors.black),
                       ),

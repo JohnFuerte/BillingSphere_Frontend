@@ -98,8 +98,11 @@ class _BPMyDesktopBodyState extends State<BPMyDesktopBody> {
                                         ),
                                         child: SearchField(
                                           suggestions: suggestionItems,
-                                          searchStyle:
-                                              const TextStyle(fontSize: 18),
+                                          searchInputDecoration:
+                                              SearchInputDecoration(
+                                            searchStyle:
+                                                const TextStyle(fontSize: 18),
+                                          ),
                                         ),
                                       ),
                                       const SizedBox(width: 10),

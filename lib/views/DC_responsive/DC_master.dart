@@ -366,7 +366,8 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                       TextAlignVertical.center,
                                                   decoration: InputDecoration(
                                                     contentPadding:
-                                                        const EdgeInsets.all(0.0),
+                                                        const EdgeInsets.all(
+                                                            0.0),
                                                     enabledBorder:
                                                         OutlineInputBorder(
                                                       borderRadius:
@@ -387,7 +388,7 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                         ],
                                       );
                                     }
-                
+
                                     return Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -421,13 +422,17 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                               decoration: InputDecoration(
                                                 contentPadding:
                                                     const EdgeInsets.all(0.0),
-                                                enabledBorder: OutlineInputBorder(
-                                                  borderRadius: BorderRadius.circular(
-                                                      0.0), // Adjust the border radius as needed
-                                                ),
-                                                focusedBorder: OutlineInputBorder(
+                                                enabledBorder:
+                                                    OutlineInputBorder(
                                                   borderRadius:
-                                                      BorderRadius.circular(0.0),
+                                                      BorderRadius.circular(
+                                                          0.0), // Adjust the border radius as needed
+                                                ),
+                                                focusedBorder:
+                                                    OutlineInputBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(
+                                                          0.0),
                                                 ),
                                               ),
                                             ),
@@ -553,8 +558,9 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                       ],
                                     ),
                                     SizedBox(
-                                      height: MediaQuery.of(context).size.height *
-                                          0.60,
+                                      height:
+                                          MediaQuery.of(context).size.height *
+                                              0.60,
                                       child: SingleChildScrollView(
                                         scrollDirection: Axis.vertical,
                                         child: Column(
@@ -607,7 +613,7 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                             .width *
                                                         0.40),
                                               },
-                                              border: const TableBorder.symmetric(
+                                              border: TableBorder.symmetric(
                                                 inside: BorderSide(
                                                     color: Colors.black),
                                                 outside: BorderSide(
@@ -625,13 +631,15 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                         onTap: () {
                                                           setState(() {
                                                             selectedId =
-                                                                fetchedDelivery[i]
+                                                                fetchedDelivery[
+                                                                        i]
                                                                     .id;
                                                             index = i;
                                                           });
                                                         },
                                                         onDoubleTap: () {
-                                                          print('Double Tapped');
+                                                          print(
+                                                              'Double Tapped');
                                                           Navigator.push(
                                                             context,
                                                             MaterialPageRoute(
@@ -664,22 +672,25 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                           child: Text(
                                                             '${i + 1}',
                                                             maxLines: 1,
-                                                            overflow: TextOverflow
-                                                                .ellipsis,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
                                                             style: GoogleFonts
                                                                 .poppins(
                                                               fontSize: 15,
                                                               fontWeight:
-                                                                  FontWeight.w500,
+                                                                  FontWeight
+                                                                      .w500,
                                                               color: selectedId ==
                                                                       fetchedDelivery[
                                                                               i]
                                                                           .id
                                                                   ? Colors.white
-                                                                  : Colors.black,
+                                                                  : Colors
+                                                                      .black,
                                                             ),
-                                                            textAlign:
-                                                                TextAlign.center,
+                                                            textAlign: TextAlign
+                                                                .center,
                                                           ),
                                                         ),
                                                       ),
@@ -688,13 +699,15 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                         onTap: () {
                                                           setState(() {
                                                             selectedId =
-                                                                fetchedDelivery[i]
+                                                                fetchedDelivery[
+                                                                        i]
                                                                     .id;
                                                             index = i;
                                                           });
                                                         },
                                                         onDoubleTap: () {
-                                                          print('Double Tapped');
+                                                          print(
+                                                              'Double Tapped');
                                                           Navigator.push(
                                                             context,
                                                             MaterialPageRoute(
@@ -731,31 +744,35 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                                 .poppins(
                                                               fontSize: 15,
                                                               fontWeight:
-                                                                  FontWeight.w500,
+                                                                  FontWeight
+                                                                      .w500,
                                                               color: selectedId ==
                                                                       fetchedDelivery[
                                                                               i]
                                                                           .id
                                                                   ? Colors.white
-                                                                  : Colors.black,
+                                                                  : Colors
+                                                                      .black,
                                                             ),
-                                                            textAlign:
-                                                                TextAlign.center,
+                                                            textAlign: TextAlign
+                                                                .center,
                                                           ),
                                                         ),
                                                       ),
-                
+
                                                       InkWell(
                                                         onTap: () {
                                                           setState(() {
                                                             selectedId =
-                                                                fetchedDelivery[i]
+                                                                fetchedDelivery[
+                                                                        i]
                                                                     .id;
                                                             index = i;
                                                           });
                                                         },
                                                         onDoubleTap: () {
-                                                          print('Double Tapped');
+                                                          print(
+                                                              'Double Tapped');
                                                           Navigator.push(
                                                             context,
                                                             MaterialPageRoute(
@@ -789,37 +806,42 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                             fetchedDelivery[i]
                                                                 .dcNo,
                                                             maxLines: 1,
-                                                            overflow: TextOverflow
-                                                                .ellipsis,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
                                                             style: GoogleFonts
                                                                 .poppins(
                                                               fontSize: 15,
                                                               fontWeight:
-                                                                  FontWeight.w500,
+                                                                  FontWeight
+                                                                      .w500,
                                                               color: selectedId ==
                                                                       fetchedDelivery[
                                                                               i]
                                                                           .id
                                                                   ? Colors.white
-                                                                  : Colors.black,
+                                                                  : Colors
+                                                                      .black,
                                                             ),
-                                                            textAlign:
-                                                                TextAlign.center,
+                                                            textAlign: TextAlign
+                                                                .center,
                                                           ),
                                                         ),
                                                       ),
-                
+
                                                       InkWell(
                                                         onTap: () {
                                                           setState(() {
                                                             selectedId =
-                                                                fetchedDelivery[i]
+                                                                fetchedDelivery[
+                                                                        i]
                                                                     .id;
                                                             index = i;
                                                           });
                                                         },
                                                         onDoubleTap: () {
-                                                          print('Double Tapped');
+                                                          print(
+                                                              'Double Tapped');
                                                           Navigator.push(
                                                             context,
                                                             MaterialPageRoute(
@@ -851,25 +873,29 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                               : Colors.white,
                                                           child: Text(
                                                             maxLines: 1,
-                                                            overflow: TextOverflow
-                                                                .ellipsis,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
                                                             getCompanyName(
-                                                                fetchedDelivery[i]
+                                                                fetchedDelivery[
+                                                                        i]
                                                                     .party), // Use companyName
                                                             style: GoogleFonts
                                                                 .poppins(
                                                               fontSize: 15,
                                                               fontWeight:
-                                                                  FontWeight.w500,
+                                                                  FontWeight
+                                                                      .w500,
                                                               color: selectedId ==
                                                                       fetchedDelivery[
                                                                               i]
                                                                           .id
                                                                   ? Colors.white
-                                                                  : Colors.black,
+                                                                  : Colors
+                                                                      .black,
                                                             ),
-                                                            textAlign:
-                                                                TextAlign.center,
+                                                            textAlign: TextAlign
+                                                                .center,
                                                           ),
                                                         ),
                                                       ),
@@ -877,13 +903,15 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                         onTap: () {
                                                           setState(() {
                                                             selectedId =
-                                                                fetchedDelivery[i]
+                                                                fetchedDelivery[
+                                                                        i]
                                                                     .id;
                                                             index = i;
                                                           });
                                                         },
                                                         onDoubleTap: () {
-                                                          print('Double Tapped');
+                                                          print(
+                                                              'Double Tapped');
                                                           Navigator.push(
                                                             context,
                                                             MaterialPageRoute(
@@ -915,40 +943,46 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                               : Colors.white,
                                                           child: Text(
                                                             maxLines: 1,
-                                                            overflow: TextOverflow
-                                                                .ellipsis,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
                                                             getCityByCompanyCode(
-                                                                fetchedDelivery[i]
+                                                                fetchedDelivery[
+                                                                        i]
                                                                     .companyCode), // Use city
                                                             style: GoogleFonts
                                                                 .poppins(
                                                               fontSize: 15,
                                                               fontWeight:
-                                                                  FontWeight.w500,
+                                                                  FontWeight
+                                                                      .w500,
                                                               color: selectedId ==
                                                                       fetchedDelivery[
                                                                               i]
                                                                           .id
                                                                   ? Colors.white
-                                                                  : Colors.black,
+                                                                  : Colors
+                                                                      .black,
                                                             ),
-                                                            textAlign:
-                                                                TextAlign.center,
+                                                            textAlign: TextAlign
+                                                                .center,
                                                           ),
                                                         ),
                                                       ),
-                
+
                                                       InkWell(
                                                         onTap: () {
                                                           setState(() {
                                                             selectedId =
-                                                                fetchedDelivery[i]
+                                                                fetchedDelivery[
+                                                                        i]
                                                                     .id;
                                                             index = i;
                                                           });
                                                         },
                                                         onDoubleTap: () {
-                                                          print('Double Tapped');
+                                                          print(
+                                                              'Double Tapped');
                                                           Navigator.push(
                                                             context,
                                                             MaterialPageRoute(
@@ -985,16 +1019,18 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                                 .poppins(
                                                               fontSize: 15,
                                                               fontWeight:
-                                                                  FontWeight.w500,
+                                                                  FontWeight
+                                                                      .w500,
                                                               color: selectedId ==
                                                                       fetchedDelivery[
                                                                               i]
                                                                           .id
                                                                   ? Colors.white
-                                                                  : Colors.black,
+                                                                  : Colors
+                                                                      .black,
                                                             ),
-                                                            textAlign:
-                                                                TextAlign.center,
+                                                            textAlign: TextAlign
+                                                                .center,
                                                           ),
                                                         ),
                                                       ),
@@ -1010,7 +1046,7 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                 ),
                               );
                             }
-                
+
                             return Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Column(
@@ -1034,7 +1070,8 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                             ),
                                             child: SingleChildScrollView(
                                               scrollDirection: Axis.horizontal,
-                                              controller: _horizontalController1,
+                                              controller:
+                                                  _horizontalController1,
                                               child: Row(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.center,
@@ -1043,10 +1080,11 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                 children: [
                                                   Container(
                                                     height: 30,
-                                                    width: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.10,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.10,
                                                     decoration:
                                                         const BoxDecoration(
                                                       border: Border(
@@ -1061,10 +1099,12 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                       style: TextStyle(
                                                         fontWeight:
                                                             FontWeight.bold,
-                                                        color: Colors.pinkAccent,
+                                                        color:
+                                                            Colors.pinkAccent,
                                                         fontSize: 16,
                                                       ),
-                                                      textAlign: TextAlign.center,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                     ),
                                                   ),
                                                   Container(
@@ -1072,10 +1112,11 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                     padding:
                                                         const EdgeInsets.only(
                                                             bottom: 5.0),
-                                                    width: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.30,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.30,
                                                     decoration:
                                                         const BoxDecoration(
                                                             border: Border(
@@ -1089,10 +1130,12 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                       style: TextStyle(
                                                         fontWeight:
                                                             FontWeight.bold,
-                                                        color: Colors.pinkAccent,
+                                                        color:
+                                                            Colors.pinkAccent,
                                                         fontSize: 16,
                                                       ),
-                                                      textAlign: TextAlign.center,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                     ),
                                                   ),
                                                   Container(
@@ -1100,10 +1143,11 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                     padding:
                                                         const EdgeInsets.only(
                                                             bottom: 5.0),
-                                                    width: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.40,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.40,
                                                     decoration:
                                                         const BoxDecoration(
                                                             border: Border(
@@ -1117,10 +1161,12 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                       style: TextStyle(
                                                         fontWeight:
                                                             FontWeight.bold,
-                                                        color: Colors.pinkAccent,
+                                                        color:
+                                                            Colors.pinkAccent,
                                                         fontSize: 16,
                                                       ),
-                                                      textAlign: TextAlign.center,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                     ),
                                                   ),
                                                   Container(
@@ -1128,10 +1174,11 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                     padding:
                                                         const EdgeInsets.only(
                                                             bottom: 5.0),
-                                                    width: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.40,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.40,
                                                     decoration:
                                                         const BoxDecoration(
                                                             border: Border(
@@ -1145,10 +1192,12 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                       style: TextStyle(
                                                         fontWeight:
                                                             FontWeight.bold,
-                                                        color: Colors.pinkAccent,
+                                                        color:
+                                                            Colors.pinkAccent,
                                                         fontSize: 16,
                                                       ),
-                                                      textAlign: TextAlign.center,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                     ),
                                                   ),
                                                   Container(
@@ -1156,10 +1205,11 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                     padding:
                                                         const EdgeInsets.only(
                                                             bottom: 5.0),
-                                                    width: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.40,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.40,
                                                     decoration:
                                                         const BoxDecoration(
                                                             border: Border(
@@ -1173,10 +1223,12 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                       style: TextStyle(
                                                         fontWeight:
                                                             FontWeight.bold,
-                                                        color: Colors.pinkAccent,
+                                                        color:
+                                                            Colors.pinkAccent,
                                                         fontSize: 16,
                                                       ),
-                                                      textAlign: TextAlign.center,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                     ),
                                                   ),
                                                   Container(
@@ -1184,10 +1236,11 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                     padding:
                                                         const EdgeInsets.only(
                                                             bottom: 5.0),
-                                                    width: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.20,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.20,
                                                     decoration:
                                                         const BoxDecoration(
                                                             border: Border(
@@ -1201,10 +1254,12 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                       style: TextStyle(
                                                         fontWeight:
                                                             FontWeight.bold,
-                                                        color: Colors.pinkAccent,
+                                                        color:
+                                                            Colors.pinkAccent,
                                                         fontSize: 16,
                                                       ),
-                                                      textAlign: TextAlign.center,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                     ),
                                                   ),
                                                   Container(
@@ -1212,10 +1267,11 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                     padding:
                                                         const EdgeInsets.only(
                                                             bottom: 5.0),
-                                                    width: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.32,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.32,
                                                     decoration:
                                                         const BoxDecoration(
                                                             border: Border(
@@ -1229,10 +1285,12 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                       style: TextStyle(
                                                         fontWeight:
                                                             FontWeight.bold,
-                                                        color: Colors.pinkAccent,
+                                                        color:
+                                                            Colors.pinkAccent,
                                                         fontSize: 16,
                                                       ),
-                                                      textAlign: TextAlign.center,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                     ),
                                                   ),
                                                 ],
@@ -1250,20 +1308,21 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                     itemBuilder: (context, index) {
                                       String companyName = getCompanyName(
                                           fetchedDelivery[index].party);
-                
+
                                       String city = getCityByCompanyCode(
                                           fetchedDelivery[index].companyCode);
-                
+
                                       if (fetchedDelivery.isEmpty) {
                                         return const Center(
                                           child:
                                               Text('No Delivery Challan Found'),
                                         );
                                       }
-                
+
                                       return SizedBox(
-                                        width: MediaQuery.of(context).size.width *
-                                            0.96,
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.96,
                                         child: Card(
                                           shape: RoundedRectangleBorder(
                                             borderRadius:
@@ -1273,18 +1332,22 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                           child: SizedBox(
                                             child: SingleChildScrollView(
                                               scrollDirection: Axis.horizontal,
-                                              controller: _horizontalController2,
+                                              controller:
+                                                  _horizontalController2,
                                               child: Row(
                                                 children: [
                                                   SizedBox(
-                                                    width: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.10,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.10,
                                                     child: Text(
                                                       "${index + 1}".toString(),
-                                                      textAlign: TextAlign.center,
-                                                      style: GoogleFonts.poppins(
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style:
+                                                          GoogleFonts.poppins(
                                                         fontSize: 15,
                                                         fontWeight:
                                                             FontWeight.normal,
@@ -1292,17 +1355,21 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                     ),
                                                   ),
                                                   SizedBox(
-                                                    width: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.30,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.30,
                                                     child: Text(
-                                                      fetchedDelivery[index].date,
-                                                      textAlign: TextAlign.center,
+                                                      fetchedDelivery[index]
+                                                          .date,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                       maxLines: 1,
                                                       overflow:
                                                           TextOverflow.ellipsis,
-                                                      style: GoogleFonts.poppins(
+                                                      style:
+                                                          GoogleFonts.poppins(
                                                         fontSize: 15,
                                                         fontWeight:
                                                             FontWeight.normal,
@@ -1310,17 +1377,21 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                     ),
                                                   ),
                                                   SizedBox(
-                                                    width: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.40,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.40,
                                                     child: Text(
-                                                      fetchedDelivery[index].dcNo,
-                                                      textAlign: TextAlign.center,
+                                                      fetchedDelivery[index]
+                                                          .dcNo,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                       maxLines: 1,
                                                       overflow:
                                                           TextOverflow.ellipsis,
-                                                      style: GoogleFonts.poppins(
+                                                      style:
+                                                          GoogleFonts.poppins(
                                                         fontSize: 15,
                                                         fontWeight:
                                                             FontWeight.normal,
@@ -1328,17 +1399,20 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                     ),
                                                   ),
                                                   SizedBox(
-                                                    width: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.40,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.40,
                                                     child: Text(
                                                       companyName,
-                                                      textAlign: TextAlign.center,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                       maxLines: 1,
                                                       overflow:
                                                           TextOverflow.ellipsis,
-                                                      style: GoogleFonts.poppins(
+                                                      style:
+                                                          GoogleFonts.poppins(
                                                         fontSize: 15,
                                                         fontWeight:
                                                             FontWeight.normal,
@@ -1346,17 +1420,20 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                     ),
                                                   ),
                                                   SizedBox(
-                                                    width: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.40,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.40,
                                                     child: Text(
                                                       city,
-                                                      textAlign: TextAlign.center,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                       maxLines: 1,
                                                       overflow:
                                                           TextOverflow.ellipsis,
-                                                      style: GoogleFonts.poppins(
+                                                      style:
+                                                          GoogleFonts.poppins(
                                                         fontSize: 15,
                                                         fontWeight:
                                                             FontWeight.normal,
@@ -1364,18 +1441,21 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                     ),
                                                   ),
                                                   SizedBox(
-                                                    width: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.20,
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.20,
                                                     child: Text(
                                                       fetchedDelivery[index]
                                                           .totalamount,
-                                                      textAlign: TextAlign.center,
+                                                      textAlign:
+                                                          TextAlign.center,
                                                       maxLines: 1,
                                                       overflow:
                                                           TextOverflow.ellipsis,
-                                                      style: GoogleFonts.poppins(
+                                                      style:
+                                                          GoogleFonts.poppins(
                                                         fontSize: 15,
                                                         fontWeight:
                                                             FontWeight.normal,
@@ -1383,13 +1463,14 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                                     ),
                                                   ),
                                                   StatefulBuilder(
-                                                    builder: (context, setState) {
+                                                    builder:
+                                                        (context, setState) {
                                                       return SizedBox(
-                                                        width:
-                                                            MediaQuery.of(context)
-                                                                    .size
-                                                                    .width *
-                                                                0.30,
+                                                        width: MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .width *
+                                                            0.30,
                                                         child: Row(
                                                           crossAxisAlignment:
                                                               CrossAxisAlignment
@@ -1481,7 +1562,8 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                       MaterialPageRoute(
                                         builder: (context) =>
                                             DeliveryChallanEditScreen(
-                                          deliveryChallan: fetchedDelivery[index],
+                                          deliveryChallan:
+                                              fetchedDelivery[index],
                                           deliveryChallans: fetchedDelivery,
                                         ),
                                       ),
@@ -1501,8 +1583,8 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                       MaterialPageRoute(
                                         builder: (context) => DCReceipt(
                                           'Print Sales',
-                                          deliveryChallan: fetchedDelivery[index]
-                                              .id,
+                                          deliveryChallan:
+                                              fetchedDelivery[index].id,
                                         ),
                                       ),
                                     );
@@ -1527,7 +1609,7 @@ class _DeliveryChallanHomeState extends State<DeliveryChallanHome> {
                                           onTapConfirm: () {
                                             // Pop the dialog
                                             Navigator.pop(context);
-                
+
                                             // Call the delete function
                                             deliveryChallanRepo
                                                 .deleteDeliveryChallan(

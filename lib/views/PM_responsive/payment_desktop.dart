@@ -77,6 +77,8 @@ class RowData {
 class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
   @override
   void initState() {
+    print(".........object........");
+
     super.initState();
     _horizontalControllersGroup = LinkedScrollControllerGroup();
     _horizontalController1 = _horizontalControllersGroup.addAndGet();
@@ -87,6 +89,8 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
   }
 
   void _initializeData() async {
+    print(".........data........");
+
     await setCompanyCode();
     await fetchPayment();
     await fetchLedger();
@@ -453,6 +457,8 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
       if (totalDebitAmount <= 0 ||
           totalCreditAmount <= 0 ||
           totalDebitAmount != totalCreditAmount) {
+        print(totalCreditAmount);
+        print(totalDebitAmount);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -747,7 +753,17 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
                 }
               });
             },
-            items: suggestedLedger.map((Ledger ledger) {
+            items: (rowDataList[index].type == 'Cr'
+                    ? suggestedLedger
+                        .where((ledger) => [
+                              "662f9807a07ec73369c237ba",
+                              "662f9832a07ec73369c237c2",
+                              "662f9878a07ec73369c237d0",
+                              "662f988ba07ec73369c237d4"
+                            ].contains(ledger.ledgerGroup))
+                        .toList()
+                    : suggestedLedger)
+                .map((Ledger ledger) {
               return DropdownMenuItem<String>(
                 value: ledger.id,
                 child: Padding(
@@ -1512,6 +1528,7 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
                       : const SizedBox(),
                   Container(
                     decoration: const BoxDecoration(
+                      // color: Colors.red,
                       border: Border(
                         top: BorderSide(),
                       ),

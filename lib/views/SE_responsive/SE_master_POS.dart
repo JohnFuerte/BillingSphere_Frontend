@@ -526,7 +526,7 @@ class _PosMasterState extends State<PosMaster> {
                                           7: FlexColumnWidth(2),
                                           8: FlexColumnWidth(1),
                                         },
-                                        border: const TableBorder.symmetric(
+                                        border: TableBorder.symmetric(
                                           inside:
                                               BorderSide(color: Colors.black),
                                           outside:

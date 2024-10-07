@@ -287,8 +287,11 @@ class _SalesSummaryMyMobileBodyState extends State<SalesSummaryMyMobileBody> {
                                           ),
                                           child: SearchField(
                                             suggestions: suggestionItems,
-                                            searchStyle: const TextStyle(
-                                                fontWeight: FontWeight.bold),
+                                            searchInputDecoration:
+                                                SearchInputDecoration(
+                                              searchStyle: const TextStyle(
+                                                  fontWeight: FontWeight.bold),
+                                            ),
                                           ),
                                         ),
                                       ],

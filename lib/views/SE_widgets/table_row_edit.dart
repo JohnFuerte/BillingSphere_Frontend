@@ -500,7 +500,7 @@ class _SEEntriesState extends State<SEEntries> {
                                   ),
                                 ),
                                 style: ButtonStyle(
-                                  textStyle: WidgetStateProperty.all(
+                                  textStyle: MaterialStateProperty.all(
                                     GoogleFonts.poppins(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,

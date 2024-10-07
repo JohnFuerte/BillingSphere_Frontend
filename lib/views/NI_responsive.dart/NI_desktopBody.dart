@@ -109,7 +109,7 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
       itemBrand: selectedItemId2!,
       itemName: controllers.itemNameController.text,
       printName: controllers.printNameController.text,
-      codeNo: controllers.codeNoController.text,
+      codeNo: "495",
       taxCategory: selectedTaxRateId!,
       hsnCode: selectedHSNCodeId!,
       barcode: controllers.barcodeController.text,
@@ -5593,7 +5593,8 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                             if (state is CubitTaxCategoryLoaded) {
                               setState(() {
                                 fetchedTaxCategories = state.taxCategories;
-                                selectedTaxRateId = fetchedTaxCategories.first.id;
+                                selectedTaxRateId =
+                                    fetchedTaxCategories.first.id;
                               });
                             } else if (state is CubitTaxCategoryError) {
                               print(state.error);
@@ -5617,7 +5618,8 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                             if (state is CubicStoreLoaded) {
                               setState(() {
                                 fetchedStores = state.stores;
-                                selectedStoreLocationId = fetchedStores.first.id;
+                                selectedStoreLocationId =
+                                    fetchedStores.first.id;
                               });
                             } else if (state is CubitStoreError) {
                               print(state.error);
@@ -5630,7 +5632,8 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                             if (state is CubitMeasurementLimitLoaded) {
                               setState(() {
                                 fetchedMLimits = state.measurementLimits;
-                                selectedMeasurementLimitId = fetchedMLimits.first.id;
+                                selectedMeasurementLimitId =
+                                    fetchedMLimits.first.id;
                                 selectedUnitId = fetchedMLimits.first.id;
                               });
                             } else if (state is CubitMeasurementLimitError) {
@@ -5638,7 +5641,8 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                             }
                           },
                         ),
-                        BlocListener<SecondaryUnitCubit, CubitSecondaryUnitStates>(
+                        BlocListener<SecondaryUnitCubit,
+                            CubitSecondaryUnitStates>(
                           listener: (context, state) {
                             if (state is CubitSecondaryUnitLoaded) {
                               setState(() {
@@ -5656,7 +5660,8 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                         child: Column(
                           children: [
                             isFetched == true
-                                ? const Center(child: CircularProgressIndicator())
+                                ? const Center(
+                                    child: CircularProgressIndicator())
                                 : Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Form(
@@ -5672,15 +5677,18 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                   children: [
                                                     Container(
                                                       height: 425,
-                                                      width: MediaQuery.of(context)
-                                                              .size
-                                                              .width *
-                                                          .44,
-                                                      decoration: const BoxDecoration(
-                                                          border: Border(
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              .44,
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                              border: Border(
                                                         top: BorderSide(
                                                             width: 1,
-                                                            color: Colors.black),
+                                                            color:
+                                                                Colors.black),
                                                         left: BorderSide(
                                                           width: 1,
                                                           color: Colors.black,
@@ -5688,11 +5696,13 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                       )),
                                                       child: Column(
                                                         crossAxisAlignment:
-                                                            CrossAxisAlignment.start,
+                                                            CrossAxisAlignment
+                                                                .start,
                                                         children: [
                                                           Padding(
                                                             padding:
-                                                                const EdgeInsets.only(
+                                                                const EdgeInsets
+                                                                    .only(
                                                                     bottom: 8.0,
                                                                     top: 8.0),
                                                             child: Container(
@@ -5713,17 +5723,22 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                               child: Text(
                                                                 ' BASIC DETAILS',
                                                                 style:
-                                                                    GoogleFonts.poppins(
-                                                                  color: Colors.white,
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  color: Colors
+                                                                      .white,
                                                                   fontWeight:
-                                                                      FontWeight.bold,
+                                                                      FontWeight
+                                                                          .bold,
                                                                   fontSize:
-                                                                      screenWidth < 1030
+                                                                      screenWidth <
+                                                                              1030
                                                                           ? 11.0
                                                                           : 14.0,
                                                                 ),
-                                                                overflow: TextOverflow
-                                                                    .ellipsis,
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
                                                               ),
                                                             ),
                                                           ),
@@ -5733,90 +5748,72 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                               Padding(
                                                                 padding:
                                                                     const EdgeInsets
-                                                                        .all(8.0),
+                                                                        .all(
+                                                                        8.0),
                                                                 child: Row(
                                                                   children: [
                                                                     Expanded(
                                                                       flex: 2,
-                                                                      child: Text(
+                                                                      child:
+                                                                          Text(
                                                                         'Item Group',
-                                                                        style:
-                                                                            GoogleFonts
-                                                                                .poppins(
+                                                                        style: GoogleFonts
+                                                                            .poppins(
                                                                           fontWeight:
-                                                                              FontWeight
-                                                                                  .bold,
-                                                                          fontSize: 16,
+                                                                              FontWeight.bold,
+                                                                          fontSize:
+                                                                              16,
                                                                           color:
                                                                               const Color(
                                                                             0xFF510986,
                                                                           ),
                                                                         ),
                                                                         overflow:
-                                                                            TextOverflow
-                                                                                .ellipsis,
+                                                                            TextOverflow.ellipsis,
                                                                       ),
                                                                     ),
                                                                     Expanded(
                                                                       flex: 9,
-                                                                      child: SizedBox(
-                                                                        height: 40,
+                                                                      child:
+                                                                          SizedBox(
+                                                                        height:
+                                                                            40,
                                                                         child:
                                                                             Container(
                                                                           decoration:
                                                                               BoxDecoration(
-                                                                            border: Border
-                                                                                .all(),
+                                                                            border:
+                                                                                Border.all(),
                                                                           ),
                                                                           child:
                                                                               SearchableDropDown(
                                                                             controller:
-                                                                                controllers
-                                                                                    .itemGroupController,
+                                                                                controllers.itemGroupController,
                                                                             searchController:
-                                                                                controllers
-                                                                                    .itemGroupController,
+                                                                                controllers.itemGroupController,
                                                                             value:
                                                                                 selectedItemId,
                                                                             onChanged:
-                                                                                (String?
-                                                                                    newValue) {
-                                                                              setState(
-                                                                                  () {
-                                                                                selectedItemId =
-                                                                                    newValue;
+                                                                                (String? newValue) {
+                                                                              setState(() {
+                                                                                selectedItemId = newValue;
                                                                               });
                                                                             },
-                                                                            items: fetchedItemGroups.map(
-                                                                                (ItemsGroup
-                                                                                    itemGroup) {
-                                                                              return DropdownMenuItem<
-                                                                                  String>(
-                                                                                value: itemGroup
-                                                                                    .id,
-                                                                                child:
-                                                                                    Text(
-                                                                                  itemGroup
-                                                                                      .name,
-                                                                                  style:
-                                                                                      GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                                                                                  overflow:
-                                                                                      TextOverflow.ellipsis,
+                                                                            items:
+                                                                                fetchedItemGroups.map((ItemsGroup itemGroup) {
+                                                                              return DropdownMenuItem<String>(
+                                                                                value: itemGroup.id,
+                                                                                child: Text(
+                                                                                  itemGroup.name,
+                                                                                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                                                                                  overflow: TextOverflow.ellipsis,
                                                                                 ),
                                                                               );
                                                                             }).toList(),
                                                                             searchMatchFn:
-                                                                                (item,
-                                                                                    searchValue) {
-                                                                              final itemGroup = fetchedItemGroups
-                                                                                  .firstWhere((e) =>
-                                                                                      e.id ==
-                                                                                      item.value)
-                                                                                  .name;
-                                                                              return itemGroup
-                                                                                  .toLowerCase()
-                                                                                  .contains(
-                                                                                      searchValue.toLowerCase());
+                                                                                (item, searchValue) {
+                                                                              final itemGroup = fetchedItemGroups.firstWhere((e) => e.id == item.value).name;
+                                                                              return itemGroup.toLowerCase().contains(searchValue.toLowerCase());
                                                                             },
                                                                           ),
                                                                         ),
@@ -5829,93 +5826,73 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                               Padding(
                                                                 padding:
                                                                     const EdgeInsets
-                                                                        .all(8.0),
+                                                                        .all(
+                                                                        8.0),
                                                                 child: Row(
                                                                   children: [
                                                                     Expanded(
                                                                       flex: 2,
-                                                                      child: Text(
+                                                                      child:
+                                                                          Text(
                                                                         'Brand',
-                                                                        style:
-                                                                            GoogleFonts
-                                                                                .poppins(
+                                                                        style: GoogleFonts
+                                                                            .poppins(
                                                                           fontWeight:
-                                                                              FontWeight
-                                                                                  .bold,
-                                                                          fontSize: 16,
-                                                                          color: const Color(
-                                                                              0xFF510986),
+                                                                              FontWeight.bold,
+                                                                          fontSize:
+                                                                              16,
+                                                                          color:
+                                                                              const Color(0xFF510986),
                                                                         ),
                                                                         overflow:
-                                                                            TextOverflow
-                                                                                .ellipsis,
+                                                                            TextOverflow.ellipsis,
                                                                       ),
                                                                     ),
                                                                     Expanded(
                                                                       flex: 4,
-                                                                      child: SizedBox(
-                                                                        height: 40,
+                                                                      child:
+                                                                          SizedBox(
+                                                                        height:
+                                                                            40,
                                                                         child:
                                                                             Container(
                                                                           decoration:
                                                                               BoxDecoration(
-                                                                            border: Border
-                                                                                .all(),
+                                                                            border:
+                                                                                Border.all(),
                                                                           ),
                                                                           child:
                                                                               SearchableDropDown(
                                                                             controller:
-                                                                                controllers
-                                                                                    .itemBrandController,
+                                                                                controllers.itemBrandController,
                                                                             searchController:
-                                                                                controllers
-                                                                                    .itemBrandController,
+                                                                                controllers.itemBrandController,
                                                                             value:
                                                                                 selectedItemId2,
                                                                             onChanged:
-                                                                                (String?
-                                                                                    newValue) {
-                                                                              setState(
-                                                                                  () {
-                                                                                selectedItemId2 =
-                                                                                    newValue;
+                                                                                (String? newValue) {
+                                                                              setState(() {
+                                                                                selectedItemId2 = newValue;
                                                                               });
                                                                             },
-                                                                            items: fetchedItemBrands.map(
-                                                                                (ItemsBrand
-                                                                                    itemBrand) {
-                                                                              return DropdownMenuItem<
-                                                                                  String>(
-                                                                                value: itemBrand
-                                                                                    .id,
-                                                                                child:
-                                                                                    Text(
-                                                                                  itemBrand
-                                                                                      .name,
-                                                                                  style:
-                                                                                      GoogleFonts.poppins(
-                                                                                    fontWeight:
-                                                                                        FontWeight.bold,
-                                                                                    fontSize:
-                                                                                        15,
+                                                                            items:
+                                                                                fetchedItemBrands.map((ItemsBrand itemBrand) {
+                                                                              return DropdownMenuItem<String>(
+                                                                                value: itemBrand.id,
+                                                                                child: Text(
+                                                                                  itemBrand.name,
+                                                                                  style: GoogleFonts.poppins(
+                                                                                    fontWeight: FontWeight.bold,
+                                                                                    fontSize: 15,
                                                                                   ),
-                                                                                  overflow:
-                                                                                      TextOverflow.ellipsis,
+                                                                                  overflow: TextOverflow.ellipsis,
                                                                                 ),
                                                                               );
                                                                             }).toList(),
                                                                             searchMatchFn:
-                                                                                (item,
-                                                                                    searchValue) {
-                                                                              final itemBrands = fetchedItemBrands
-                                                                                  .firstWhere((e) =>
-                                                                                      e.id ==
-                                                                                      item.value)
-                                                                                  .name;
-                                                                              return itemBrands
-                                                                                  .toLowerCase()
-                                                                                  .contains(
-                                                                                      searchValue.toLowerCase());
+                                                                                (item, searchValue) {
+                                                                              final itemBrands = fetchedItemBrands.firstWhere((e) => e.id == item.value).name;
+                                                                              return itemBrands.toLowerCase().contains(searchValue.toLowerCase());
                                                                             },
                                                                           ),
                                                                         ),
@@ -5923,63 +5900,51 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                     ),
                                                                     Expanded(
                                                                       flex: 2,
-                                                                      child: Text(
+                                                                      child:
+                                                                          Text(
                                                                         'Code No',
-                                                                        style:
-                                                                            GoogleFonts
-                                                                                .poppins(
+                                                                        style: GoogleFonts
+                                                                            .poppins(
                                                                           fontWeight:
-                                                                              FontWeight
-                                                                                  .bold,
-                                                                          fontSize: 16,
-                                                                          color: const Color(
-                                                                              0xFF510986),
+                                                                              FontWeight.bold,
+                                                                          fontSize:
+                                                                              16,
+                                                                          color:
+                                                                              const Color(0xFF510986),
                                                                         ),
                                                                         overflow:
-                                                                            TextOverflow
-                                                                                .ellipsis,
+                                                                            TextOverflow.ellipsis,
                                                                         textAlign:
-                                                                            TextAlign
-                                                                                .center,
+                                                                            TextAlign.center,
                                                                       ),
                                                                     ),
                                                                     Expanded(
                                                                       flex: 3,
-                                                                      child: SizedBox(
-                                                                        height: 40,
+                                                                      child:
+                                                                          SizedBox(
+                                                                        height:
+                                                                            40,
                                                                         child:
                                                                             TextFormField(
                                                                           enabled:
                                                                               false,
                                                                           controller:
-                                                                              controllers
-                                                                                  .codeNoController,
-                                                                          style: GoogleFonts.poppins(
-                                                                              fontWeight:
-                                                                                  FontWeight
-                                                                                      .bold),
+                                                                              controllers.codeNoController,
+                                                                          style:
+                                                                              GoogleFonts.poppins(fontWeight: FontWeight.bold),
                                                                           cursorHeight:
                                                                               21,
                                                                           textAlignVertical:
-                                                                              TextAlignVertical
-                                                                                  .top,
+                                                                              TextAlignVertical.top,
                                                                           decoration:
                                                                               InputDecoration(
-                                                                            contentPadding: const EdgeInsets
-                                                                                .only(
-                                                                                left:
-                                                                                    5.0,
-                                                                                bottom:
-                                                                                    8.0),
+                                                                            contentPadding:
+                                                                                const EdgeInsets.only(left: 5.0, bottom: 8.0),
                                                                             border:
                                                                                 OutlineInputBorder(
-                                                                              borderRadius:
-                                                                                  BorderRadius.circular(
-                                                                                      0),
-                                                                              borderSide:
-                                                                                  const BorderSide(
-                                                                                color: Colors
-                                                                                    .black,
+                                                                              borderRadius: BorderRadius.circular(0),
+                                                                              borderSide: const BorderSide(
+                                                                                color: Colors.black,
                                                                               ),
                                                                             ),
                                                                           ),
@@ -5991,87 +5956,83 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                               ),
                                                               //Item Name
                                                               NISingleTextField(
-                                                                labelText: 'Item Name',
+                                                                labelText:
+                                                                    'Item Name',
                                                                 flex1: 2,
                                                                 flex2: 9,
-                                                                controller: controllers
-                                                                    .itemNameController,
+                                                                controller:
+                                                                    controllers
+                                                                        .itemNameController,
                                                               ),
                                                               //Print Name
                                                               NISingleTextField(
-                                                                labelText: 'Print Name',
+                                                                labelText:
+                                                                    'Print Name',
                                                                 flex1: 2,
                                                                 flex2: 9,
-                                                                controller: controllers
-                                                                    .printNameController,
+                                                                controller:
+                                                                    controllers
+                                                                        .printNameController,
                                                               ),
                                                               //Hsn Code
                                                               Padding(
                                                                 padding:
                                                                     const EdgeInsets
-                                                                        .all(8.0),
+                                                                        .all(
+                                                                        8.0),
                                                                 child: Row(
                                                                   children: [
                                                                     Expanded(
                                                                       flex: 2,
-                                                                      child: Text(
+                                                                      child:
+                                                                          Text(
                                                                         'HSN Code',
-                                                                        style:
-                                                                            GoogleFonts
-                                                                                .poppins(
+                                                                        style: GoogleFonts
+                                                                            .poppins(
                                                                           fontWeight:
-                                                                              FontWeight
-                                                                                  .bold,
-                                                                          fontSize: 16,
-                                                                          color: const Color(
-                                                                              0xFF510986),
+                                                                              FontWeight.bold,
+                                                                          fontSize:
+                                                                              16,
+                                                                          color:
+                                                                              const Color(0xFF510986),
                                                                         ),
                                                                         overflow:
-                                                                            TextOverflow
-                                                                                .ellipsis,
+                                                                            TextOverflow.ellipsis,
                                                                       ),
                                                                     ),
                                                                     Expanded(
                                                                       flex: 4,
-                                                                      child: SizedBox(
-                                                                        height: 40,
+                                                                      child:
+                                                                          SizedBox(
+                                                                        height:
+                                                                            40,
                                                                         child:
                                                                             Container(
                                                                           decoration:
                                                                               BoxDecoration(
-                                                                            border: Border
-                                                                                .all(),
+                                                                            border:
+                                                                                Border.all(),
                                                                           ),
                                                                           child:
                                                                               SearchableDropDown(
                                                                             controller:
-                                                                                controllers
-                                                                                    .itemHsnController,
+                                                                                controllers.itemHsnController,
                                                                             searchController:
-                                                                                controllers
-                                                                                    .itemHsnController,
+                                                                                controllers.itemHsnController,
                                                                             value:
                                                                                 selectedHSNCodeId,
                                                                             onChanged:
-                                                                                (String?
-                                                                                    newValue) {
-                                                                              setState(
-                                                                                  () {
-                                                                                selectedHSNCodeId =
-                                                                                    newValue;
+                                                                                (String? newValue) {
+                                                                              setState(() {
+                                                                                selectedHSNCodeId = newValue;
                                                                               });
                                                                             },
-                                                                            items: fetchedHSNCodes.map(
-                                                                                (HSNCode
-                                                                                    hsnCode) {
-                                                                              return DropdownMenuItem<
-                                                                                  String>(
-                                                                                value: hsnCode
-                                                                                    .id,
-                                                                                child:
-                                                                                    Row(
-                                                                                  mainAxisAlignment:
-                                                                                      MainAxisAlignment.spaceBetween,
+                                                                            items:
+                                                                                fetchedHSNCodes.map((HSNCode hsnCode) {
+                                                                              return DropdownMenuItem<String>(
+                                                                                value: hsnCode.id,
+                                                                                child: Row(
+                                                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                                   children: [
                                                                                     Expanded(
                                                                                       child: Text(
@@ -6089,17 +6050,9 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                               );
                                                                             }).toList(),
                                                                             searchMatchFn:
-                                                                                (item,
-                                                                                    searchValue) {
-                                                                              final itemHsn = fetchedHSNCodes
-                                                                                  .firstWhere((e) =>
-                                                                                      e.id ==
-                                                                                      item.value)
-                                                                                  .description;
-                                                                              return itemHsn
-                                                                                  .toLowerCase()
-                                                                                  .contains(
-                                                                                      searchValue.toLowerCase());
+                                                                                (item, searchValue) {
+                                                                              final itemHsn = fetchedHSNCodes.firstWhere((e) => e.id == item.value).description;
+                                                                              return itemHsn.toLowerCase().contains(searchValue.toLowerCase());
                                                                             },
                                                                           ),
                                                                         ),
@@ -6107,70 +6060,56 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                     ),
                                                                     Expanded(
                                                                       flex: 2,
-                                                                      child: Text(
+                                                                      child:
+                                                                          Text(
                                                                         'Tax Category',
-                                                                        style:
-                                                                            GoogleFonts
-                                                                                .poppins(
+                                                                        style: GoogleFonts
+                                                                            .poppins(
                                                                           fontWeight:
-                                                                              FontWeight
-                                                                                  .bold,
-                                                                          fontSize: 16,
-                                                                          color: const Color(
-                                                                              0xFF510986),
+                                                                              FontWeight.bold,
+                                                                          fontSize:
+                                                                              16,
+                                                                          color:
+                                                                              const Color(0xFF510986),
                                                                         ),
                                                                         overflow:
-                                                                            TextOverflow
-                                                                                .ellipsis,
+                                                                            TextOverflow.ellipsis,
                                                                         textAlign:
-                                                                            TextAlign
-                                                                                .center,
+                                                                            TextAlign.center,
                                                                       ),
                                                                     ),
                                                                     Expanded(
                                                                       flex: 3,
-                                                                      child: SizedBox(
-                                                                        height: 40,
+                                                                      child:
+                                                                          SizedBox(
+                                                                        height:
+                                                                            40,
                                                                         child:
                                                                             Container(
                                                                           decoration:
                                                                               BoxDecoration(
-                                                                            border: Border
-                                                                                .all(),
+                                                                            border:
+                                                                                Border.all(),
                                                                           ),
                                                                           child:
                                                                               DropdownButtonHideUnderline(
-                                                                            child: DropdownButton<
-                                                                                String>(
-                                                                              value:
-                                                                                  selectedTaxRateId,
-                                                                              underline:
-                                                                                  Container(),
-                                                                              isExpanded:
-                                                                                  true,
-                                                                              onChanged:
-                                                                                  (String?
-                                                                                      newValue) {
-                                                                                setState(
-                                                                                    () {
-                                                                                  selectedTaxRateId =
-                                                                                      newValue;
+                                                                            child:
+                                                                                DropdownButton<String>(
+                                                                              value: selectedTaxRateId,
+                                                                              underline: Container(),
+                                                                              isExpanded: true,
+                                                                              onChanged: (String? newValue) {
+                                                                                setState(() {
+                                                                                  selectedTaxRateId = newValue;
                                                                                 });
                                                                               },
-                                                                              items: fetchedTaxCategories.map(
-                                                                                  (TaxRate
-                                                                                      taxRate) {
-                                                                                return DropdownMenuItem<
-                                                                                    String>(
-                                                                                  value:
-                                                                                      taxRate.id,
-                                                                                  child:
-                                                                                      Text(
+                                                                              items: fetchedTaxCategories.map((TaxRate taxRate) {
+                                                                                return DropdownMenuItem<String>(
+                                                                                  value: taxRate.id,
+                                                                                  child: Text(
                                                                                     '  ${taxRate.rate}%',
-                                                                                    style:
-                                                                                        GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                                                                                    overflow:
-                                                                                        TextOverflow.ellipsis,
+                                                                                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+                                                                                    overflow: TextOverflow.ellipsis,
                                                                                   ),
                                                                                 );
                                                                               }).toList(),
@@ -6189,35 +6128,44 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                     ),
                                                     Container(
                                                       height: 400,
-                                                      width: MediaQuery.of(context)
-                                                              .size
-                                                              .width *
-                                                          .44,
-                                                      decoration: const BoxDecoration(
-                                                          border: Border(
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              .44,
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                              border: Border(
                                                         left: BorderSide(
-                                                            color: Colors.black),
+                                                            color:
+                                                                Colors.black),
                                                         bottom: BorderSide(
-                                                            color: Colors.black),
+                                                            color:
+                                                                Colors.black),
                                                       )),
                                                       child: Column(
                                                         crossAxisAlignment:
-                                                            CrossAxisAlignment.start,
+                                                            CrossAxisAlignment
+                                                                .start,
                                                         children: [
                                                           const DottedLine(
-                                                            direction: Axis.horizontal,
-                                                            lineLength: double.infinity,
+                                                            direction:
+                                                                Axis.horizontal,
+                                                            lineLength:
+                                                                double.infinity,
                                                             lineThickness: 1.0,
                                                             dashLength: 4.0,
-                                                            dashColor: Colors.black,
+                                                            dashColor:
+                                                                Colors.black,
                                                             dashRadius: 0.0,
                                                             dashGapLength: 4.0,
-                                                            dashGapColor:
-                                                                Colors.transparent,
+                                                            dashGapColor: Colors
+                                                                .transparent,
                                                           ),
                                                           Padding(
                                                             padding:
-                                                                const EdgeInsets.only(
+                                                                const EdgeInsets
+                                                                    .only(
                                                                     bottom: 8.0,
                                                                     top: 8.0),
                                                             child: Container(
@@ -6237,20 +6185,19 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                   0xFF0000CD),
                                                               child: Text(
                                                                 ' STOCK OPTIONS',
-                                                                style:
-                                                                    GoogleFonts.poppins(
-                                                                        color: Colors
-                                                                            .white,
-                                                                        fontWeight:
-                                                                            FontWeight
-                                                                                .bold,
-                                                                        fontSize:
-                                                                            screenWidth <
-                                                                                    1030
-                                                                                ? 11.0
-                                                                                : 14.0),
-                                                                overflow: TextOverflow
-                                                                    .ellipsis,
+                                                                style: GoogleFonts.poppins(
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    fontSize: screenWidth <
+                                                                            1030
+                                                                        ? 11.0
+                                                                        : 14.0),
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
                                                               ),
                                                             ),
                                                           ),
@@ -6259,69 +6206,58 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                               Padding(
                                                                 padding:
                                                                     const EdgeInsets
-                                                                        .all(8.0),
+                                                                        .all(
+                                                                        8.0),
                                                                 child: Row(
                                                                   children: [
                                                                     Expanded(
                                                                       flex: 2,
-                                                                      child: Text(
+                                                                      child:
+                                                                          Text(
                                                                         'Store Location',
-                                                                        style:
-                                                                            GoogleFonts
-                                                                                .poppins(
+                                                                        style: GoogleFonts
+                                                                            .poppins(
                                                                           fontWeight:
-                                                                              FontWeight
-                                                                                  .bold,
-                                                                          fontSize: 16,
-                                                                          color: const Color(
-                                                                              0xFF510986),
+                                                                              FontWeight.bold,
+                                                                          fontSize:
+                                                                              16,
+                                                                          color:
+                                                                              const Color(0xFF510986),
                                                                         ),
                                                                         overflow:
-                                                                            TextOverflow
-                                                                                .ellipsis,
+                                                                            TextOverflow.ellipsis,
                                                                       ),
                                                                     ),
                                                                     Expanded(
                                                                       flex: 4,
-                                                                      child: SizedBox(
-                                                                        height: 40,
+                                                                      child:
+                                                                          SizedBox(
+                                                                        height:
+                                                                            40,
                                                                         child:
                                                                             Container(
                                                                           decoration:
                                                                               BoxDecoration(
-                                                                            border: Border
-                                                                                .all(),
+                                                                            border:
+                                                                                Border.all(),
                                                                           ),
                                                                           child:
                                                                               DropdownButtonHideUnderline(
-                                                                            child: DropdownButton<
-                                                                                String>(
-                                                                              value:
-                                                                                  selectedStoreLocationId,
-                                                                              underline:
-                                                                                  Container(),
-                                                                              isExpanded:
-                                                                                  true,
-                                                                              onChanged:
-                                                                                  (String?
-                                                                                      newValue) {
-                                                                                setState(
-                                                                                    () {
-                                                                                  selectedStoreLocationId =
-                                                                                      newValue;
+                                                                            child:
+                                                                                DropdownButton<String>(
+                                                                              value: selectedStoreLocationId,
+                                                                              underline: Container(),
+                                                                              isExpanded: true,
+                                                                              onChanged: (String? newValue) {
+                                                                                setState(() {
+                                                                                  selectedStoreLocationId = newValue;
                                                                                 });
                                                                               },
-                                                                              items: fetchedStores.map(
-                                                                                  (StoreLocation
-                                                                                      storeLocation) {
-                                                                                return DropdownMenuItem<
-                                                                                    String>(
-                                                                                  value:
-                                                                                      storeLocation.id,
-                                                                                  child:
-                                                                                      Row(
-                                                                                    mainAxisAlignment:
-                                                                                        MainAxisAlignment.spaceBetween,
+                                                                              items: fetchedStores.map((StoreLocation storeLocation) {
+                                                                                return DropdownMenuItem<String>(
+                                                                                  value: storeLocation.id,
+                                                                                  child: Row(
+                                                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                                     children: [
                                                                                       Expanded(
                                                                                         child: Text(
@@ -6344,64 +6280,54 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                     ),
                                                                     Expanded(
                                                                       flex: 2,
-                                                                      child: Text(
+                                                                      child:
+                                                                          Text(
                                                                         'Barcode Sr',
-                                                                        style:
-                                                                            GoogleFonts
-                                                                                .poppins(
+                                                                        style: GoogleFonts
+                                                                            .poppins(
                                                                           fontWeight:
-                                                                              FontWeight
-                                                                                  .bold,
-                                                                          fontSize: 16,
-                                                                          color: const Color(
-                                                                              0xFF510986),
+                                                                              FontWeight.bold,
+                                                                          fontSize:
+                                                                              16,
+                                                                          color:
+                                                                              const Color(0xFF510986),
                                                                         ),
                                                                         overflow:
-                                                                            TextOverflow
-                                                                                .ellipsis,
+                                                                            TextOverflow.ellipsis,
                                                                         textAlign:
-                                                                            TextAlign
-                                                                                .center,
+                                                                            TextAlign.center,
                                                                       ),
                                                                     ),
                                                                     Expanded(
                                                                       flex: 3,
-                                                                      child: Container(
+                                                                      child:
+                                                                          Container(
                                                                         constraints:
                                                                             const BoxConstraints(
-                                                                          maxHeight: 40,
+                                                                          maxHeight:
+                                                                              40,
                                                                         ),
                                                                         decoration:
                                                                             BoxDecoration(
-                                                                          border: Border.all(
-                                                                              color: Colors
-                                                                                  .black),
+                                                                          border:
+                                                                              Border.all(color: Colors.black),
                                                                           borderRadius:
-                                                                              BorderRadius
-                                                                                  .circular(
-                                                                                      0),
+                                                                              BorderRadius.circular(0),
                                                                         ),
                                                                         child:
                                                                             TextFormField(
                                                                           controller:
-                                                                              controllers
-                                                                                  .barcodeController,
-                                                                          style: GoogleFonts.poppins(
-                                                                              fontWeight:
-                                                                                  FontWeight
-                                                                                      .bold),
+                                                                              controllers.barcodeController,
+                                                                          style:
+                                                                              GoogleFonts.poppins(fontWeight: FontWeight.bold),
                                                                           cursorHeight:
                                                                               20,
                                                                           decoration:
                                                                               const InputDecoration(
                                                                             border:
-                                                                                InputBorder
-                                                                                    .none,
-                                                                            contentPadding: EdgeInsets.only(
-                                                                                left:
-                                                                                    5.0,
-                                                                                bottom:
-                                                                                    8.0),
+                                                                                InputBorder.none,
+                                                                            contentPadding:
+                                                                                EdgeInsets.only(left: 5.0, bottom: 8.0),
                                                                           ),
                                                                         ),
                                                                       ),
@@ -6412,69 +6338,61 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                               Padding(
                                                                 padding:
                                                                     const EdgeInsets
-                                                                        .all(8.0),
+                                                                        .all(
+                                                                        8.0),
                                                                 child: Row(
                                                                   children: [
                                                                     Expanded(
                                                                       flex: 2,
-                                                                      child: Text(
+                                                                      child:
+                                                                          Text(
                                                                         'Stock Unit',
-                                                                        style:
-                                                                            GoogleFonts
-                                                                                .poppins(
+                                                                        style: GoogleFonts
+                                                                            .poppins(
                                                                           fontWeight:
-                                                                              FontWeight
-                                                                                  .bold,
-                                                                          fontSize: 16,
-                                                                          color: const Color(
-                                                                              0xFF510986),
+                                                                              FontWeight.bold,
+                                                                          fontSize:
+                                                                              16,
+                                                                          color:
+                                                                              const Color(0xFF510986),
                                                                         ),
                                                                         overflow:
-                                                                            TextOverflow
-                                                                                .ellipsis,
+                                                                            TextOverflow.ellipsis,
                                                                       ),
                                                                     ),
                                                                     Expanded(
                                                                       flex: 4,
-                                                                      child: SizedBox(
-                                                                        height: 40,
+                                                                      child:
+                                                                          SizedBox(
+                                                                        height:
+                                                                            40,
                                                                         child:
                                                                             Container(
                                                                           decoration:
                                                                               BoxDecoration(
-                                                                            border: Border
-                                                                                .all(),
+                                                                            border:
+                                                                                Border.all(),
                                                                           ),
                                                                           child:
                                                                               SearchableDropDown(
                                                                             controller:
-                                                                                controllers
-                                                                                    .itemMeasureunitController,
+                                                                                controllers.itemMeasureunitController,
                                                                             searchController:
-                                                                                controllers
-                                                                                    .itemMeasureunitController,
+                                                                                controllers.itemMeasureunitController,
                                                                             value:
                                                                                 selectedMeasurementLimitId,
                                                                             onChanged:
-                                                                                (String?
-                                                                                    newValue) {
-                                                                              setState(
-                                                                                  () {
-                                                                                selectedMeasurementLimitId =
-                                                                                    newValue;
+                                                                                (String? newValue) {
+                                                                              setState(() {
+                                                                                selectedMeasurementLimitId = newValue;
                                                                               });
                                                                             },
-                                                                            items: fetchedMLimits.map(
-                                                                                (MeasurementLimit
-                                                                                    measurementLimit) {
-                                                                              return DropdownMenuItem<
-                                                                                  String>(
-                                                                                value: measurementLimit
-                                                                                    .id,
-                                                                                child:
-                                                                                    Row(
-                                                                                  mainAxisAlignment:
-                                                                                      MainAxisAlignment.spaceBetween,
+                                                                            items:
+                                                                                fetchedMLimits.map((MeasurementLimit measurementLimit) {
+                                                                              return DropdownMenuItem<String>(
+                                                                                value: measurementLimit.id,
+                                                                                child: Row(
+                                                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                                   children: [
                                                                                     Text(
                                                                                       measurementLimit.measurement,
@@ -6485,17 +6403,9 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                               );
                                                                             }).toList(),
                                                                             searchMatchFn:
-                                                                                (item,
-                                                                                    searchValue) {
-                                                                              final itemMLimit = fetchedMLimits
-                                                                                  .firstWhere((e) =>
-                                                                                      e.id ==
-                                                                                      item.value)
-                                                                                  .measurement;
-                                                                              return itemMLimit
-                                                                                  .toLowerCase()
-                                                                                  .contains(
-                                                                                      searchValue.toLowerCase());
+                                                                                (item, searchValue) {
+                                                                              final itemMLimit = fetchedMLimits.firstWhere((e) => e.id == item.value).measurement;
+                                                                              return itemMLimit.toLowerCase().contains(searchValue.toLowerCase());
                                                                             },
                                                                           ),
                                                                         ),
@@ -6503,67 +6413,57 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                     ),
                                                                     Expanded(
                                                                       flex: 2,
-                                                                      child: Text(
+                                                                      child:
+                                                                          Text(
                                                                         'Secondary Unit',
-                                                                        style:
-                                                                            GoogleFonts
-                                                                                .poppins(
+                                                                        style: GoogleFonts
+                                                                            .poppins(
                                                                           fontWeight:
-                                                                              FontWeight
-                                                                                  .bold,
-                                                                          fontSize: 16,
-                                                                          color: const Color(
-                                                                              0xFF510986),
+                                                                              FontWeight.bold,
+                                                                          fontSize:
+                                                                              16,
+                                                                          color:
+                                                                              const Color(0xFF510986),
                                                                         ),
                                                                         overflow:
-                                                                            TextOverflow
-                                                                                .ellipsis,
+                                                                            TextOverflow.ellipsis,
                                                                         textAlign:
-                                                                            TextAlign
-                                                                                .center,
+                                                                            TextAlign.center,
                                                                       ),
                                                                     ),
                                                                     Expanded(
                                                                       flex: 3,
-                                                                      child: SizedBox(
-                                                                        height: 40,
+                                                                      child:
+                                                                          SizedBox(
+                                                                        height:
+                                                                            40,
                                                                         child:
                                                                             Container(
                                                                           decoration:
                                                                               BoxDecoration(
-                                                                            border: Border
-                                                                                .all(),
+                                                                            border:
+                                                                                Border.all(),
                                                                           ),
                                                                           child:
                                                                               SearchableDropDown(
                                                                             controller:
-                                                                                controllers
-                                                                                    .itemMeasureunitController,
+                                                                                controllers.itemMeasureunitController,
                                                                             searchController:
-                                                                                controllers
-                                                                                    .itemMeasureunitController,
+                                                                                controllers.itemMeasureunitController,
                                                                             value:
                                                                                 selectedSecondaryUnitId,
                                                                             onChanged:
-                                                                                (String?
-                                                                                    newValue) {
-                                                                              setState(
-                                                                                  () {
-                                                                                selectedSecondaryUnitId =
-                                                                                    newValue;
+                                                                                (String? newValue) {
+                                                                              setState(() {
+                                                                                selectedSecondaryUnitId = newValue;
                                                                               });
                                                                             },
-                                                                            items: fetchedSUnit.map(
-                                                                                (SecondaryUnit
-                                                                                    secondaryUnit) {
-                                                                              return DropdownMenuItem<
-                                                                                  String>(
-                                                                                value: secondaryUnit
-                                                                                    .id,
-                                                                                child:
-                                                                                    Row(
-                                                                                  mainAxisAlignment:
-                                                                                      MainAxisAlignment.spaceBetween,
+                                                                            items:
+                                                                                fetchedSUnit.map((SecondaryUnit secondaryUnit) {
+                                                                              return DropdownMenuItem<String>(
+                                                                                value: secondaryUnit.id,
+                                                                                child: Row(
+                                                                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                                                   children: [
                                                                                     Expanded(
                                                                                       child: Text(
@@ -6577,17 +6477,9 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                               );
                                                                             }).toList(),
                                                                             searchMatchFn:
-                                                                                (item,
-                                                                                    searchValue) {
-                                                                              final itemSunit = fetchedSUnit
-                                                                                  .firstWhere((e) =>
-                                                                                      e.id ==
-                                                                                      item.value)
-                                                                                  .secondaryUnit;
-                                                                              return itemSunit
-                                                                                  .toLowerCase()
-                                                                                  .contains(
-                                                                                      searchValue.toLowerCase());
+                                                                                (item, searchValue) {
+                                                                              final itemSunit = fetchedSUnit.firstWhere((e) => e.id == item.value).secondaryUnit;
+                                                                              return itemSunit.toLowerCase().contains(searchValue.toLowerCase());
                                                                             },
                                                                           ),
                                                                         ),
@@ -6599,133 +6491,114 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                               Padding(
                                                                 padding:
                                                                     const EdgeInsets
-                                                                        .all(8.0),
+                                                                        .all(
+                                                                        8.0),
                                                                 child: Row(
                                                                   children: [
                                                                     Expanded(
                                                                       flex: 2,
-                                                                      child: Text(
+                                                                      child:
+                                                                          Text(
                                                                         'Minimum Stock',
-                                                                        style:
-                                                                            GoogleFonts
-                                                                                .poppins(
+                                                                        style: GoogleFonts
+                                                                            .poppins(
                                                                           fontWeight:
-                                                                              FontWeight
-                                                                                  .bold,
-                                                                          fontSize: 16,
-                                                                          color: const Color(
-                                                                              0xFF510986),
+                                                                              FontWeight.bold,
+                                                                          fontSize:
+                                                                              16,
+                                                                          color:
+                                                                              const Color(0xFF510986),
                                                                         ),
                                                                         overflow:
-                                                                            TextOverflow
-                                                                                .ellipsis,
+                                                                            TextOverflow.ellipsis,
                                                                       ),
                                                                     ),
                                                                     Expanded(
                                                                       flex: 4,
-                                                                      child: Container(
+                                                                      child:
+                                                                          Container(
                                                                         constraints:
                                                                             const BoxConstraints(
-                                                                          maxHeight: 40,
+                                                                          maxHeight:
+                                                                              40,
                                                                         ),
                                                                         decoration:
                                                                             BoxDecoration(
-                                                                          border: Border.all(
-                                                                              color: Colors
-                                                                                  .black),
+                                                                          border:
+                                                                              Border.all(color: Colors.black),
                                                                           borderRadius:
-                                                                              BorderRadius
-                                                                                  .circular(
-                                                                                      0),
+                                                                              BorderRadius.circular(0),
                                                                         ),
                                                                         child:
                                                                             TextFormField(
                                                                           controller:
-                                                                              controllers
-                                                                                  .minimumStockController,
-                                                                          style: GoogleFonts.poppins(
-                                                                              fontWeight:
-                                                                                  FontWeight
-                                                                                      .bold),
+                                                                              controllers.minimumStockController,
+                                                                          style:
+                                                                              GoogleFonts.poppins(fontWeight: FontWeight.bold),
                                                                           cursorHeight:
                                                                               20,
                                                                           decoration:
                                                                               const InputDecoration(
                                                                             border:
-                                                                                InputBorder
-                                                                                    .none,
-                                                                            contentPadding: EdgeInsets.only(
-                                                                                left:
-                                                                                    5.0,
-                                                                                bottom:
-                                                                                    8.0),
+                                                                                InputBorder.none,
+                                                                            contentPadding:
+                                                                                EdgeInsets.only(left: 5.0, bottom: 8.0),
                                                                           ),
                                                                         ),
                                                                       ),
                                                                     ),
                                                                     Expanded(
                                                                       flex: 2,
-                                                                      child: Text(
+                                                                      child:
+                                                                          Text(
                                                                         'Maximum Stock',
-                                                                        style:
-                                                                            GoogleFonts
-                                                                                .poppins(
+                                                                        style: GoogleFonts
+                                                                            .poppins(
                                                                           fontWeight:
-                                                                              FontWeight
-                                                                                  .bold,
-                                                                          fontSize: 16,
-                                                                          color: const Color(
-                                                                              0xFF510986),
+                                                                              FontWeight.bold,
+                                                                          fontSize:
+                                                                              16,
+                                                                          color:
+                                                                              const Color(0xFF510986),
                                                                         ),
                                                                         overflow:
-                                                                            TextOverflow
-                                                                                .ellipsis,
+                                                                            TextOverflow.ellipsis,
                                                                         textAlign:
-                                                                            TextAlign
-                                                                                .center,
+                                                                            TextAlign.center,
                                                                       ),
                                                                     ),
                                                                     Expanded(
                                                                       flex: 3,
-                                                                      child: Container(
+                                                                      child:
+                                                                          Container(
                                                                         constraints:
                                                                             const BoxConstraints(
-                                                                          maxHeight: 40,
+                                                                          maxHeight:
+                                                                              40,
                                                                         ),
                                                                         decoration:
                                                                             BoxDecoration(
-                                                                          border: Border.all(
-                                                                              color: Colors
-                                                                                  .black),
+                                                                          border:
+                                                                              Border.all(color: Colors.black),
                                                                           borderRadius:
-                                                                              BorderRadius
-                                                                                  .circular(
-                                                                                      0),
+                                                                              BorderRadius.circular(0),
                                                                         ),
                                                                         child:
                                                                             TextFormField(
                                                                           controller:
-                                                                              controllers
-                                                                                  .maximumStockController,
-                                                                          style: GoogleFonts.poppins(
-                                                                              fontWeight:
-                                                                                  FontWeight
-                                                                                      .bold),
+                                                                              controllers.maximumStockController,
+                                                                          style:
+                                                                              GoogleFonts.poppins(fontWeight: FontWeight.bold),
                                                                           cursorHeight:
                                                                               20,
                                                                           textAlignVertical:
-                                                                              TextAlignVertical
-                                                                                  .top,
+                                                                              TextAlignVertical.top,
                                                                           decoration:
                                                                               const InputDecoration(
                                                                             border:
-                                                                                InputBorder
-                                                                                    .none,
-                                                                            contentPadding: EdgeInsets.only(
-                                                                                left:
-                                                                                    5.0,
-                                                                                bottom:
-                                                                                    8.0),
+                                                                                InputBorder.none,
+                                                                            contentPadding:
+                                                                                EdgeInsets.only(left: 5.0, bottom: 8.0),
                                                                           ),
                                                                         ),
                                                                       ),
@@ -6736,76 +6609,68 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                               Padding(
                                                                 padding:
                                                                     const EdgeInsets
-                                                                        .all(8.0),
+                                                                        .all(
+                                                                        8.0),
                                                                 child: Row(
                                                                   children: [
                                                                     Expanded(
                                                                       flex: 2,
-                                                                      child: Text(
+                                                                      child:
+                                                                          Text(
                                                                         'Monthly Sale Qty',
-                                                                        style:
-                                                                            GoogleFonts
-                                                                                .poppins(
+                                                                        style: GoogleFonts
+                                                                            .poppins(
                                                                           fontWeight:
-                                                                              FontWeight
-                                                                                  .bold,
-                                                                          fontSize: 16,
-                                                                          color: const Color(
-                                                                              0xFF510986),
+                                                                              FontWeight.bold,
+                                                                          fontSize:
+                                                                              16,
+                                                                          color:
+                                                                              const Color(0xFF510986),
                                                                         ),
                                                                         overflow:
-                                                                            TextOverflow
-                                                                                .ellipsis,
+                                                                            TextOverflow.ellipsis,
                                                                       ),
                                                                     ),
                                                                     Expanded(
                                                                       flex: 4,
-                                                                      child: Container(
+                                                                      child:
+                                                                          Container(
                                                                         constraints:
                                                                             const BoxConstraints(
-                                                                          maxHeight: 40,
+                                                                          maxHeight:
+                                                                              40,
                                                                         ),
                                                                         decoration:
                                                                             BoxDecoration(
-                                                                          border: Border.all(
-                                                                              color: Colors
-                                                                                  .black),
+                                                                          border:
+                                                                              Border.all(color: Colors.black),
                                                                           borderRadius:
-                                                                              BorderRadius
-                                                                                  .circular(
-                                                                                      0),
+                                                                              BorderRadius.circular(0),
                                                                         ),
                                                                         child:
                                                                             TextFormField(
                                                                           controller:
-                                                                              controllers
-                                                                                  .monthlySalesQtyController,
-                                                                          style: GoogleFonts.poppins(
-                                                                              fontWeight:
-                                                                                  FontWeight
-                                                                                      .bold),
+                                                                              controllers.monthlySalesQtyController,
+                                                                          style:
+                                                                              GoogleFonts.poppins(fontWeight: FontWeight.bold),
                                                                           cursorHeight:
                                                                               20,
                                                                           textAlignVertical:
-                                                                              TextAlignVertical
-                                                                                  .top,
+                                                                              TextAlignVertical.top,
                                                                           decoration:
                                                                               const InputDecoration(
                                                                             border:
-                                                                                InputBorder
-                                                                                    .none,
-                                                                            contentPadding: EdgeInsets.only(
-                                                                                left:
-                                                                                    5.0,
-                                                                                bottom:
-                                                                                    8.0),
+                                                                                InputBorder.none,
+                                                                            contentPadding:
+                                                                                EdgeInsets.only(left: 5.0, bottom: 8.0),
                                                                           ),
                                                                         ),
                                                                       ),
                                                                     ),
                                                                     const Expanded(
                                                                       flex: 5,
-                                                                      child: SizedBox(),
+                                                                      child:
+                                                                          SizedBox(),
                                                                     ),
                                                                   ],
                                                                 ),
@@ -6823,26 +6688,31 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                   children: [
                                                     Container(
                                                       height: 425,
-                                                      width: MediaQuery.of(context)
-                                                              .size
-                                                              .width *
-                                                          .44,
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              .44,
                                                       decoration: const BoxDecoration(
                                                           border: Border(
                                                               top: BorderSide(
-                                                                  color: Colors.black),
+                                                                  color: Colors
+                                                                      .black),
                                                               right: BorderSide(
-                                                                  color: Colors.black),
+                                                                  color: Colors
+                                                                      .black),
                                                               left: BorderSide(
-                                                                  color:
-                                                                      Colors.black))),
+                                                                  color: Colors
+                                                                      .black))),
                                                       child: Column(
                                                         crossAxisAlignment:
-                                                            CrossAxisAlignment.start,
+                                                            CrossAxisAlignment
+                                                                .start,
                                                         children: [
                                                           Padding(
                                                             padding:
-                                                                const EdgeInsets.only(
+                                                                const EdgeInsets
+                                                                    .only(
                                                                     bottom: 8.0,
                                                                     top: 8.0),
                                                             child: Container(
@@ -6862,20 +6732,19 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                   0xFF0000CD),
                                                               child: Text(
                                                                 ' PRICE DETAILS',
-                                                                style:
-                                                                    GoogleFonts.poppins(
-                                                                        color: Colors
-                                                                            .white,
-                                                                        fontWeight:
-                                                                            FontWeight
-                                                                                .bold,
-                                                                        fontSize:
-                                                                            screenWidth <
-                                                                                    1030
-                                                                                ? 11.0
-                                                                                : 14.0),
-                                                                overflow: TextOverflow
-                                                                    .ellipsis,
+                                                                style: GoogleFonts.poppins(
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    fontSize: screenWidth <
+                                                                            1030
+                                                                        ? 11.0
+                                                                        : 14.0),
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
                                                               ),
                                                             ),
                                                           ),
@@ -6890,10 +6759,12 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                             retailController:
                                                                 controllers
                                                                     .retailController,
-                                                            mrpController: controllers
-                                                                .mrpController,
-                                                            dateController: controllers
-                                                                .dateController,
+                                                            mrpController:
+                                                                controllers
+                                                                    .mrpController,
+                                                            dateController:
+                                                                controllers
+                                                                    .dateController,
                                                             currentPriceController:
                                                                 controllers
                                                                     .currentPriceController,
@@ -6903,38 +6774,48 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                     ),
                                                     Container(
                                                       height: 400,
-                                                      width: MediaQuery.of(context)
-                                                              .size
-                                                              .width *
-                                                          .44,
-                                                      decoration: const BoxDecoration(
-                                                          border: Border(
-                                                              right: BorderSide(
-                                                                color: Colors.black,
-                                                              ),
-                                                              bottom: BorderSide(
-                                                                  color: Colors.black),
-                                                              left: BorderSide(
-                                                                  color:
-                                                                      Colors.black))),
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              .44,
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                              border: Border(
+                                                                  right:
+                                                                      BorderSide(
+                                                                    color: Colors
+                                                                        .black,
+                                                                  ),
+                                                                  bottom: BorderSide(
+                                                                      color: Colors
+                                                                          .black),
+                                                                  left: BorderSide(
+                                                                      color: Colors
+                                                                          .black))),
                                                       child: Column(
                                                         crossAxisAlignment:
-                                                            CrossAxisAlignment.start,
+                                                            CrossAxisAlignment
+                                                                .start,
                                                         children: [
                                                           const DottedLine(
-                                                            direction: Axis.horizontal,
-                                                            lineLength: double.infinity,
+                                                            direction:
+                                                                Axis.horizontal,
+                                                            lineLength:
+                                                                double.infinity,
                                                             lineThickness: 1.0,
                                                             dashLength: 4.0,
-                                                            dashColor: Colors.black,
+                                                            dashColor:
+                                                                Colors.black,
                                                             dashRadius: 0.0,
                                                             dashGapLength: 4.0,
-                                                            dashGapColor:
-                                                                Colors.transparent,
+                                                            dashGapColor: Colors
+                                                                .transparent,
                                                           ),
                                                           Padding(
                                                             padding:
-                                                                const EdgeInsets.only(
+                                                                const EdgeInsets
+                                                                    .only(
                                                                     bottom: 8.0,
                                                                     top: 8.0),
                                                             child: Container(
@@ -6954,28 +6835,27 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                   0xFF0000CD),
                                                               child: Text(
                                                                 ' ITEM IMAGES',
-                                                                style:
-                                                                    GoogleFonts.poppins(
-                                                                        color: Colors
-                                                                            .white,
-                                                                        fontWeight:
-                                                                            FontWeight
-                                                                                .bold,
-                                                                        fontSize:
-                                                                            screenWidth <
-                                                                                    1030
-                                                                                ? 11.0
-                                                                                : 14.0),
-                                                                overflow: TextOverflow
-                                                                    .ellipsis,
+                                                                style: GoogleFonts.poppins(
+                                                                    color: Colors
+                                                                        .white,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    fontSize: screenWidth <
+                                                                            1030
+                                                                        ? 11.0
+                                                                        : 14.0),
+                                                                overflow:
+                                                                    TextOverflow
+                                                                        .ellipsis,
                                                               ),
                                                             ),
                                                           ),
                                                           Column(children: [
                                                             Padding(
                                                               padding:
-                                                                  const EdgeInsets.all(
-                                                                      4.0),
+                                                                  const EdgeInsets
+                                                                      .all(4.0),
                                                               child: Row(
                                                                 children: [
                                                                   Text(
@@ -6985,56 +6865,53 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                       fontWeight:
                                                                           FontWeight
                                                                               .bold,
-                                                                      fontSize: 16,
+                                                                      fontSize:
+                                                                          16,
                                                                       color: const Color(
                                                                           0xFF510986),
                                                                     ),
                                                                   ),
                                                                   SizedBox(
-                                                                    width: MediaQuery.of(
-                                                                                context)
+                                                                    width: MediaQuery.of(context)
                                                                             .size
                                                                             .width *
                                                                         .01,
                                                                   ),
                                                                   Container(
-                                                                    width: MediaQuery.of(
-                                                                                context)
+                                                                    width: MediaQuery.of(context)
                                                                             .size
                                                                             .width *
                                                                         .13,
                                                                     constraints:
                                                                         const BoxConstraints(
-                                                                      maxHeight: 40,
+                                                                      maxHeight:
+                                                                          40,
                                                                     ),
                                                                     decoration:
                                                                         BoxDecoration(
                                                                       border: Border.all(
-                                                                          color: Colors
-                                                                              .black),
+                                                                          color:
+                                                                              Colors.black),
                                                                       borderRadius:
-                                                                          BorderRadius
-                                                                              .circular(
-                                                                                  0),
+                                                                          BorderRadius.circular(
+                                                                              0),
                                                                     ),
                                                                     child:
                                                                         TextFormField(
                                                                       style: GoogleFonts.poppins(
                                                                           fontWeight:
-                                                                              FontWeight
-                                                                                  .bold),
-                                                                      cursorHeight: 20,
+                                                                              FontWeight.bold),
+                                                                      cursorHeight:
+                                                                          20,
                                                                       decoration:
                                                                           const InputDecoration(
                                                                         border:
-                                                                            InputBorder
-                                                                                .none,
-                                                                        contentPadding:
-                                                                            EdgeInsets.only(
-                                                                                left:
-                                                                                    5.0,
-                                                                                bottom:
-                                                                                    8.0),
+                                                                            InputBorder.none,
+                                                                        contentPadding: EdgeInsets.only(
+                                                                            left:
+                                                                                5.0,
+                                                                            bottom:
+                                                                                8.0),
                                                                       ),
                                                                     ),
                                                                   )
@@ -7046,58 +6923,52 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                             ),
                                                             Padding(
                                                               padding:
-                                                                  const EdgeInsets.only(
+                                                                  const EdgeInsets
+                                                                      .only(
                                                                       left: 8),
                                                               child: Row(
                                                                 children: [
                                                                   Container(
-                                                                    decoration: BoxDecoration(
-                                                                        border: Border.all(
-                                                                            color: Colors
-                                                                                .black)),
+                                                                    decoration:
+                                                                        BoxDecoration(
+                                                                            border:
+                                                                                Border.all(color: Colors.black)),
                                                                     height: 200,
-                                                                    width: MediaQuery.of(
-                                                                                context)
+                                                                    width: MediaQuery.of(context)
                                                                             .size
                                                                             .width *
                                                                         0.18,
                                                                     child: _selectedImages
                                                                             .isEmpty
                                                                         ? Center(
-                                                                            child: Text(
+                                                                            child:
+                                                                                Text(
                                                                             'No Image Selected',
-                                                                            style: GoogleFonts.poppins(
-                                                                                fontWeight:
-                                                                                    FontWeight.bold),
+                                                                            style:
+                                                                                GoogleFonts.poppins(fontWeight: FontWeight.bold),
                                                                             overflow:
-                                                                                TextOverflow
-                                                                                    .ellipsis,
+                                                                                TextOverflow.ellipsis,
                                                                           ))
                                                                         : Image.memory(
-                                                                            _selectedImages[
-                                                                                0]),
+                                                                            _selectedImages[0]),
                                                                   ),
                                                                   Column(
                                                                     children: [
                                                                       Padding(
-                                                                        padding:
-                                                                            const EdgeInsets
-                                                                                .only(
-                                                                                left:
-                                                                                    5.0,
-                                                                                bottom:
-                                                                                    1.0),
+                                                                        padding: const EdgeInsets
+                                                                            .only(
+                                                                            left:
+                                                                                5.0,
+                                                                            bottom:
+                                                                                1.0),
                                                                         child:
                                                                             ElevatedButton(
                                                                           onPressed:
                                                                               () async {
                                                                             FilePickerResult?
                                                                                 result =
-                                                                                await FilePicker
-                                                                                    .platform
-                                                                                    .pickFiles(
-                                                                              type: FileType
-                                                                                  .custom,
+                                                                                await FilePicker.platform.pickFiles(
+                                                                              type: FileType.custom,
                                                                               allowedExtensions: [
                                                                                 'jpg',
                                                                                 'jpeg',
@@ -7105,254 +6976,199 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                                 'gif'
                                                                               ],
                                                                             );
-                        
+
                                                                             if (result !=
                                                                                 null) {
                                                                               // setState(() {
                                                                               //   _filePickerResult =
                                                                               //       result;
                                                                               // });
-                                                                              List<Uint8List>
-                                                                                  fileBytesList =
-                                                                                  [];
-                        
-                                                                              for (PlatformFile file
-                                                                                  in result
-                                                                                      .files) {
-                                                                                Uint8List
-                                                                                    fileBytes =
-                                                                                    file.bytes!;
-                                                                                fileBytesList
-                                                                                    .add(fileBytes);
+                                                                              List<Uint8List> fileBytesList = [];
+
+                                                                              for (PlatformFile file in result.files) {
+                                                                                Uint8List fileBytes = file.bytes!;
+                                                                                fileBytesList.add(fileBytes);
                                                                               }
-                        
-                                                                              setState(
-                                                                                  () {
-                                                                                _selectedImages
-                                                                                    .addAll(fileBytesList);
+
+                                                                              setState(() {
+                                                                                _selectedImages.addAll(fileBytesList);
                                                                               });
-                        
+
                                                                               // print(_selectedImages);
                                                                             } else {
                                                                               // User canceled the picker
-                                                                              print(
-                                                                                  'File picking canceled by the user.');
+                                                                              print('File picking canceled by the user.');
                                                                             }
                                                                           },
-                                                                          style: ElevatedButton
-                                                                              .styleFrom(
+                                                                          style:
+                                                                              ElevatedButton.styleFrom(
                                                                             foregroundColor:
-                                                                                Colors
-                                                                                    .black,
+                                                                                Colors.black,
                                                                             backgroundColor:
-                                                                                Colors
-                                                                                    .white,
-                                                                            fixedSize: Size(
-                                                                                buttonWidth,
-                                                                                buttonHeight),
+                                                                                Colors.white,
+                                                                            fixedSize:
+                                                                                Size(buttonWidth, buttonHeight),
                                                                             shape:
                                                                                 RoundedRectangleBorder(
-                                                                              borderRadius:
-                                                                                  BorderRadius.circular(
-                                                                                      0),
+                                                                              borderRadius: BorderRadius.circular(0),
                                                                             ),
                                                                             side:
                                                                                 const BorderSide(
-                                                                              color: Colors
-                                                                                  .black,
+                                                                              color: Colors.black,
                                                                             ),
                                                                           ),
-                                                                          child: Text(
+                                                                          child:
+                                                                              Text(
                                                                             'Add',
-                                                                            style: GoogleFonts.poppins(
-                                                                                fontSize: screenWidth <
-                                                                                        1030
-                                                                                    ? 11.0
-                                                                                    : 13.0),
+                                                                            style:
+                                                                                GoogleFonts.poppins(fontSize: screenWidth < 1030 ? 11.0 : 13.0),
                                                                           ),
                                                                         ),
                                                                       ),
                                                                       Padding(
-                                                                        padding:
-                                                                            const EdgeInsets
-                                                                                .only(
-                                                                                left:
-                                                                                    5.0,
-                                                                                bottom:
-                                                                                    1.0),
+                                                                        padding: const EdgeInsets
+                                                                            .only(
+                                                                            left:
+                                                                                5.0,
+                                                                            bottom:
+                                                                                1.0),
                                                                         child:
                                                                             ElevatedButton(
                                                                           onPressed:
                                                                               () {},
-                                                                          style: ElevatedButton
-                                                                              .styleFrom(
+                                                                          style:
+                                                                              ElevatedButton.styleFrom(
                                                                             foregroundColor:
-                                                                                Colors
-                                                                                    .black,
+                                                                                Colors.black,
                                                                             backgroundColor:
-                                                                                Colors
-                                                                                    .white,
-                                                                            fixedSize: Size(
-                                                                                buttonWidth,
-                                                                                buttonHeight),
+                                                                                Colors.white,
+                                                                            fixedSize:
+                                                                                Size(buttonWidth, buttonHeight),
                                                                             shape:
                                                                                 RoundedRectangleBorder(
-                                                                              borderRadius:
-                                                                                  BorderRadius.circular(
-                                                                                      0),
+                                                                              borderRadius: BorderRadius.circular(0),
                                                                             ),
                                                                             side:
                                                                                 const BorderSide(
-                                                                              color: Colors
-                                                                                  .black,
+                                                                              color: Colors.black,
                                                                             ),
                                                                           ),
-                                                                          child: Center(
-                                                                            child: Text(
+                                                                          child:
+                                                                              Center(
+                                                                            child:
+                                                                                Text(
                                                                               'Delete',
-                                                                              style: GoogleFonts.poppins(
-                                                                                  fontSize: screenWidth < 1030
-                                                                                      ? 11.0
-                                                                                      : 13.0),
-                                                                              overflow:
-                                                                                  TextOverflow
-                                                                                      .ellipsis,
+                                                                              style: GoogleFonts.poppins(fontSize: screenWidth < 1030 ? 11.0 : 13.0),
+                                                                              overflow: TextOverflow.ellipsis,
                                                                             ),
                                                                           ),
                                                                         ),
                                                                       ),
                                                                       Padding(
-                                                                        padding:
-                                                                            const EdgeInsets
-                                                                                .only(
-                                                                                left:
-                                                                                    5.0,
-                                                                                bottom:
-                                                                                    1.0),
+                                                                        padding: const EdgeInsets
+                                                                            .only(
+                                                                            left:
+                                                                                5.0,
+                                                                            bottom:
+                                                                                1.0),
                                                                         child:
                                                                             ElevatedButton(
                                                                           onPressed:
                                                                               () {},
-                                                                          style: ElevatedButton
-                                                                              .styleFrom(
+                                                                          style:
+                                                                              ElevatedButton.styleFrom(
                                                                             foregroundColor:
-                                                                                Colors
-                                                                                    .black,
+                                                                                Colors.black,
                                                                             backgroundColor:
-                                                                                Colors
-                                                                                    .white,
-                                                                            fixedSize: Size(
-                                                                                buttonWidth,
-                                                                                buttonHeight),
+                                                                                Colors.white,
+                                                                            fixedSize:
+                                                                                Size(buttonWidth, buttonHeight),
                                                                             shape:
                                                                                 RoundedRectangleBorder(
-                                                                              borderRadius:
-                                                                                  BorderRadius.circular(
-                                                                                      0),
+                                                                              borderRadius: BorderRadius.circular(0),
                                                                             ),
                                                                             side:
                                                                                 const BorderSide(
-                                                                              color: Colors
-                                                                                  .black,
+                                                                              color: Colors.black,
                                                                             ),
                                                                           ),
-                                                                          child: Text(
+                                                                          child:
+                                                                              Text(
                                                                             'Next',
-                                                                            style: GoogleFonts.poppins(
-                                                                                fontSize: screenWidth <
-                                                                                        1030
-                                                                                    ? 11.0
-                                                                                    : 13.0),
+                                                                            style:
+                                                                                GoogleFonts.poppins(fontSize: screenWidth < 1030 ? 11.0 : 13.0),
                                                                           ),
                                                                         ),
                                                                       ),
                                                                       Padding(
-                                                                        padding:
-                                                                            const EdgeInsets
-                                                                                .only(
-                                                                                left:
-                                                                                    5.0,
-                                                                                bottom:
-                                                                                    1.0),
+                                                                        padding: const EdgeInsets
+                                                                            .only(
+                                                                            left:
+                                                                                5.0,
+                                                                            bottom:
+                                                                                1.0),
                                                                         child:
                                                                             ElevatedButton(
                                                                           onPressed:
                                                                               () {},
-                                                                          style: ElevatedButton
-                                                                              .styleFrom(
+                                                                          style:
+                                                                              ElevatedButton.styleFrom(
                                                                             foregroundColor:
-                                                                                Colors
-                                                                                    .black,
+                                                                                Colors.black,
                                                                             backgroundColor:
-                                                                                Colors
-                                                                                    .white,
-                                                                            fixedSize: Size(
-                                                                                buttonWidth,
-                                                                                buttonHeight),
+                                                                                Colors.white,
+                                                                            fixedSize:
+                                                                                Size(buttonWidth, buttonHeight),
                                                                             shape:
                                                                                 RoundedRectangleBorder(
-                                                                              borderRadius:
-                                                                                  BorderRadius.circular(
-                                                                                      0),
+                                                                              borderRadius: BorderRadius.circular(0),
                                                                             ),
                                                                             side:
                                                                                 const BorderSide(
-                                                                              color: Colors
-                                                                                  .black,
+                                                                              color: Colors.black,
                                                                             ),
                                                                           ),
-                                                                          child: Text(
+                                                                          child:
+                                                                              Text(
                                                                             'Previous',
-                                                                            style: GoogleFonts.poppins(
-                                                                                fontSize: screenWidth <
-                                                                                        1030
-                                                                                    ? 11.0
-                                                                                    : 13.0),
+                                                                            style:
+                                                                                GoogleFonts.poppins(fontSize: screenWidth < 1030 ? 11.0 : 13.0),
                                                                           ),
                                                                         ),
                                                                       ),
                                                                       Padding(
-                                                                        padding:
-                                                                            const EdgeInsets
-                                                                                .only(
-                                                                                left:
-                                                                                    5.0,
-                                                                                bottom:
-                                                                                    1.0),
+                                                                        padding: const EdgeInsets
+                                                                            .only(
+                                                                            left:
+                                                                                5.0,
+                                                                            bottom:
+                                                                                1.0),
                                                                         child:
                                                                             ElevatedButton(
                                                                           onPressed:
                                                                               () {},
-                                                                          style: ElevatedButton
-                                                                              .styleFrom(
+                                                                          style:
+                                                                              ElevatedButton.styleFrom(
                                                                             foregroundColor:
-                                                                                Colors
-                                                                                    .black,
+                                                                                Colors.black,
                                                                             backgroundColor:
-                                                                                Colors
-                                                                                    .white,
-                                                                            fixedSize: Size(
-                                                                                buttonWidth,
-                                                                                buttonHeight),
+                                                                                Colors.white,
+                                                                            fixedSize:
+                                                                                Size(buttonWidth, buttonHeight),
                                                                             shape:
                                                                                 RoundedRectangleBorder(
-                                                                              borderRadius:
-                                                                                  BorderRadius.circular(
-                                                                                      0),
+                                                                              borderRadius: BorderRadius.circular(0),
                                                                             ),
                                                                             side:
                                                                                 const BorderSide(
-                                                                              color: Colors
-                                                                                  .black,
+                                                                              color: Colors.black,
                                                                             ),
                                                                           ),
-                                                                          child: Text(
+                                                                          child:
+                                                                              Text(
                                                                             'Zoom',
-                                                                            style: GoogleFonts.poppins(
-                                                                                fontSize: screenWidth <
-                                                                                        1030
-                                                                                    ? 11.0
-                                                                                    : 13.0),
+                                                                            style:
+                                                                                GoogleFonts.poppins(fontSize: screenWidth < 1030 ? 11.0 : 13.0),
                                                                           ),
                                                                         ),
                                                                       ),
@@ -7371,7 +7187,9 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                             ),
                                             Container(
                                               height: 60,
-                                              width: MediaQuery.of(context).size.width *
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
                                                   .88,
                                               decoration: const BoxDecoration(
                                                   border: Border(
@@ -7382,64 +7200,75 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                         color: Colors.black,
                                                       ),
                                                       left: BorderSide(
-                                                          color: Colors.black))),
+                                                          color:
+                                                              Colors.black))),
                                               child: Padding(
-                                                padding: const EdgeInsets.only(left: 4),
+                                                padding: const EdgeInsets.only(
+                                                    left: 4),
                                                 child: Row(
                                                   children: [
                                                     SizedBox(
-                                                      width: MediaQuery.of(context)
-                                                              .size
-                                                              .width *
-                                                          0.1,
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              0.1,
                                                       child: Text(
                                                         'Opening Stock (F7) :',
-                                                        style: GoogleFonts.poppins(
-                                                          fontWeight: FontWeight.bold,
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                          fontWeight:
+                                                              FontWeight.bold,
                                                           fontSize: 16,
-                                                          color:
-                                                              const Color(0xFF510986),
+                                                          color: const Color(
+                                                              0xFF510986),
                                                         ),
-                                                        overflow: TextOverflow.ellipsis,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
                                                       ),
                                                     ),
                                                     SizedBox(
-                                                      width: MediaQuery.of(context)
-                                                              .size
-                                                              .width *
-                                                          0.08,
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              0.08,
                                                       height: 40,
                                                       child: Container(
-                                                        decoration: BoxDecoration(
+                                                        decoration:
+                                                            BoxDecoration(
                                                           border: Border.all(),
                                                         ),
                                                         child:
                                                             DropdownButtonHideUnderline(
-                                                          child: DropdownButton<String>(
-                                                            value: selectedStock,
-                                                            underline: Container(),
+                                                          child: DropdownButton<
+                                                              String>(
+                                                            value:
+                                                                selectedStock,
+                                                            underline:
+                                                                Container(),
                                                             isExpanded: true,
-                                                            onChanged:
-                                                                (String? newValue) {
+                                                            onChanged: (String?
+                                                                newValue) {
                                                               setState(() {
                                                                 selectedStock =
                                                                     newValue!;
                                                               });
                                                             },
-                                                            items: stock
-                                                                .map((String value) {
+                                                            items: stock.map(
+                                                                (String value) {
                                                               return DropdownMenuItem<
                                                                   String>(
                                                                 value: value,
                                                                 child: Text(
                                                                   '  $value',
-                                                                  style: GoogleFonts
-                                                                      .poppins(
-                                                                          fontWeight:
-                                                                              FontWeight
-                                                                                  .bold),
-                                                                  overflow: TextOverflow
-                                                                      .ellipsis,
+                                                                  style: GoogleFonts.poppins(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold),
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
                                                                 ),
                                                               );
                                                             }).toList(),
@@ -7448,64 +7277,74 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                       ),
                                                     ),
                                                     SizedBox(
-                                                      width: MediaQuery.of(context)
-                                                              .size
-                                                              .width *
-                                                          .03,
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              .03,
                                                     ),
                                                     SizedBox(
-                                                      width: MediaQuery.of(context)
-                                                              .size
-                                                              .width *
-                                                          .1,
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              .1,
                                                       child: Text(
                                                         'Is Active :',
-                                                        style: GoogleFonts.poppins(
-                                                          fontWeight: FontWeight.bold,
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                          fontWeight:
+                                                              FontWeight.bold,
                                                           fontSize: 16,
-                                                          color:
-                                                              const Color(0xFF510986),
+                                                          color: const Color(
+                                                              0xFF510986),
                                                         ),
-                                                        overflow: TextOverflow.ellipsis,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
                                                       ),
                                                     ),
                                                     SizedBox(
-                                                      width: MediaQuery.of(context)
-                                                              .size
-                                                              .width *
-                                                          .08,
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              .08,
                                                       height: 40,
                                                       child: Container(
-                                                        decoration: BoxDecoration(
+                                                        decoration:
+                                                            BoxDecoration(
                                                           border: Border.all(),
                                                         ),
                                                         child:
                                                             DropdownButtonHideUnderline(
-                                                          child: DropdownButton<String>(
-                                                            value: selectedStatus,
-                                                            underline: Container(),
+                                                          child: DropdownButton<
+                                                              String>(
+                                                            value:
+                                                                selectedStatus,
+                                                            underline:
+                                                                Container(),
                                                             isExpanded: true,
-                                                            onChanged:
-                                                                (String? newValue) {
+                                                            onChanged: (String?
+                                                                newValue) {
                                                               setState(() {
                                                                 selectedStatus =
                                                                     newValue!;
                                                               });
                                                             },
-                                                            items: status
-                                                                .map((String value) {
+                                                            items: status.map(
+                                                                (String value) {
                                                               return DropdownMenuItem<
                                                                   String>(
                                                                 value: value,
                                                                 child: Text(
                                                                   '  $value',
-                                                                  style: GoogleFonts
-                                                                      .poppins(
-                                                                          fontWeight:
-                                                                              FontWeight
-                                                                                  .bold),
-                                                                  overflow: TextOverflow
-                                                                      .ellipsis,
+                                                                  style: GoogleFonts.poppins(
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold),
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
                                                                 ),
                                                               );
                                                             }).toList(),
@@ -7514,78 +7353,81 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                       ),
                                                     ),
                                                     SizedBox(
-                                                      width: MediaQuery.of(context)
-                                                              .size
-                                                              .width *
-                                                          .01,
+                                                      width:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              .01,
                                                     ),
                                                     Padding(
                                                       padding:
-                                                          const EdgeInsets.only(top: 8),
+                                                          const EdgeInsets.only(
+                                                              top: 8),
                                                       child: Row(
                                                         mainAxisAlignment:
-                                                            MainAxisAlignment.center,
+                                                            MainAxisAlignment
+                                                                .center,
                                                         children: [
                                                           ElevatedButton(
                                                             style: ElevatedButton.styleFrom(
                                                                 fixedSize: Size(
-                                                                    MediaQuery.of(
-                                                                                context)
+                                                                    MediaQuery.of(context)
                                                                             .size
                                                                             .width *
                                                                         .1,
                                                                     25),
-                                                                shape:
-                                                                    const BeveledRectangleBorder(
-                                                                        side: BorderSide(
-                                                                            color: Colors
-                                                                                .black,
-                                                                            width: .3)),
-                                                                backgroundColor: Colors
-                                                                    .yellow.shade100),
+                                                                shape: const BeveledRectangleBorder(
+                                                                    side: BorderSide(
+                                                                        color: Colors
+                                                                            .black,
+                                                                        width:
+                                                                            .3)),
+                                                                backgroundColor:
+                                                                    Colors
+                                                                        .yellow
+                                                                        .shade100),
                                                             onPressed: () {
                                                               if (selectedStock ==
                                                                   'Yes') {
                                                                 showDialog(
                                                                   barrierDismissible:
                                                                       false,
-                                                                  context: context,
-                                                                  builder: (BuildContext
-                                                                      context) {
+                                                                  context:
+                                                                      context,
+                                                                  builder:
+                                                                      (BuildContext
+                                                                          context) {
                                                                     return StatefulBuilder(
-                                                                      builder: (context,
-                                                                          setState) {
+                                                                      builder:
+                                                                          (context,
+                                                                              setState) {
                                                                         void
                                                                             updateTotals() {
-                                                                          setState(() {
+                                                                          setState(
+                                                                              () {
                                                                             calculateTotals();
                                                                           });
                                                                         }
-                        
+
                                                                         return AlertDialog(
                                                                           contentPadding:
-                                                                              EdgeInsets
-                                                                                  .zero,
+                                                                              EdgeInsets.zero,
                                                                           content:
                                                                               SizedBox(
-                                                                            height: 500,
-                                                                            width: 1000,
+                                                                            height:
+                                                                                500,
+                                                                            width:
+                                                                                1000,
                                                                             child:
                                                                                 Column(
                                                                               children: [
                                                                                 Container(
-                                                                                  width:
-                                                                                      1000,
-                                                                                  height:
-                                                                                      50,
-                                                                                  decoration:
-                                                                                      BoxDecoration(color: Colors.blue[600]),
-                                                                                  child:
-                                                                                      Padding(
-                                                                                    padding:
-                                                                                        const EdgeInsets.all(8.0),
-                                                                                    child:
-                                                                                        Row(
+                                                                                  width: 1000,
+                                                                                  height: 50,
+                                                                                  decoration: BoxDecoration(color: Colors.blue[600]),
+                                                                                  child: Padding(
+                                                                                    padding: const EdgeInsets.all(8.0),
+                                                                                    child: Row(
                                                                                       children: [
                                                                                         const SizedBox(),
                                                                                         const Spacer(),
@@ -7617,23 +7459,15 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                                     ),
                                                                                   ),
                                                                                 ),
-                                                                                const SizedBox(
-                                                                                    height:
-                                                                                        2),
+                                                                                const SizedBox(height: 2),
                                                                                 Container(
-                                                                                  alignment:
-                                                                                      Alignment.topCenter,
-                                                                                  width:
-                                                                                      990,
-                                                                                  height:
-                                                                                      350,
-                                                                                  decoration:
-                                                                                      BoxDecoration(
-                                                                                    border:
-                                                                                        Border.all(),
+                                                                                  alignment: Alignment.topCenter,
+                                                                                  width: 990,
+                                                                                  height: 350,
+                                                                                  decoration: BoxDecoration(
+                                                                                    border: Border.all(),
                                                                                   ),
-                                                                                  child:
-                                                                                      Column(
+                                                                                  child: Column(
                                                                                     children: [
                                                                                       Row(
                                                                                         children: [
@@ -7731,21 +7565,14 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                                     ],
                                                                                   ),
                                                                                 ),
-                                                                                const SizedBox(
-                                                                                    height:
-                                                                                        2),
+                                                                                const SizedBox(height: 2),
                                                                                 Container(
-                                                                                  width:
-                                                                                      990,
-                                                                                  height:
-                                                                                      50,
-                                                                                  decoration:
-                                                                                      BoxDecoration(
-                                                                                    border:
-                                                                                        Border.all(),
+                                                                                  width: 990,
+                                                                                  height: 50,
+                                                                                  decoration: BoxDecoration(
+                                                                                    border: Border.all(),
                                                                                   ),
-                                                                                  child:
-                                                                                      Row(
+                                                                                  child: Row(
                                                                                     children: [
                                                                                       SizedBox(
                                                                                         width: 200,
@@ -7768,9 +7595,7 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                                                     ],
                                                                                   ),
                                                                                 ),
-                                                                                const SizedBox(
-                                                                                    height:
-                                                                                        5),
+                                                                                const SizedBox(height: 5),
                                                                                 Row(
                                                                                   children: [
                                                                                     const SizedBox(),
@@ -7818,74 +7643,83 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                                                             },
                                                             child: Text(
                                                               'Save [F4]',
-                                                              style:
-                                                                  GoogleFonts.poppins(
-                                                                color: Colors.black,
+                                                              style: GoogleFonts
+                                                                  .poppins(
+                                                                color: Colors
+                                                                    .black,
                                                                 fontWeight:
-                                                                    FontWeight.bold,
+                                                                    FontWeight
+                                                                        .bold,
                                                               ),
                                                               overflow:
-                                                                  TextOverflow.ellipsis,
+                                                                  TextOverflow
+                                                                      .ellipsis,
                                                             ),
                                                           ),
                                                           SizedBox(
-                                                            width:
-                                                                MediaQuery.of(context)
-                                                                        .size
-                                                                        .width *
-                                                                    .002,
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                .002,
                                                           ),
                                                           ElevatedButton(
                                                             style: ElevatedButton.styleFrom(
                                                                 fixedSize: Size(
-                                                                    MediaQuery.of(
-                                                                                context)
+                                                                    MediaQuery.of(context)
                                                                             .size
                                                                             .width *
                                                                         .1,
                                                                     25),
-                                                                shape:
-                                                                    const BeveledRectangleBorder(
-                                                                        side: BorderSide(
-                                                                            color: Colors
-                                                                                .black,
-                                                                            width: .3)),
-                                                                backgroundColor: Colors
-                                                                    .yellow.shade100),
+                                                                shape: const BeveledRectangleBorder(
+                                                                    side: BorderSide(
+                                                                        color: Colors
+                                                                            .black,
+                                                                        width:
+                                                                            .3)),
+                                                                backgroundColor:
+                                                                    Colors
+                                                                        .yellow
+                                                                        .shade100),
                                                             onPressed: () {
-                                                              Navigator.of(context)
+                                                              Navigator.of(
+                                                                      context)
                                                                   .pushReplacement(
                                                                 MaterialPageRoute(
-                                                                  builder: (context) =>
-                                                                      const ItemHome(),
+                                                                  builder:
+                                                                      (context) =>
+                                                                          const ItemHome(),
                                                                 ),
                                                               );
                                                             },
                                                             child: Text(
                                                               'Cancel',
-                                                              style:
-                                                                  GoogleFonts.poppins(
-                                                                color: Colors.black,
+                                                              style: GoogleFonts
+                                                                  .poppins(
+                                                                color: Colors
+                                                                    .black,
                                                                 fontWeight:
-                                                                    FontWeight.bold,
+                                                                    FontWeight
+                                                                        .bold,
                                                               ),
                                                               overflow:
-                                                                  TextOverflow.ellipsis,
+                                                                  TextOverflow
+                                                                      .ellipsis,
                                                             ),
                                                           ),
                                                           SizedBox(
-                                                            width:
-                                                                MediaQuery.of(context)
-                                                                        .size
-                                                                        .width *
-                                                                    .002,
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                .002,
                                                           ),
                                                           SizedBox(
-                                                            width:
-                                                                MediaQuery.of(context)
-                                                                        .size
-                                                                        .width *
-                                                                    .002,
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                .002,
                                                           ),
                                                         ],
                                                       ),
@@ -8220,7 +8054,6 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
                   ),
                 ],
               ),
-           
             ),
           );
   }

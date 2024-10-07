@@ -301,9 +301,12 @@ class _SalesSummaryMyDesktopBodyState extends State<SalesSummaryMyDesktopBody> {
                                               ),
                                               child: SearchField(
                                                 suggestions: suggestionItems,
-                                                searchStyle: const TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.bold),
+                                                searchInputDecoration:
+                                                    SearchInputDecoration(
+                                                  searchStyle: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold),
+                                                ),
                                               ),
                                             ),
                                           ],

@@ -120,6 +120,7 @@ class _SePosReceiptNota4State extends State<SePosReceiptNota4> {
         orientation: pw.PageOrientation.portrait,
         build: (context) {
           return pw.Container(
+            // color: MaterialColor(primary, swatch),
             width: format.width,
             decoration: pw.BoxDecoration(
                 color: PdfColors.white,

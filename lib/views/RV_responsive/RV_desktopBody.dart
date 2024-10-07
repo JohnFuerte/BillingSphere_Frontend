@@ -78,7 +78,7 @@ class _DesktopBodyState extends State<RVDesktopBody> {
   @override
   void initState() {
     super.initState();
-    _focusNode.requestFocus(); // Request focus initially
+    _focusNode.requestFocus();
     _horizontalControllersGroup = LinkedScrollControllerGroup();
     _horizontalController1 = _horizontalControllersGroup.addAndGet();
     _horizontalController2 = _horizontalControllersGroup.addAndGet();
@@ -137,7 +137,6 @@ class _DesktopBodyState extends State<RVDesktopBody> {
   final TextEditingController _dateController = TextEditingController();
   final TextEditingController _narrationController = TextEditingController();
   final TextEditingController _searchController = TextEditingController();
-
   final TextEditingController _chequeNoController = TextEditingController();
   final TextEditingController _chequeDateController = TextEditingController();
   final TextEditingController _depositDateController = TextEditingController();
@@ -276,8 +275,11 @@ class _DesktopBodyState extends State<RVDesktopBody> {
       );
 
       setState(() {
-        suggestedLedger =
-            ledger.where((element) => element.status == 'Yes').toList();
+        suggestedLedger = ledger
+            .where((element) =>
+                element.status == 'Yes' &&
+                element.ledgerGroup == '662f984ba07ec73369c237c8')
+            .toList();
 
         selectedLedgerName =
             suggestedLedger.isNotEmpty ? suggestedLedger.first.id : null;

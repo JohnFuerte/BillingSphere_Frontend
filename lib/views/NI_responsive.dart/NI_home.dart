@@ -1204,7 +1204,7 @@ class _ItemHomeState extends State<ItemHome> {
                                                         2,
                                                         2,
                                                         1
-                                                      ][j], // Adjust flex as needed
+                                                      ][j],
                                                       child: Container(
                                                         padding:
                                                             const EdgeInsets
