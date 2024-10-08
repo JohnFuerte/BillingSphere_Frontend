@@ -389,9 +389,10 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                   double previousAmount =
                       double.tryParse(rowDataList[index].amount) ?? 0.0;
                   double amountDifference = enteredAmount - previousAmount;
-
+                  print("checking");
                   // Validate the amount
-                  if (enteredAmount <= dueAmount) {
+                  if (enteredAmount <= dueAmount &&
+                      (remainingAmount - amountDifference) >= 0) {
                     // If the amount is valid, update the amount and remaining
                     rowDataList[index].amount = value;
                     saveValues(rowDataList[index].toMap());
@@ -411,7 +412,6 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                       ));
                     }
                   } else {
-                    // Handle invalid amount case
                     showInvalidAmountDialog(context, dueAmount);
                   }
                 });

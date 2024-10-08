@@ -310,7 +310,7 @@ class _BarcodePrintDState extends State<BarcodePrintD> {
                                       const double stickerPricegap =
                                           0.08 * PdfPageFormat.cm;
                                       const double gapBetween2Sticker =
-                                          1.1 * PdfPageFormat.cm;
+                                          1.6 * PdfPageFormat.cm;
 
                                       // Calculate total height based on stickers and gaps
                                       double totalHeight = (pageHeight) + (gap);
