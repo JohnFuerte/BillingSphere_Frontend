@@ -75,7 +75,8 @@ class _BarcodePrintDState extends State<BarcodePrintD> {
   Future<Barcode> fetchBarcodeById(String id) async {
     try {
       final Barcode? barcode = await barcodeRepository.fetchBarcodeById(id);
-      print(barcode);
+      print(barcode?.id);
+      print(barcode?.barcode);
       if (barcode != null) {
         return barcode;
       } else {
@@ -285,6 +286,7 @@ class _BarcodePrintDState extends State<BarcodePrintD> {
                                       final barcode = await fetchBarcodeById(
                                           fectedItems[index].barcode);
                                       String barcodeData = barcode.barcode;
+                                      print("...........$barcodeData");
                                       final pdf = pw.Document();
 
                                       // Calculate dimensions in PDF points (1 inch = 72 points)
