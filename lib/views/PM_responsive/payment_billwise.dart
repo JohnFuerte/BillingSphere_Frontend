@@ -212,7 +212,7 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                             color: Colors.red,
                           ),
                         ),
-                        SizedBox(height: 20),
+                        SizedBox(height: 15),
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
@@ -391,8 +391,7 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                   double amountDifference = enteredAmount - previousAmount;
 
                   // Validate the amount
-                  if (enteredAmount <= dueAmount &&
-                      (remainingAmount - amountDifference) >= 0) {
+                  if (enteredAmount <= dueAmount) {
                     // If the amount is valid, update the amount and remaining
                     rowDataList[index].amount = value;
                     saveValues(rowDataList[index].toMap());
@@ -1353,8 +1352,87 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                                 if (widget.debitAmount == totalAmount) {
                                   widget.allValuesCallback(_allValuesBillwise);
                                   widget.onSave();
-
-                                  Navigator.of(context).pop();
+                                  Navigator.of(context)
+                                      .pop(); // Close dialog if amount is valid
+                                } else {
+                                  // Show a dialog if the amounts are not equal
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        contentPadding: EdgeInsets.zero,
+                                        shape: InputBorder.none,
+                                        content: Container(
+                                          width: 500,
+                                          height: 200,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: [
+                                              Container(
+                                                height: 40,
+                                                color: Colors.blue,
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  "Amount Error",
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                              SizedBox(height: 16),
+                                              Expanded(
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(
+                                                      10.0),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        "Total amount should be equal to debited account.",
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      SizedBox(height: 15),
+                                                      Align(
+                                                        alignment: Alignment
+                                                            .centerRight,
+                                                        child: TextButton(
+                                                          onPressed: () {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop(); // Close error dialog
+                                                          },
+                                                          child: Text(
+                                                            "OK",
+                                                            style: TextStyle(
+                                                              fontSize: 16,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color:
+                                                                  Colors.blue,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
                                 }
                               },
                               child: const Text(
