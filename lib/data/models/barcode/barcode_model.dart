@@ -4,6 +4,7 @@ import 'dart:convert';
 class Barcode {
   String id;
   String barcode;
+
   Barcode({
     required this.id,
     required this.barcode,
@@ -27,4 +28,10 @@ class Barcode {
 
   factory Barcode.fromJson(String source) =>
       Barcode.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  // Override the toString() method to print object data
+  @override
+  String toString() {
+    return 'Barcode(id: $id, barcode: $barcode)';
+  }
 }
