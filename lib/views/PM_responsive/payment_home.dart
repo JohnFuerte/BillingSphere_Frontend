@@ -1,4 +1,5 @@
 import 'package:billingsphere/data/models/payment/payment_model.dart';
+import 'package:billingsphere/views/PM_responsive/payment_edit.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -1076,7 +1077,18 @@ class _PaymentHomeState extends State<PaymentHome> {
                             BottomButtons(
                               title: 'Edit',
                               subtitle: 'F3',
-                              onPressed: () {},
+                              onPressed: selectedId != null
+                                  ? () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                PMMyPaymentDesktopBodyE(
+                                              id: selectedId ?? '',
+                                            ),
+                                          ));
+                                    }
+                                  : () {},
                             ),
                             BottomButtons(
                               title: 'XLS',

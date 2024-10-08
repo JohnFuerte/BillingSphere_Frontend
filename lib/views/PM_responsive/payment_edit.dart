@@ -2,6 +2,7 @@ import 'package:billingsphere/data/models/ledger/ledger_model.dart';
 import 'package:billingsphere/data/models/payment/payment_model.dart';
 import 'package:billingsphere/data/repository/ledger_repository.dart';
 import 'package:billingsphere/data/repository/payment_respository.dart';
+import 'package:billingsphere/helper/constants.dart';
 import 'package:billingsphere/views/PM_widgets/entries.dart';
 import 'package:billingsphere/views/PM_widgets/PM_desktopappbar.dart';
 import 'package:billingsphere/views/RA_widgets/RA_D_side_buttons.dart';
@@ -262,7 +263,7 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBodyE> {
             ),
           )
         : Scaffold(
-            backgroundColor: const Color.fromARGB(255, 215, 215, 215),
+            backgroundColor: white,
             body: SingleChildScrollView(
               child: Opacity(
                 opacity: isLoading ? 0.5 : 1,
