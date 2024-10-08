@@ -409,7 +409,7 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
                 _allValuesBillwise.add(newValue);
               }
             }
-            print('Updated _allValuesBillwise: $_allValuesBillwise');
+            // print('Updated _allValuesBillwise: $_allValuesBillwise');
           });
         },
         onSave: onSave,
@@ -457,8 +457,6 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
       if (totalDebitAmount <= 0 ||
           totalCreditAmount <= 0 ||
           totalDebitAmount != totalCreditAmount) {
-        print(totalCreditAmount);
-        print(totalDebitAmount);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
@@ -575,10 +573,10 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
           Ledger? ledger = await ledgerServices.fetchLedgerById(ledgerId);
           if (ledger != null) {
             if (type == 'Dr') {
-              ledger.debitBalance -= double.parse(debit);
+              ledger.debitBalance += double.parse(debit);
               ledgerServices.updateLedger2(ledger, context);
             } else if (type == 'Cr') {
-              ledger.debitBalance += double.parse(credit);
+              ledger.debitBalance -= double.parse(credit);
               ledgerServices.updateLedger2(ledger, context);
             } else {
               print('Error: Unable to update Ledger.');
@@ -753,7 +751,6 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
                 }
               });
             },
-            //as
             items: (rowDataList[index].type == 'Cr'
                     ? suggestedLedger
                         .where((ledger) => [
@@ -829,19 +826,27 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
                 rowDataList[index].debit = value;
                 saveValues(rowDataList[index].toMap());
                 calculateTotalDebitAmount();
-                openDialog1(
-                  context,
-                  rowDataList[index].ledger ?? '',
-                  suggestedLedger
-                      .firstWhere(
-                          (element) => element.id == rowDataList[index].ledger)
-                      .name,
-                  double.tryParse(rowDataList[index].debit) ?? 0.0,
-                  () {
-                    addNewRowCr();
-                    _searchController.clear();
-                  },
+
+                final selectedLedger = suggestedLedger.firstWhere(
+                  (element) => element.id == rowDataList[index].ledger,
                 );
+
+                // Check if the selected ledger exists and bilwiseAccounting is "Yes"
+                if (selectedLedger.bilwiseAccounting == "Yes") {
+                  openDialog1(
+                    context,
+                    rowDataList[index].ledger ?? '',
+                    selectedLedger.name,
+                    double.tryParse(rowDataList[index].debit) ?? 0.0,
+                    () {
+                      addNewRowCr();
+                      _searchController.clear();
+                    },
+                  );
+                } else {
+                  addNewRowCr();
+                  _searchController.clear();
+                }
               });
             },
             style: GoogleFonts.poppins(fontWeight: FontWeight.w600),

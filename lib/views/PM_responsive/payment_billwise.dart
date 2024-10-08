@@ -148,8 +148,10 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
   }
 
   void updatetotalAmount() {
+    print("Enter");
     totalAmount = rowDataList.fold(
         0.0, (sum, row) => sum + (double.tryParse(row.amount) ?? 0.0));
+    print("Exit");
 
     // double totalEnteredAmount = _allValues.fold(
     //   0.0,
@@ -158,6 +160,85 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
     // setState(() {
     //   remainingAmount = widget.totalamount - totalEnteredAmount;
     // });
+  }
+
+  void showInvalidAmountDialog(BuildContext context, double dueAmount) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          contentPadding: EdgeInsets.zero,
+          shape: InputBorder.none,
+          content: Container(
+            width: 500,
+            height: 200,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(0)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  height: 40,
+                  color: Colors.blue,
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Billing Sphere",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 16),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Pending amount of this bill is: $dueAmount",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          "Please enter an amount less than or equal to $dueAmount.",
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.red,
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: Text(
+                              "OK",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -332,7 +413,7 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                     }
                   } else {
                     // Handle invalid amount case
-                    print('Invalid amount entered');
+                    showInvalidAmountDialog(context, dueAmount);
                   }
                 });
               },
@@ -614,9 +695,8 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
 
                       //Buttons
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(),
-                          const Spacer(),
                           SizedBox(
                             width: 150,
                             child: ElevatedButton(
@@ -632,10 +712,16 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                                 ),
                               ),
                               onPressed: () {
-                                widget.allValuesCallback(_allValuesBillwise);
-                                widget.onSave();
+                                setState(() {
+                                  updatetotalAmount();
+                                });
+                                print(totalAmount);
+                                if (widget.debitAmount == totalAmount) {
+                                  widget.allValuesCallback(_allValuesBillwise);
+                                  widget.onSave();
 
-                                Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                }
                               },
                               child: const Text(
                                 "Save",
@@ -667,8 +753,6 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                               ),
                             ),
                           ),
-                          const Spacer(),
-                          const SizedBox(),
                         ],
                       ),
                       const SizedBox(height: 5),
@@ -1249,9 +1333,8 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
 
                       //Buttons
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(),
-                          const Spacer(),
                           SizedBox(
                             width: 150,
                             child: ElevatedButton(
@@ -1267,10 +1350,12 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                                 ),
                               ),
                               onPressed: () {
-                                widget.allValuesCallback(_allValuesBillwise);
-                                widget.onSave();
+                                if (widget.debitAmount == totalAmount) {
+                                  widget.allValuesCallback(_allValuesBillwise);
+                                  widget.onSave();
 
-                                Navigator.of(context).pop();
+                                  Navigator.of(context).pop();
+                                }
                               },
                               child: const Text(
                                 "Save",
@@ -1302,8 +1387,6 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                               ),
                             ),
                           ),
-                          const Spacer(),
-                          const SizedBox(),
                         ],
                       ),
                       const SizedBox(height: 5),

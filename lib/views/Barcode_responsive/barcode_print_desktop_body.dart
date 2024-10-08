@@ -75,6 +75,7 @@ class _BarcodePrintDState extends State<BarcodePrintD> {
   Future<Barcode> fetchBarcodeById(String id) async {
     try {
       final Barcode? barcode = await barcodeRepository.fetchBarcodeById(id);
+      print(barcode);
       if (barcode != null) {
         return barcode;
       } else {
@@ -309,7 +310,7 @@ class _BarcodePrintDState extends State<BarcodePrintD> {
                                       const double stickerPricegap =
                                           0.08 * PdfPageFormat.cm;
                                       const double gapBetween2Sticker =
-                                          0.9 * PdfPageFormat.cm;
+                                          1.1 * PdfPageFormat.cm;
 
                                       // Calculate total height based on stickers and gaps
                                       double totalHeight = (pageHeight) + (gap);
