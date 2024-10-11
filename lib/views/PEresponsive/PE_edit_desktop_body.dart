@@ -566,7 +566,11 @@ class _PurchaseEditDState extends State<PurchaseEditD> {
 
     print(purchaseData);
 
-    await purchaseServices.updatePurchase(purchaseData, context).then((value) {
+    await purchaseServices
+        .updatePurchase(
+      purchaseData,
+    )
+        .then((value) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (context) => const PEMasterBody(),

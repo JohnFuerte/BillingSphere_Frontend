@@ -171,7 +171,9 @@ class PurchaseServices {
     }
   }
 
-  Future<void> updatePurchase(Purchase purchase, BuildContext context) async {
+  Future<void> updatePurchase(
+    Purchase purchase,
+  ) async {
     String? token = await getToken();
 
     // Convert the updated ledger object to a map
@@ -190,7 +192,6 @@ class PurchaseServices {
     print(responseData);
 
     if (responseData['success'] == true) {
-      // Give me FlutterToast
       Fluttertoast.showToast(
         msg: "Purchase updated successfully!",
         toastLength: Toast.LENGTH_SHORT,

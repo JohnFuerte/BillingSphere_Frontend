@@ -176,60 +176,40 @@ class PaymentService {
     }
   }
 
-  // Future<void> updatePayment(
-  //     Payment updatedPayment, BuildContext context) async {
-  //   try {
-  //     String? token = await getToken();
-  //     final response = await http.put(
-  //       Uri.parse(
-  //           '${Constants.baseUrl}/payment/update/${updatedPayment.id}'), // Replace with your API endpoint
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //         'Authorization': '$token',
-  //       },
-  //       body: jsonEncode(
-  //           updatedPayment.toMap()), // Convert Payment object to JSON
-  //     );
-  //     if (response.statusCode == 200) {
-  //       Navigator.of(context).pushReplacement(
-  //         MaterialPageRoute(
-  //           builder: (context) => const PaymentHome(),
-  //         ),
-  //       );
-  //       print('Payment updated successfully');
-  //     } else {
-  //       // Failed to update payment
-  //       print('Failed to update payment: ${response.reasonPhrase}');
-  //     }
-  //   } catch (error) {
-  //     // Error updating payment
-  //     print('Error updating payment: $error');
-  //   }
-  // }
+  Future<void> updatePayment(
+      Payment updatedPayment, BuildContext context, String id) async {
+    try {
+      print("updating payment");
+      String? token = await getToken();
+      final response = await http.put(
+        Uri.parse('${Constants.baseUrl}/payment/update/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': '$token',
+        },
+        body: jsonEncode(updatedPayment.toJson()),
+      );
+      if (response.statusCode == 200) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const PaymentHome(),
+          ),
+        );
+        print('Payment updated successfully');
+      } else {
+        // Failed to update payment
+        print('Failed to update payment: ${response.reasonPhrase}');
+      }
+    } catch (error) {
+      // Error updating payment
+      print('Error updating payment: $error');
+    }
+  }
 
   Future<void> deletePayment(String paymentId, BuildContext context) async {
     try {
+      print(paymentId);
       String? token = await getToken();
-
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return const Dialog(
-            child: Padding(
-              padding: EdgeInsets.all(20.0),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(width: 20),
-                  Text("Deleting Payment..."),
-                ],
-              ),
-            ),
-          );
-        },
-      );
 
       final response = await http.delete(
         Uri.parse('${Constants.baseUrl}/payment/delete/$paymentId'),
@@ -242,19 +222,41 @@ class PaymentService {
       final responseData = json.decode(response.body);
 
       if (responseData['success'] == true) {
-        Navigator.of(context).pop(); // Close loading dialog
+        Navigator.of(context).pop();
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => const PaymentHome(),
           ),
         );
+
+        // Show success toast
+        Fluttertoast.showToast(
+          msg: 'Payment deleted successfully',
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+        );
       } else {
         Navigator.of(context).pop();
         print('Failed to delete payment: ${responseData['message']}');
+
+        // Show error toast
+        Fluttertoast.showToast(
+          msg: 'Failed to delete payment: ${responseData['message']}',
+          toastLength: Toast.LENGTH_LONG,
+          gravity: ToastGravity.BOTTOM,
+        );
       }
     } catch (error) {
-      Navigator.of(context).pop(); // Close loading dialog
+      Navigator.of(context).pop();
+
       print('Error deleting payment: $error');
+
+      // Show error toast for unexpected errors
+      Fluttertoast.showToast(
+        msg: 'Error deleting payment: $error',
+        toastLength: Toast.LENGTH_LONG,
+        gravity: ToastGravity.BOTTOM,
+      );
     }
   }
 }

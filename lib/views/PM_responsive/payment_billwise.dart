@@ -1,4 +1,6 @@
+import 'package:billingsphere/data/models/payment/payment_model.dart';
 import 'package:billingsphere/data/models/purchase/purchase_model.dart';
+import 'package:billingsphere/data/repository/payment_respository.dart';
 import 'package:billingsphere/data/repository/purchase_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -16,12 +18,15 @@ class PaymentBillwise extends StatefulWidget {
     required this.debitAmount,
     required this.allValuesCallback,
     required this.onSave,
+    this.paymentID,
   });
+
   final String ledgerID;
   final String ledgerName;
   final double debitAmount;
   final Function(List<Map<String, dynamic>>) allValuesCallback;
   final VoidCallback onSave;
+  final String? paymentID; // Declare it as nullable
 
   @override
   State<PaymentBillwise> createState() => _ChequeReturnEntryState();
@@ -65,7 +70,7 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
     ' New Ref.',
     ' On Account'
   ];
-  String selectedTypeOfRef = '';
+  String selectedTypeOfRef = ' Against Ref.';
   bool isLoading = false;
   String? selectedPurchase;
 
@@ -81,28 +86,13 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
   late LinkedScrollControllerGroup _horizontalControllersGroup;
 
   PurchaseServices purchaseServices = PurchaseServices();
+  PaymentService paymentService = PaymentService();
   LedgerService ledgerService = LedgerService();
 
   List<Purchase> filteredPurchase = [];
   List<RowData> rowDataList = [];
   final List<Map<String, dynamic>> _allValuesBillwise = [];
   double totalAmount = 0.00;
-
-  Future<void> getPurchase() async {
-    final purchase = await purchaseServices.getPurchase();
-    setState(() {
-      filteredPurchase = purchase
-          .where(
-            (element) =>
-                element.ledger == widget.ledgerID &&
-                element.type == 'Debit' &&
-                element.dueAmount != '0',
-          )
-          .toList();
-    });
-
-    print('filteredPurchase $filteredPurchase');
-  }
 
   @override
   void initState() {
@@ -118,6 +108,61 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
   }
 
   String formattedDate = DateFormat('dd/MM/yyyy').format(DateTime.now());
+
+  Future<void> getPurchase() async {
+    final purchase = await purchaseServices.getPurchase();
+    setState(() {
+      filteredPurchase = purchase
+          .where(
+            (element) =>
+                element.ledger == widget.ledgerID && element.type == 'Debit',
+          )
+          .toList();
+    });
+
+    if (widget.paymentID != null) {
+      fetchAndSetPayment();
+    }
+
+    print(
+        'Filtered Purchase List: ${filteredPurchase.map((p) => p.id).toList()}');
+  }
+
+  Future<void> fetchAndSetPayment() async {
+    try {
+      if (widget.paymentID != null) {
+        final Payment? payment =
+            await paymentService.fetchPaymentById(widget.paymentID!);
+
+        rowDataList.clear();
+
+        if (payment != null) {
+          for (var bill in payment.billwise) {
+            RowData rowData = RowData(
+              selectedTypeOfRef: ' Against Ref.',
+              selectedPurchase: bill.purchase,
+              billno: bill.billNo,
+              date: bill.date,
+              amount: bill.amount.toString(),
+              dateController: TextEditingController(text: bill.date),
+              amountController:
+                  TextEditingController(text: bill.amount.toString()),
+            );
+
+            rowData.uniqueKey = const Uuid().v4();
+
+            rowDataList.add(rowData);
+            saveValues(rowData.toMap());
+          }
+          setState(() {});
+        }
+      } else {
+        print('No paymentID provided.');
+      }
+    } catch (error) {
+      print('Failed to fetch payment: $error');
+    }
+  }
 
   void addNewRow() {
     rowDataList.add(RowData(
@@ -148,18 +193,203 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
   }
 
   void updatetotalAmount() {
-    print("Enter");
-    totalAmount = rowDataList.fold(
-        0.0, (sum, row) => sum + (double.tryParse(row.amount) ?? 0.0));
-    print("Exit");
+    totalAmount = rowDataList.fold(0.0, (sum, row) {
+      double amount = double.tryParse(row.amount) ?? 0.0;
+      return sum + amount;
+    });
+  }
 
-    // double totalEnteredAmount = _allValues.fold(
-    //   0.0,
-    //   (sum, entry) => sum + double.tryParse(entry['amount'])!,
-    // );
-    // setState(() {
-    //   remainingAmount = widget.totalamount - totalEnteredAmount;
-    // });
+  Widget _buildRow(int index) {
+    print('Building Row $index: ${rowDataList[index].toMap()}');
+
+    String? selectedPurchaseId = rowDataList[index].selectedPurchase;
+
+    List<Purchase> availablePurchase = filteredPurchase.where((purchase) {
+      bool isSelectedPurchase = purchase.id == selectedPurchaseId;
+      bool hasDueAmount = purchase.dueAmount != null &&
+          (double.tryParse(purchase.dueAmount.toString()) ?? 0.0) > 0.0;
+
+      return hasDueAmount || isSelectedPurchase;
+    }).toList();
+
+    print('Row $index: selectedPurchase = $selectedPurchaseId');
+    print('Filtered Purchases: ${filteredPurchase.map((p) => p.id).toList()}');
+    print(
+        'Available Purchases: ${availablePurchase.map((p) => p.id).toList()}');
+
+    if (selectedPurchaseId != null &&
+        !availablePurchase
+            .any((purchase) => purchase.id == selectedPurchaseId)) {
+      print('Resetting selectedPurchase for row $index');
+      rowDataList[index].selectedPurchase = null;
+    }
+
+    return Row(
+      children: [
+        // Type of Reference Dropdown
+        Padding(
+          padding: const EdgeInsets.only(left: 10.0),
+          child: Container(
+            decoration: BoxDecoration(border: Border.all()),
+            width: 170,
+            height: 40,
+            alignment: Alignment.centerLeft,
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                isExpanded: true,
+                value: rowDataList[index].selectedTypeOfRef,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    rowDataList[index].selectedTypeOfRef = newValue!;
+                  });
+                },
+                items: typesofReference.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: Text(value),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+
+        Container(
+          width: 364,
+          height: 40,
+          decoration: BoxDecoration(border: Border.all()),
+          child: SearchableDropDown(
+            controller: searchController,
+            value: selectedPurchaseId,
+            onChanged: (String? newValue) {
+              setState(() {
+                rowDataList[index].selectedPurchase = newValue;
+
+                if (newValue != null) {
+                  var selectedPurchaseItem = availablePurchase.firstWhere(
+                    (purchase) => purchase.id == newValue,
+                  );
+
+                  rowDataList[index].billno = selectedPurchaseItem.billNumber;
+                }
+              });
+            },
+            items: availablePurchase.map((Purchase purchase) {
+              return DropdownMenuItem<String>(
+                value: purchase.id,
+                child: Padding(
+                  padding: const EdgeInsets.all(2.0),
+                  child: Row(
+                    children: [
+                      Text('${purchase.date} RP# ${purchase.billNumber}'),
+                      const Spacer(),
+                      Text(
+                          double.parse(purchase.dueAmount!).toStringAsFixed(2)),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+            searchMatchFn: (item, searchValue) {
+              final itemMLimit = availablePurchase
+                  .firstWhere((e) => e.id == item.value)
+                  .billNumber;
+              return itemMLimit
+                  .toLowerCase()
+                  .contains(searchValue.toLowerCase());
+            },
+          ),
+        ),
+        const SizedBox(width: 10),
+
+        // Date Input
+        Container(
+          width: 150,
+          height: 40,
+          decoration: BoxDecoration(border: Border.all()),
+          child: TextFormField(
+            controller: rowDataList[index].dateController,
+            onChanged: (value) {
+              setState(() {
+                rowDataList[index].date = value;
+              });
+            },
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+
+        const SizedBox(width: 10),
+
+        Padding(
+          padding: const EdgeInsets.only(right: 10.0),
+          child: Container(
+            width: 190,
+            height: 40,
+            decoration: BoxDecoration(border: Border.all()),
+            alignment: Alignment.center,
+            child: TextFormField(
+              controller: rowDataList[index].amountController,
+              onFieldSubmitted: (value) {
+                setState(() {
+                  double enteredAmount = double.tryParse(value) ?? 0.0;
+                  String formattedEnteredAmount =
+                      enteredAmount.toStringAsFixed(2);
+
+                  double dueAmount = double.tryParse(availablePurchase
+                          .firstWhere((purchase) =>
+                              purchase.id ==
+                              rowDataList[index].selectedPurchase)
+                          .dueAmount!) ??
+                      0.0;
+                  String formattedDueAmount = dueAmount.toStringAsFixed(2);
+
+                  double previousAmount =
+                      double.tryParse(rowDataList[index].amount) ?? 0.0;
+                  String formattedPreviousAmount =
+                      previousAmount.toStringAsFixed(2);
+
+                  double amountDifference = enteredAmount - previousAmount;
+
+                  if (enteredAmount <= dueAmount) {
+                    rowDataList[index].amount = formattedEnteredAmount;
+
+                    rowDataList[index].amountController.text =
+                        formattedEnteredAmount;
+                    saveValues(rowDataList[index].toMap());
+
+                    remainingAmount -=
+                        double.tryParse(formattedPreviousAmount) ?? 0.0;
+                    updatetotalAmount();
+
+                    if ((remainingAmount - amountDifference) > 0) {
+                      addNewRow();
+                    }
+                  } else {
+                    showInvalidAmountDialog(
+                        context, double.tryParse(formattedDueAmount) ?? 0.0);
+                  }
+                });
+              },
+              style: const TextStyle(
+                color: Colors.black,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.right,
+            ),
+          ),
+        ),
+      ],
+    );
   }
 
   void showInvalidAmountDialog(BuildContext context, double dueAmount) {
@@ -198,7 +428,7 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Pending amount of this bill is: $dueAmount",
+                          "Pending amount of this bill is: ${dueAmount.toStringAsFixed(2)}",
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -206,7 +436,7 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                         ),
                         SizedBox(height: 10),
                         Text(
-                          "Please enter an amount less than or equal to $dueAmount.",
+                          "Please enter an amount less than or equal to ${dueAmount.toStringAsFixed(2)}.",
                           style: TextStyle(
                             fontSize: 16,
                             color: Colors.red,
@@ -255,178 +485,6 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
     _horizontalController2.dispose();
 
     super.dispose();
-  }
-
-  Widget _buildRow(int index) {
-    // Filter available sales to exclude already selected sales
-    List<Purchase> availablePurchase = filteredPurchase.where((purchase) {
-      return !_allValuesBillwise
-              .any((entry) => entry['selectedPurchase'] == purchase.id) ||
-          purchase.id == rowDataList[index].selectedPurchase;
-    }).toList();
-    return Row(
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(left: 10.0),
-          child: Container(
-            decoration: BoxDecoration(border: Border.all()),
-            width: 170,
-            height: 40,
-            alignment: Alignment.centerLeft,
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                isExpanded: true,
-                value: rowDataList[index].selectedTypeOfRef,
-                underline: Container(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    rowDataList[index].selectedTypeOfRef = newValue!;
-                  });
-                },
-                items: typesofReference.map((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Padding(
-                      padding: const EdgeInsets.all(2.0),
-                      child: Text(value),
-                    ),
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(
-          width: 10,
-        ),
-        Container(
-          width: 364,
-          height: 40,
-          decoration: BoxDecoration(border: Border.all()),
-          child: SearchableDropDown(
-            controller: searchController,
-            searchController: searchController,
-            value: rowDataList[index].selectedPurchase,
-            onChanged: (String? newValue) {
-              setState(() {
-                rowDataList[index].selectedPurchase = newValue;
-                // Assign billno here
-                rowDataList[index].billno = availablePurchase
-                    .firstWhere((purchase) => purchase.id == newValue)
-                    .billNumber;
-              });
-            },
-            items: availablePurchase.map((Purchase purchase) {
-              return DropdownMenuItem<String>(
-                value: purchase.id,
-                child: Padding(
-                  padding: const EdgeInsets.all(2.0),
-                  child: Row(
-                    children: [
-                      Text('${purchase.date} RP# ${purchase.billNumber}'),
-                      const Spacer(),
-                      Text(
-                          double.parse(purchase.dueAmount!).toStringAsFixed(2)),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-            searchMatchFn: (item, searchValue) {
-              final itemMLimit = availablePurchase
-                  .firstWhere((e) => e.id == item.value)
-                  .billNumber;
-              return itemMLimit
-                  .toLowerCase()
-                  .contains(searchValue.toLowerCase());
-            },
-          ),
-        ),
-        const SizedBox(
-          width: 10,
-        ),
-        Container(
-          width: 150,
-          height: 40,
-          decoration: BoxDecoration(border: Border.all()),
-          child: TextFormField(
-            controller: rowDataList[index].dateController,
-            onChanged: (value) {
-              setState(() {
-                rowDataList[index].date = value;
-              });
-            },
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ),
-        const SizedBox(
-          width: 10,
-        ),
-        Padding(
-          padding: const EdgeInsets.only(right: 10.0),
-          child: Container(
-            width: 190,
-            height: 40,
-            decoration: BoxDecoration(border: Border.all()),
-            alignment: Alignment.center,
-            child: TextFormField(
-              controller: rowDataList[index].amountController,
-              onFieldSubmitted: (value) {
-                setState(() {
-                  double enteredAmount = double.tryParse(value) ?? 0.0;
-                  double dueAmount = double.tryParse(availablePurchase
-                          .firstWhere((purchase) =>
-                              purchase.id ==
-                              rowDataList[index].selectedPurchase)
-                          .dueAmount!) ??
-                      0.0;
-
-                  double previousAmount =
-                      double.tryParse(rowDataList[index].amount) ?? 0.0;
-                  double amountDifference = enteredAmount - previousAmount;
-                  print("checking");
-                  // Validate the amount
-                  if (enteredAmount <= dueAmount &&
-                      (remainingAmount - amountDifference) >= 0) {
-                    // If the amount is valid, update the amount and remaining
-                    rowDataList[index].amount = value;
-                    saveValues(rowDataList[index].toMap());
-                    remainingAmount -= amountDifference;
-                    updatetotalAmount();
-                    // Add a new row with default values if remainingAmount > 0
-                    if (remainingAmount > 0) {
-                      rowDataList.add(RowData(
-                        selectedTypeOfRef: '',
-                        selectedPurchase: null,
-                        billno: '',
-                        date: formattedDate,
-                        amount: '',
-                        dateController:
-                            TextEditingController(text: formattedDate),
-                        amountController: TextEditingController(),
-                      ));
-                    }
-                  } else {
-                    showInvalidAmountDialog(context, dueAmount);
-                  }
-                });
-              },
-              style: const TextStyle(
-                color: Colors.black,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-              textAlign: TextAlign.right,
-            ),
-          ),
-        ),
-      ],
-    );
   }
 
   @override
@@ -716,6 +774,7 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                                 });
                                 print(totalAmount);
                                 if (widget.debitAmount == totalAmount) {
+                                  print(_allValuesBillwise);
                                   widget.allValuesCallback(_allValuesBillwise);
                                   widget.onSave();
 
@@ -1352,8 +1411,7 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                                 if (widget.debitAmount == totalAmount) {
                                   widget.allValuesCallback(_allValuesBillwise);
                                   widget.onSave();
-                                  Navigator.of(context)
-                                      .pop(); // Close dialog if amount is valid
+                                  Navigator.of(context).pop();
                                 } else {
                                   // Show a dialog if the amounts are not equal
                                   showDialog(

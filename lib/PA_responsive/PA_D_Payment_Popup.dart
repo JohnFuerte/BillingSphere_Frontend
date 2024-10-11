@@ -213,7 +213,9 @@ class _ChequeReturnEntryState extends State<PaymentPopUpFormPA> {
             if (dueAmount != null) {
               dueAmount -= adjustmentAmount;
               purchase.dueAmount = dueAmount.toString();
-              await purchaseService.updatePurchase(purchase, context);
+              await purchaseService.updatePurchase(
+                purchase,
+              );
             } else {
               // Handle the case when the conversion from String to double fails
               print('Error: Unable to parse dueAmount.');
@@ -229,7 +231,9 @@ class _ChequeReturnEntryState extends State<PaymentPopUpFormPA> {
 
         if (ledger != null) {
           ledger.debitBalance -= totalAdjustmentAmount;
-          await ledgerService.updateLedger2(ledger, context);
+          await ledgerService.updateLedger2(
+            ledger,
+          );
         } else {
           // Handle the case when the conversion from String to double fails
           print('Error: Unable to update Ledger.');
@@ -238,7 +242,9 @@ class _ChequeReturnEntryState extends State<PaymentPopUpFormPA> {
 
         if (ledger2 != null) {
           ledger2.debitBalance += totalAdjustmentAmount;
-          await ledgerService.updateLedger2(ledger2, context);
+          await ledgerService.updateLedger2(
+            ledger2,
+          );
         } else {
           // Handle the case when the conversion from String to double fails
           print('Error: Unable to update Ledger.');

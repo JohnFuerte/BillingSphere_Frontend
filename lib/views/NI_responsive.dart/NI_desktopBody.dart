@@ -109,7 +109,7 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
       itemBrand: selectedItemId2!,
       itemName: controllers.itemNameController.text,
       printName: controllers.printNameController.text,
-      codeNo: "495",
+      codeNo: controllers.codeNoController.text,
       taxCategory: selectedTaxRateId!,
       hsnCode: selectedHSNCodeId!,
       barcode: controllers.barcodeController.text,

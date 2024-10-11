@@ -30,9 +30,6 @@ class LedgerService {
     return prefs.getString('usergroup');
   }
 
-
-  
-
   Future<Ledger?> createLedger({
     required String name,
     required String printName,
@@ -211,12 +208,6 @@ class LedgerService {
     }
   }
 
-  
-  
-  
-  
-  
-  
   Future<List<Ledger>> fetchLedgers({
     Map<String, dynamic>? queryParameters,
   }) async {
@@ -274,27 +265,20 @@ class LedgerService {
 
       final responseData = json.decode(response.body);
 
-      // print('Leger by id $responseData');
       if (responseData['success'] == true) {
         final ledgerData = responseData['data'];
-
-        // Check if the ledger data is not null
         if (ledgerData != null) {
           return Ledger.fromMap(ledgerData);
-        } else {
-          // If ledger data is null, return null
-          return null;
         }
       } else {
         print('${responseData['message']}');
-        // Return null in case of failure
         return null;
       }
     } catch (error) {
       print(error.toString());
-      // Return null in case of an error
       return null;
     }
+    return null; // Ensure a return statement at the end
   }
 
   // Function to update ledger data
@@ -346,11 +330,9 @@ class LedgerService {
     }
   }
 
-  Future<void> updateLedger2(Ledger updatedLedger, BuildContext context) async {
+  Future<void> updateLedger2(Ledger updatedLedger) async {
     try {
       String? token = await getToken();
-
-      // Convert the updated ledger object to a map
       Map<String, dynamic> ledgerMap = updatedLedger.toMap();
 
       final response = await http.patch(
@@ -366,7 +348,7 @@ class LedgerService {
       final responseData = json.decode(response.body);
 
       if (responseData['success'] == true) {
-// Do something...
+        print("ledger updated successfully");
       } else {
         print('Failed to update ledger: ${responseData['message']}');
       }

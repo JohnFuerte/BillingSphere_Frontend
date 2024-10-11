@@ -7,7 +7,7 @@ class Payment {
   final List<Entry> entries;
   final List<Billwise> billwise;
   final String? narration;
-  final ChequeDetails? chequeDetails; // Add this field
+  final ChequeDetails? chequeDetails;
 
   Payment({
     required this.id,

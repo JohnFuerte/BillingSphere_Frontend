@@ -245,7 +245,9 @@ class _ChequeReturnEntryState extends State<QuickEntryBillwiseReceipt> {
         Ledger? ledger = await ledgerService.fetchLedgerById(widget.id);
         if (ledger != null) {
           ledger.debitBalance -= totalAdjustmentAmount;
-          await ledgerService.updateLedger2(ledger, context);
+          await ledgerService.updateLedger2(
+            ledger,
+          );
         } else {
           print('Error: Unable to update Ledger.');
         }
@@ -253,7 +255,9 @@ class _ChequeReturnEntryState extends State<QuickEntryBillwiseReceipt> {
         Ledger? ledger2 = await ledgerService.fetchLedgerById(widget.id2);
         if (ledger2 != null) {
           ledger2.debitBalance += totalAdjustmentAmount;
-          await ledgerService.updateLedger2(ledger2, context);
+          await ledgerService.updateLedger2(
+            ledger2,
+          );
         } else {
           print('Error: Unable to update Ledger.');
         }

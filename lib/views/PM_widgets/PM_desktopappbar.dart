@@ -1,58 +1,70 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class PMDesktopAppbar extends StatelessWidget {
   const PMDesktopAppbar({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 0, top: 0),
+    return SizedBox(
+      height: MediaQuery.of(context).size.height * .06,
+      width: MediaQuery.of(context).size.width * 1,
       child: Row(
         children: [
-          IconButton(
-            onPressed: () {
-              Navigator.pop(context);
-            },
-            icon: const Icon(
-              CupertinoIcons.arrow_left,
-              color: Colors.black,
-              size: 15,
-            ),
-          ),
           Expanded(
-            flex: 1,
+            flex: 2,
             child: Container(
-              height: 25,
-              color: const Color(0xff79442F),
-              child: const Text(
-                'Payment',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white),
+              color: const Color(0xffA0522D),
+              child: Center(
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      icon: const Icon(
+                        CupertinoIcons.arrow_left,
+                        color: Colors.white,
+                        size: 15,
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 80,
+                    ),
+                    SizedBox(
+                      width: 110,
+                      child: Text(
+                        'Payment',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 22,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
           Expanded(
-            flex: 6,
+            flex: 5,
             child: Container(
-              width: MediaQuery.of(context).size.width * 0.82,
-              height: 25,
-              decoration: const BoxDecoration(
-                color: Color.fromARGB(255, 151, 111, 25),
-              ),
-              child: const Text(
+              color: const Color(0xffB8860B),
+              child: Center(
+                  child: Text(
                 'Voucher Entry',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white),
-              ),
+                style: GoogleFonts.poppins(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 22,
+                ),
+              )),
             ),
-          ),
+          )
         ],
       ),
     );

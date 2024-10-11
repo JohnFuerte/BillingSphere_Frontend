@@ -235,7 +235,9 @@ class _ChequeReturnEntryState extends State<ReceiptPopUpFormRA> {
         Ledger? ledger = await ledgerService.fetchLedgerById(widget.id);
         if (ledger != null) {
           ledger.debitBalance -= totalAdjustmentAmount;
-          await ledgerService.updateLedger2(ledger, context);
+          await ledgerService.updateLedger2(
+            ledger,
+          );
         } else {
           print('Error: Unable to update Ledger.');
         }
@@ -243,7 +245,9 @@ class _ChequeReturnEntryState extends State<ReceiptPopUpFormRA> {
         Ledger? ledger2 = await ledgerService.fetchLedgerById(selectedId!);
         if (ledger2 != null) {
           ledger2.debitBalance += totalAdjustmentAmount;
-          await ledgerService.updateLedger2(ledger2, context);
+          await ledgerService.updateLedger2(
+            ledger2,
+          );
         } else {
           print('Error: Unable to update Ledger.');
         }

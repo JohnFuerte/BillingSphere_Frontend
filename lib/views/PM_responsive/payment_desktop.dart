@@ -77,8 +77,6 @@ class RowData {
 class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
   @override
   void initState() {
-    print(".........object........");
-
     super.initState();
     _horizontalControllersGroup = LinkedScrollControllerGroup();
     _horizontalController1 = _horizontalControllersGroup.addAndGet();
@@ -89,8 +87,6 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
   }
 
   void _initializeData() async {
-    print(".........data........");
-
     await setCompanyCode();
     await fetchPayment();
     await fetchLedger();
@@ -180,7 +176,6 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
     List<String>? code = await getCompanyCode();
     setState(() {
       companyCode = code;
-      print(companyCode);
     });
   }
 
@@ -409,7 +404,7 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
                 _allValuesBillwise.add(newValue);
               }
             }
-            // print('Updated _allValuesBillwise: $_allValuesBillwise');
+            print('Updated _allValuesBillwise: $_allValuesBillwise');
           });
         },
         onSave: onSave,
@@ -474,6 +469,7 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
       // double totalDebit = _allValues
       //     .map<double>((e) => e['debit'])
       //     .reduce((value, element) => value + element);
+      print("all values : $_allValues");
 
       for (var value in _allValues) {
         double debit = double.tryParse(value['debit']) ?? 0.0;
@@ -489,6 +485,8 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
           ),
         );
       }
+      print("bill wise : $_allValuesBillwise");
+
       // Adding billwise entries
       for (var valueBillwise in _allValuesBillwise) {
         double amount = double.tryParse(valueBillwise['amount']) ?? 0.0;
@@ -528,9 +526,8 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
         );
       }
 
-      // Create the ReceiptVoucher object
       Payment payment = Payment(
-        id: '', // Generate an ID for the payment
+        id: '',
         companyCode: companyCode!.first,
         totalamount: totalDebitAmount,
         no: int.parse(_noController.text),
@@ -541,10 +538,10 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
         chequeDetails: chequeDetails,
       );
 
-      print('Payment created: ${payment.toJson()}');
-
       // Save the receipt voucher
       await paymentServices.createPayment(payment, context).then((value) async {
+        print("inside paymentservide $_allValuesBillwise");
+
         for (var valueBillwise in _allValuesBillwise) {
           var purchaseId = valueBillwise['selectedPurchase'];
           var adjustmentAmount =
@@ -557,7 +554,9 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
             if (dueAmount != null) {
               dueAmount -= adjustmentAmount;
               purchase.dueAmount = dueAmount.toString();
-              await purchaseServices.updatePurchase(purchase, context);
+              await purchaseServices.updatePurchase(
+                purchase,
+              );
             } else {
               print('Error: Unable to parse dueAmount.');
             }
@@ -574,10 +573,14 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
           if (ledger != null) {
             if (type == 'Dr') {
               ledger.debitBalance += double.parse(debit);
-              ledgerServices.updateLedger2(ledger, context);
+              ledgerServices.updateLedger2(
+                ledger,
+              );
             } else if (type == 'Cr') {
               ledger.debitBalance -= double.parse(credit);
-              ledgerServices.updateLedger2(ledger, context);
+              ledgerServices.updateLedger2(
+                ledger,
+              );
             } else {
               print('Error: Unable to update Ledger.');
             }
@@ -831,7 +834,6 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBody> {
                   (element) => element.id == rowDataList[index].ledger,
                 );
 
-                // Check if the selected ledger exists and bilwiseAccounting is "Yes"
                 if (selectedLedger.bilwiseAccounting == "Yes") {
                   openDialog1(
                     context,

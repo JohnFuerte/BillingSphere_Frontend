@@ -232,7 +232,9 @@ class _ChequeReturnEntryState extends State<QuickEntryBillwisePayment> {
             if (dueAmount != null) {
               dueAmount -= adjustmentAmount;
               purchase.dueAmount = dueAmount.toString();
-              await purchaseServices.updatePurchase(purchase, context);
+              await purchaseServices.updatePurchase(
+                purchase,
+              );
             } else {
               print('Error: Unable to parse dueAmount.');
             }
@@ -246,7 +248,9 @@ class _ChequeReturnEntryState extends State<QuickEntryBillwisePayment> {
         Ledger? ledger = await ledgerService.fetchLedgerById(widget.id);
         if (ledger != null) {
           ledger.debitBalance -= totalAdjustmentAmount;
-          await ledgerService.updateLedger2(ledger, context);
+          await ledgerService.updateLedger2(
+            ledger,
+          );
         } else {
           print('Error: Unable to update Ledger.');
         }
@@ -254,7 +258,9 @@ class _ChequeReturnEntryState extends State<QuickEntryBillwisePayment> {
         Ledger? ledger2 = await ledgerService.fetchLedgerById(widget.id2);
         if (ledger2 != null) {
           ledger2.debitBalance += totalAdjustmentAmount;
-          await ledgerService.updateLedger2(ledger2, context);
+          await ledgerService.updateLedger2(
+            ledger2,
+          );
         } else {
           print('Error: Unable to update Ledger.');
         }

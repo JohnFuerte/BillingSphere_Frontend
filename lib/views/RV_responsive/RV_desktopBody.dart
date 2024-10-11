@@ -559,10 +559,14 @@ class _DesktopBodyState extends State<RVDesktopBody> {
             if (ledger != null) {
               if (type == 'Cr') {
                 ledger.debitBalance -= double.parse(credit);
-                ledgerServices.updateLedger2(ledger, context);
+                ledgerServices.updateLedger2(
+                  ledger,
+                );
               } else if (type == 'Dr') {
                 ledger.debitBalance += double.parse(debit);
-                ledgerServices.updateLedger2(ledger, context);
+                ledgerServices.updateLedger2(
+                  ledger,
+                );
               } else {
                 print('Error: $e');
               }
