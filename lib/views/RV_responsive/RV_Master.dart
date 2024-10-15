@@ -1,4 +1,5 @@
 import 'package:billingsphere/views/RV_responsive/RV_desktopBody.dart';
+import 'package:billingsphere/views/RV_responsive/RV_edit.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -1066,7 +1067,17 @@ class _ReceiptVoucherHomeState extends State<ReceiptVoucherHome> {
                             BottomButtons(
                               title: 'Edit',
                               subtitle: 'F3',
-                              onPressed: () {},
+                              onPressed: selectedId != null
+                                  ? () {
+                                      Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => RVEditBody(
+                                              id: selectedId!,
+                                            ),
+                                          ));
+                                    }
+                                  : () {},
                             ),
                             BottomButtons(
                               title: 'XLS',

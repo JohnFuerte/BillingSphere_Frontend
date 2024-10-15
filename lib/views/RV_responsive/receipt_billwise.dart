@@ -1,4 +1,6 @@
+import 'package:billingsphere/data/models/receiptVoucher/receipt_voucher_model.dart';
 import 'package:billingsphere/data/models/salesEntries/sales_entrires_model.dart';
+import 'package:billingsphere/data/repository/receipt_voucher_repository.dart';
 import 'package:billingsphere/data/repository/sales_enteries_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -16,12 +18,14 @@ class ReceiptBillwise extends StatefulWidget {
     required this.debitAmount,
     required this.allValuesCallback,
     required this.onSave,
+    this.receiptID,
   });
   final String ledgerID;
   final String ledgerName;
   final double debitAmount;
   final Function(List<Map<String, dynamic>>) allValuesCallback;
   final VoidCallback onSave;
+  final String? receiptID;
 
   @override
   State<ReceiptBillwise> createState() => _ChequeReturnEntryState();
@@ -82,26 +86,12 @@ class _ChequeReturnEntryState extends State<ReceiptBillwise> {
 
   SalesEntryService saleServices = SalesEntryService();
   LedgerService ledgerService = LedgerService();
+  ReceiptVoucherService receiptServices = ReceiptVoucherService();
 
   List<SalesEntry> filteredSale = [];
   List<RowData> rowDataList = [];
   final List<Map<String, dynamic>> _allValuesBillwise = [];
   double totalAmount = 0.00;
-
-  Future<void> getSale() async {
-    final sale = await saleServices.fetchSalesEntries();
-    print("${widget.ledgerID}..............");
-    setState(() {
-      filteredSale = sale
-          .where((element) =>
-              element.party == widget.ledgerID &&
-              (element.type == 'DEBIT' || element.type == 'MULTI MODE') &&
-              element.dueAmount != '0')
-          .toList();
-    });
-
-    print('filteredSale $filteredSale');
-  }
 
   @override
   void initState() {
@@ -117,6 +107,69 @@ class _ChequeReturnEntryState extends State<ReceiptBillwise> {
   }
 
   String formattedDate = DateFormat('dd/MM/yyyy').format(DateTime.now());
+
+  Future<void> getSale() async {
+    final sale = await saleServices.fetchSalesEntries();
+    print("${widget.ledgerID}..............");
+    setState(() {
+      filteredSale = sale
+          .where((element) =>
+              element.party == widget.ledgerID &&
+              (element.type == 'DEBIT' || element.type == 'MULTI MODE'))
+          .toList();
+    });
+
+    if (widget.receiptID != null) {
+      fetchAndSetReceipt();
+    }
+
+    print('filteredSale $filteredSale');
+  }
+
+  Future<void> fetchAndSetReceipt() async {
+    try {
+      if (widget.receiptID != null) {
+        final ReceiptVoucher? receipt =
+            await receiptServices.fetchReceiptVchById(widget.receiptID!);
+
+        rowDataList.clear();
+
+        if (receipt != null) {
+          bool entryFound = false;
+          for (var entry in receipt.entries) {
+            if (entry.ledger == widget.ledgerID) {
+              for (var bill in receipt.billwise) {
+                RowData rowData = RowData(
+                  selectedTypeOfRef: ' Against Ref.',
+                  selectedSales: bill.purchase,
+                  billno: bill.billNo,
+                  date: bill.date,
+                  amount: bill.amount.toString(),
+                  dateController: TextEditingController(text: bill.date),
+                  amountController:
+                      TextEditingController(text: bill.amount.toString()),
+                );
+
+                rowDataList.add(rowData);
+                saveValues(rowData.toMap());
+              }
+            }
+          }
+
+          if (!entryFound) {
+            addNewRow();
+          }
+          setState(() {});
+        }
+      } else {
+        print('No paymentID provided.');
+      }
+    } catch (error) {
+      print('Failed to fetch payment: $error');
+      addNewRow();
+      setState(() {});
+    }
+  }
 
   void addNewRow() {
     rowDataList.add(
@@ -143,14 +196,16 @@ class _ChequeReturnEntryState extends State<ReceiptBillwise> {
         _allValuesBillwise[existingEntryIndex] =
             values; // Update existing entry
       } else {
-        _allValuesBillwise.add(values); // Add new entry
+        _allValuesBillwise.add(values);
       }
     });
   }
 
   void updatetotalAmount() {
-    totalAmount = rowDataList.fold(
-        0.0, (sum, row) => sum + (double.tryParse(row.amount) ?? 0.0));
+    totalAmount = rowDataList.fold(0.0, (sum, row) {
+      double amount = double.tryParse(row.amount) ?? 0.0;
+      return sum + amount;
+    });
   }
 
   @override
@@ -170,12 +225,27 @@ class _ChequeReturnEntryState extends State<ReceiptBillwise> {
   }
 
   Widget _buildRow(int index) {
-    // Filter available sales to exclude already selected sales
+    String? selectedSalesId = rowDataList[index].selectedSales;
+
+    List<String?> selectedSales = rowDataList
+        .where((row) => row.selectedSales != null && row != rowDataList[index])
+        .map((row) => row.selectedSales)
+        .toList();
+
     List<SalesEntry> availableSales = filteredSale.where((sale) {
-      return !_allValuesBillwise
-              .any((entry) => entry['selectedSales'] == sale.id) ||
-          sale.id == rowDataList[index].selectedSales;
+      bool isSelectedSale = sale.id == selectedSalesId;
+      bool hasDueAmount =
+          (double.tryParse(sale.dueAmount.toString()) ?? 0.0) > 0.0;
+
+      return (!selectedSales.contains(sale.id) && hasDueAmount) ||
+          isSelectedSale;
     }).toList();
+
+    if (selectedSalesId != null &&
+        !availableSales.any((sale) => sale.id == selectedSalesId)) {
+      rowDataList[index].selectedSales = null;
+    }
+
     return Row(
       children: [
         Padding(
@@ -189,7 +259,6 @@ class _ChequeReturnEntryState extends State<ReceiptBillwise> {
               child: DropdownButton<String>(
                 isExpanded: true,
                 value: rowDataList[index].selectedTypeOfRef,
-                underline: Container(),
                 onChanged: (String? newValue) {
                   setState(() {
                     rowDataList[index].selectedTypeOfRef = newValue!;
@@ -208,24 +277,27 @@ class _ChequeReturnEntryState extends State<ReceiptBillwise> {
             ),
           ),
         ),
-        const SizedBox(
-          width: 10,
-        ),
+        const SizedBox(width: 10),
+
+        // Sales Dropdown
         Container(
           width: 364,
           height: 40,
           decoration: BoxDecoration(border: Border.all()),
           child: SearchableDropDown(
             controller: searchController,
-            searchController: searchController,
-            value: rowDataList[index].selectedSales,
+            value: selectedSalesId,
             onChanged: (String? newValue) {
               setState(() {
                 rowDataList[index].selectedSales = newValue;
-                // Assign billno here
-                rowDataList[index].billno = availableSales
-                    .firstWhere((sale) => sale.id == newValue)
-                    .dcNo;
+
+                if (newValue != null) {
+                  var selectedSalesItem = availableSales.firstWhere(
+                    (sale) => sale.id == newValue,
+                  );
+
+                  rowDataList[index].billno = selectedSalesItem.dcNo;
+                }
               });
             },
             items: availableSales.map((SalesEntry sale) {
@@ -235,9 +307,9 @@ class _ChequeReturnEntryState extends State<ReceiptBillwise> {
                   padding: const EdgeInsets.all(2.0),
                   child: Row(
                     children: [
-                      Text('${sale.date} TI# ${sale.dcNo}'),
+                      Text('${sale.date} RP# ${sale.dcNo}'),
                       const Spacer(),
-                      Text(sale.dueAmount),
+                      Text(double.parse(sale.dueAmount!).toStringAsFixed(2)),
                     ],
                   ),
                 ),
@@ -252,9 +324,9 @@ class _ChequeReturnEntryState extends State<ReceiptBillwise> {
             },
           ),
         ),
-        const SizedBox(
-          width: 10,
-        ),
+        const SizedBox(width: 10),
+
+        // Date Input
         Container(
           width: 150,
           height: 40,
@@ -274,57 +346,55 @@ class _ChequeReturnEntryState extends State<ReceiptBillwise> {
             textAlign: TextAlign.center,
           ),
         ),
-        const SizedBox(
-          width: 10,
-        ),
+        const SizedBox(width: 10),
+
+        // Amount Input
         Padding(
           padding: const EdgeInsets.only(right: 10.0),
           child: Container(
             width: 190,
             height: 40,
             decoration: BoxDecoration(border: Border.all()),
-            alignment: Alignment.centerRight,
+            alignment: Alignment.center,
             child: TextFormField(
               controller: rowDataList[index].amountController,
               onFieldSubmitted: (value) {
                 setState(() {
                   double enteredAmount = double.tryParse(value) ?? 0.0;
+                  String formattedEnteredAmount =
+                      enteredAmount.toStringAsFixed(2);
+
+                  // Fetch due amount for the selected sale
                   double dueAmount = double.tryParse(availableSales
                           .firstWhere((sale) =>
                               sale.id == rowDataList[index].selectedSales)
-                          .dueAmount) ??
+                          .dueAmount!) ??
                       0.0;
+                  String formattedDueAmount = dueAmount.toStringAsFixed(2);
 
-                  double previousAmount =
-                      double.tryParse(rowDataList[index].amount) ?? 0.0;
-                  double amountDifference = enteredAmount - previousAmount;
+                  if (enteredAmount <= dueAmount) {
+                    // Update current row's amount
+                    rowDataList[index].amount = formattedEnteredAmount;
+                    rowDataList[index].amountController.text =
+                        formattedEnteredAmount;
 
-                  // Validate the amount
-                  if (enteredAmount <= dueAmount &&
-                      (remainingAmount - amountDifference) >= 0) {
-                    // If the amount is valid, update the amount and remaining amount
-                    rowDataList[index].amount = value;
                     saveValues(rowDataList[index].toMap());
-                    remainingAmount -= amountDifference;
-                    updatetotalAmount();
-                    // Add a new row with default values if remainingAmount > 0
+
+                    double totalEnteredAmount =
+                        rowDataList.fold(0.0, (sum, row) {
+                      return sum + (double.tryParse(row.amount) ?? 0.0);
+                    });
+
+                    remainingAmount = widget.debitAmount - totalEnteredAmount;
+                    print("..................$remainingAmount");
                     if (remainingAmount > 0) {
-                      rowDataList.add(
-                        RowData(
-                          selectedTypeOfRef: '',
-                          selectedSales: null,
-                          billno: '',
-                          date: formattedDate,
-                          amount: '',
-                          dateController:
-                              TextEditingController(text: formattedDate),
-                          amountController: TextEditingController(),
-                        ),
-                      );
+                      addNewRow();
                     }
+                    updatetotalAmount();
                   } else {
-                    // Handle invalid amount case
-                    print('Invalid amount entered');
+                    // Show an invalid amount dialog if the entered amount exceeds the due amount
+                    showInvalidAmountDialog(
+                        context, double.tryParse(formattedDueAmount) ?? 0.0);
                   }
                 });
               },
@@ -338,6 +408,85 @@ class _ChequeReturnEntryState extends State<ReceiptBillwise> {
           ),
         ),
       ],
+    );
+  }
+
+  void showInvalidAmountDialog(BuildContext context, double dueAmount) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          contentPadding: EdgeInsets.zero,
+          shape: InputBorder.none,
+          content: Container(
+            width: 500,
+            height: 200,
+            decoration: BoxDecoration(borderRadius: BorderRadius.circular(0)),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  height: 40,
+                  color: Colors.blue,
+                  alignment: Alignment.center,
+                  child: const Text(
+                    "Billing Sphere",
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "Pending amount of this bill is: ${dueAmount.toStringAsFixed(2)}",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          "Please enter an amount less than or equal to ${dueAmount.toStringAsFixed(2)}.",
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: Colors.red,
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text(
+                              "OK",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -1262,10 +1411,90 @@ class _ChequeReturnEntryState extends State<ReceiptBillwise> {
                                 ),
                               ),
                               onPressed: () {
-                                widget.allValuesCallback(_allValuesBillwise);
-                                widget.onSave();
-
-                                Navigator.of(context).pop();
+                                if (widget.debitAmount == totalAmount) {
+                                  widget.allValuesCallback(_allValuesBillwise);
+                                  widget.onSave();
+                                  Navigator.of(context).pop();
+                                } else {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        contentPadding: EdgeInsets.zero,
+                                        shape: InputBorder.none,
+                                        content: Container(
+                                          width: 500,
+                                          height: 200,
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.stretch,
+                                            children: [
+                                              Container(
+                                                height: 40,
+                                                color: Colors.blue,
+                                                alignment: Alignment.center,
+                                                child: const Text(
+                                                  "Amount Error",
+                                                  style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                              const SizedBox(height: 16),
+                                              Expanded(
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(
+                                                      10.0),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      const Text(
+                                                        "Total amount should be equal to debited account.",
+                                                        style: TextStyle(
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                          height: 15),
+                                                      Align(
+                                                        alignment: Alignment
+                                                            .centerRight,
+                                                        child: TextButton(
+                                                          onPressed: () {
+                                                            Navigator.of(
+                                                                    context)
+                                                                .pop(); // Close error dialog
+                                                          },
+                                                          child: const Text(
+                                                            "OK",
+                                                            style: TextStyle(
+                                                              fontSize: 16,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color:
+                                                                  Colors.blue,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                }
                               },
                               child: const Text(
                                 "Save",

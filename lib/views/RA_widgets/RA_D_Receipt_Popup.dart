@@ -221,7 +221,7 @@ class _ChequeReturnEntryState extends State<ReceiptPopUpFormRA> {
             if (dueAmount != null) {
               dueAmount -= adjustmentAmount;
               sales.dueAmount = dueAmount.toString();
-              await salesService.updateSalesEntry(sales, context);
+              await salesService.updateSalesEntry(sales);
             } else {
               print('Error: Unable to parse dueAmount.');
             }

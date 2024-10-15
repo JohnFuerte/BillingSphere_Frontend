@@ -26,7 +26,7 @@ class PaymentBillwise extends StatefulWidget {
   final double debitAmount;
   final Function(List<Map<String, dynamic>>) allValuesCallback;
   final VoidCallback onSave;
-  final String? paymentID; // Declare it as nullable
+  final String? paymentID;
 
   @override
   State<PaymentBillwise> createState() => _ChequeReturnEntryState();
@@ -133,26 +133,33 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
       if (widget.paymentID != null) {
         final Payment? payment =
             await paymentService.fetchPaymentById(widget.paymentID!);
-
         rowDataList.clear();
 
         if (payment != null) {
-          for (var bill in payment.billwise) {
-            RowData rowData = RowData(
-              selectedTypeOfRef: ' Against Ref.',
-              selectedPurchase: bill.purchase,
-              billno: bill.billNo,
-              date: bill.date,
-              amount: bill.amount.toString(),
-              dateController: TextEditingController(text: bill.date),
-              amountController:
-                  TextEditingController(text: bill.amount.toString()),
-            );
+          bool entryFound = false;
+          for (var entry in payment.entries) {
+            if (entry.ledger == widget.ledgerID) {
+              entryFound = true;
+              for (var bill in payment.billwise) {
+                RowData rowData = RowData(
+                  selectedTypeOfRef: ' Against Ref.',
+                  selectedPurchase: bill.purchase,
+                  billno: bill.billNo,
+                  date: bill.date,
+                  amount: bill.amount.toString(),
+                  dateController: TextEditingController(text: bill.date),
+                  amountController:
+                      TextEditingController(text: bill.amount.toString()),
+                );
 
-            rowData.uniqueKey = const Uuid().v4();
+                rowDataList.add(rowData);
+                saveValues(rowData.toMap());
+              }
+            }
+          }
 
-            rowDataList.add(rowData);
-            saveValues(rowData.toMap());
+          if (!entryFound) {
+            addNewRow();
           }
           setState(() {});
         }
@@ -161,6 +168,8 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
       }
     } catch (error) {
       print('Failed to fetch payment: $error');
+      addNewRow();
+      setState(() {});
     }
   }
 
@@ -184,10 +193,9 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
 
     setState(() {
       if (existingEntryIndex != -1) {
-        _allValuesBillwise[existingEntryIndex] =
-            values; // Update existing entry
+        _allValuesBillwise[existingEntryIndex] = values;
       } else {
-        _allValuesBillwise.add(values); // Add new entry
+        _allValuesBillwise.add(values);
       }
     });
   }
@@ -200,33 +208,31 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
   }
 
   Widget _buildRow(int index) {
-    print('Building Row $index: ${rowDataList[index].toMap()}');
-
     String? selectedPurchaseId = rowDataList[index].selectedPurchase;
+
+    List<String?> selectedPurchases = rowDataList
+        .where(
+            (row) => row.selectedPurchase != null && row != rowDataList[index])
+        .map((row) => row.selectedPurchase)
+        .toList();
 
     List<Purchase> availablePurchase = filteredPurchase.where((purchase) {
       bool isSelectedPurchase = purchase.id == selectedPurchaseId;
-      bool hasDueAmount = purchase.dueAmount != null &&
+      bool hasDueAmount =
           (double.tryParse(purchase.dueAmount.toString()) ?? 0.0) > 0.0;
 
-      return hasDueAmount || isSelectedPurchase;
+      return (!selectedPurchases.contains(purchase.id) && hasDueAmount) ||
+          isSelectedPurchase;
     }).toList();
-
-    print('Row $index: selectedPurchase = $selectedPurchaseId');
-    print('Filtered Purchases: ${filteredPurchase.map((p) => p.id).toList()}');
-    print(
-        'Available Purchases: ${availablePurchase.map((p) => p.id).toList()}');
 
     if (selectedPurchaseId != null &&
         !availablePurchase
             .any((purchase) => purchase.id == selectedPurchaseId)) {
-      print('Resetting selectedPurchase for row $index');
       rowDataList[index].selectedPurchase = null;
     }
 
     return Row(
       children: [
-        // Type of Reference Dropdown
         Padding(
           padding: const EdgeInsets.only(left: 10.0),
           child: Container(
@@ -352,13 +358,6 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                       0.0;
                   String formattedDueAmount = dueAmount.toStringAsFixed(2);
 
-                  double previousAmount =
-                      double.tryParse(rowDataList[index].amount) ?? 0.0;
-                  String formattedPreviousAmount =
-                      previousAmount.toStringAsFixed(2);
-
-                  double amountDifference = enteredAmount - previousAmount;
-
                   if (enteredAmount <= dueAmount) {
                     rowDataList[index].amount = formattedEnteredAmount;
 
@@ -366,13 +365,19 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
                         formattedEnteredAmount;
                     saveValues(rowDataList[index].toMap());
 
-                    remainingAmount -=
-                        double.tryParse(formattedPreviousAmount) ?? 0.0;
-                    updatetotalAmount();
+                    double totalEnteredAmount =
+                        rowDataList.fold(0.0, (sum, row) {
+                      return sum + (double.tryParse(row.amount) ?? 0.0);
+                    });
 
-                    if ((remainingAmount - amountDifference) > 0) {
+                    remainingAmount = widget.debitAmount - totalEnteredAmount;
+
+                    updatetotalAmount();
+                    print("remaining amount : $remainingAmount");
+                    if (remainingAmount > 0) {
                       addNewRow();
                     }
+                    updatetotalAmount();
                   } else {
                     showInvalidAmountDialog(
                         context, double.tryParse(formattedDueAmount) ?? 0.0);

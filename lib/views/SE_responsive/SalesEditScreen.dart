@@ -721,7 +721,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
             : [],
       );
 
-      await salesEntryService.updateSalesEntry(updatedSalesEntry, context);
+      await salesEntryService.updateSalesEntry(updatedSalesEntry);
     } catch (e) {
       print("Error $e");
     }

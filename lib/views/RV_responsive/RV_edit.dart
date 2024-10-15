@@ -25,11 +25,12 @@ import 'RV_receipt.dart';
 import 'receipt_billwise.dart';
 import 'package:linked_scroll_controller/linked_scroll_controller.dart';
 
-class RVDesktopBody extends StatefulWidget {
-  const RVDesktopBody({super.key});
+class RVEditBody extends StatefulWidget {
+  final String id;
+  const RVEditBody({super.key, required this.id});
 
   @override
-  State<RVDesktopBody> createState() => _DesktopBodyState();
+  State<RVEditBody> createState() => _DesktopBodyState();
 }
 
 class RowData {
@@ -74,26 +75,26 @@ class RowData {
   }
 }
 
-class _DesktopBodyState extends State<RVDesktopBody> {
+class _DesktopBodyState extends State<RVEditBody> {
   @override
   void initState() {
     super.initState();
+    print(widget.id);
     _focusNode.requestFocus();
     _horizontalControllersGroup = LinkedScrollControllerGroup();
     _horizontalController1 = _horizontalControllersGroup.addAndGet();
     _horizontalController2 = _horizontalControllersGroup.addAndGet();
 
     _initializeData();
-    addNewRow();
   }
 
   void _initializeData() async {
     await setCompanyCode();
-    await fetchReceipt();
     _selectedDate = DateTime.now();
     _dateController.text = formatter.format(_selectedDate!);
     formattedDay = DateFormat('EEE').format(_selectedDate!);
     await fetchLedger();
+    fetchAndSetReceipt();
   }
 
   @override
@@ -196,30 +197,6 @@ class _DesktopBodyState extends State<RVDesktopBody> {
     });
   }
 
-  // Fetch Receipt
-  Future<void> fetchReceipt() async {
-    try {
-      final List<rv.ReceiptVoucher> receipt =
-          await receiptServices.fetchReceiptVoucherEntries();
-      final filteredReceiptEntry = receipt
-          .where(
-              (receiptentry) => receiptentry.companyCode == companyCode!.first)
-          .toList();
-
-      setState(() {
-        suggestedReceipt = filteredReceiptEntry;
-        _generateRandomNumber();
-      });
-    } catch (error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $error'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  }
-
   //Fetch ledgers
   Future<void> fetchLedger() async {
     try {
@@ -291,6 +268,59 @@ class _DesktopBodyState extends State<RVDesktopBody> {
           backgroundColor: Colors.red,
         ),
       );
+    }
+  }
+
+  Future<void> fetchAndSetReceipt() async {
+    try {
+      final rv.ReceiptVoucher? receipt =
+          await receiptServices.fetchReceiptVchById(widget.id);
+      print(receipt);
+      rowDataList.clear();
+
+      setState(() {
+        // Update other payment fields
+        _noController.text = (receipt!.no).toString();
+        _dateController.text = receipt.date;
+        _narrationController.text = receipt.narration ?? '';
+
+        print(receipt.entries);
+        // Map fetched entries to rowDataList
+        for (var entry in receipt.entries) {
+          rowDataList.add(RowData(
+            type: entry.account,
+            ledger: entry.ledger,
+            remarks: entry.remark,
+            debit: entry.debit.toString(),
+            credit: entry.credit.toString(),
+            isCredit: entry.account == 'Cr',
+            isDebit: entry.account == 'Dr',
+            debitController:
+                TextEditingController(text: entry.debit.toString()),
+            creditController:
+                TextEditingController(text: entry.credit.toString()),
+            remarksController: TextEditingController(text: entry.remark),
+            ledgerGroup: '',
+          ));
+        }
+
+        if (receipt.chequeDetails != null) {
+          _chequeNoController.text = receipt.chequeDetails!.chequeNo!;
+          _chequeDateController.text = receipt.chequeDetails!.chequeDate!;
+          _depositDateController.text = receipt.chequeDetails!.depositDate!;
+          _branchController.text = receipt.chequeDetails!.branch!;
+          // _batchNoController.text = receipt.chequeDetails!.batchNo!;
+          _bankController.text = receipt.chequeDetails!.bank!;
+          setState(() {
+            showChequeDepositDetails = true;
+          });
+        }
+      });
+
+      calculateTotalDebitAmount();
+      calculateTotalCreditAmount();
+    } catch (error) {
+      print('Failed to fetch payment: $error');
     }
   }
 
@@ -388,24 +418,30 @@ class _DesktopBodyState extends State<RVDesktopBody> {
   }
 
   void openDialog1(BuildContext context, String ledgerID, String ledgerName,
-      double debitAmount, VoidCallback onSave) {
+      double debitAmount, VoidCallback onSave,
+      [String? receiptID]) {
     showDialog(
       context: context,
       builder: (context) => ReceiptBillwise(
         ledgerID: ledgerID,
         ledgerName: ledgerName,
         debitAmount: debitAmount,
+        receiptID: widget.id,
         allValuesCallback: (List<Map<String, dynamic>> newValues) {
           setState(() {
-            // Merge newValues into _allValuesBillwise
             for (var newValue in newValues) {
-              final existingIndex = _allValuesBillwise.indexWhere(
-                (entry) => entry['uniqueKey'] == newValue['uniqueKey'],
-              );
-              if (existingIndex != -1) {
-                _allValuesBillwise[existingIndex] = newValue;
-              } else {
-                _allValuesBillwise.add(newValue);
+              double amount = double.tryParse(newValue['amount']) ?? 0.0;
+
+              if (amount > 0) {
+                final existingIndex = _allValuesBillwise.indexWhere(
+                  (entry) => entry['uniqueKey'] == newValue['uniqueKey'],
+                );
+
+                if (existingIndex != -1) {
+                  _allValuesBillwise[existingIndex] = newValue;
+                } else {
+                  _allValuesBillwise.add(newValue);
+                }
               }
             }
             print('Updated _allValuesBillwise: $_allValuesBillwise');
@@ -453,6 +489,10 @@ class _DesktopBodyState extends State<RVDesktopBody> {
   // Save Receipt
   Future<void> saveReceiptData() async {
     try {
+      for (int i = 0; i < rowDataList.length; i++) {
+        saveValues(rowDataList[i].toMap());
+      }
+
       if (totalDebitAmount <= 0 ||
           totalCreditAmount <= 0 ||
           totalDebitAmount != totalCreditAmount) {
@@ -465,6 +505,7 @@ class _DesktopBodyState extends State<RVDesktopBody> {
         );
         return;
       }
+
       // Prepare entries for the receipt
       List<rv.Entry> entries = [];
       List<rv.Billwise> billwise = [];
@@ -483,18 +524,39 @@ class _DesktopBodyState extends State<RVDesktopBody> {
           ),
         );
       }
-      // Adding billwise entries
-      for (var valueBillwise in _allValuesBillwise) {
-        double amount = double.tryParse(valueBillwise['amount']) ?? 0.0;
 
-        billwise.add(
-          rv.Billwise(
-            date: valueBillwise['date'],
-            purchase: valueBillwise['selectedSales'],
-            amount: amount,
-            billNo: valueBillwise['billno'],
-          ),
-        );
+      if (_allValuesBillwise.isEmpty) {
+        final rv.ReceiptVoucher? receipt =
+            await receiptServices.fetchReceiptVchById(widget.id);
+
+        if (receipt?.billwise != null && receipt!.billwise.isNotEmpty) {
+          for (var billwiseEntry in receipt.billwise) {
+            billwise.add(
+              Billwise(
+                date: billwiseEntry.date,
+                purchase: billwiseEntry.purchase,
+                amount: billwiseEntry.amount,
+                billNo: billwiseEntry.billNo,
+              ),
+            );
+          }
+        } else {
+          print('No billwise data found.');
+        }
+      } else {
+        // Adding billwise entries
+        for (var valueBillwise in _allValuesBillwise) {
+          double amount = double.tryParse(valueBillwise['amount']) ?? 0.0;
+
+          billwise.add(
+            rv.Billwise(
+              date: valueBillwise['date'],
+              purchase: valueBillwise['selectedSales'],
+              amount: amount,
+              billNo: valueBillwise['billno'],
+            ),
+          );
+        }
       }
 
       ChequeDetails? chequeDetails;
@@ -535,28 +597,65 @@ class _DesktopBodyState extends State<RVDesktopBody> {
         narration: _narrationController.text,
         chequeDetails: chequeDetails,
       );
-
-      print('Receipt created: ${receipt.toJson()}');
-      await receiptServices.createReciptVoucher(receipt, context).then(
+      await restorePreviousState();
+      await receiptServices.updateReceipt(receipt, context, widget.id).then(
         (value) async {
-          for (var valueBillwise in _allValuesBillwise) {
-            var salesId = valueBillwise['selectedSales'];
-            var adjustmentAmount =
-                double.parse(valueBillwise['amount'].toString());
+          if (_allValuesBillwise.isEmpty) {
+            final rv.ReceiptVoucher? receipt =
+                await receiptServices.fetchReceiptVchById(widget.id);
 
-            SalesEntry? sale = await salesServices.fetchSalesById(salesId);
-            if (sale != null) {
-              double? dueAmount = double.tryParse(sale.dueAmount);
-              if (dueAmount != null) {
-                dueAmount -= adjustmentAmount;
-                sale.dueAmount = dueAmount.toString();
-                await salesServices.updateSalesEntry(sale);
-              } else {
-                print('Error: Unable to parse dueAmount.');
+            if (receipt?.billwise != null && receipt!.billwise.isNotEmpty) {
+              for (var billwiseEntry in receipt.billwise) {
+                print("enter billwise");
+                var purchaseId = billwiseEntry.purchase;
+                var adjustmentAmount = billwiseEntry.amount;
+
+                SalesEntry? purchase = await salesServices.fetchSalesById(
+                  purchaseId,
+                );
+                print("purchase : ${purchase}");
+                if (purchase != null) {
+                  double? dueAmount = double.tryParse(purchase.dueAmount ?? '');
+                  if (dueAmount != null) {
+                    dueAmount -= adjustmentAmount;
+
+                    purchase.dueAmount = dueAmount.toString();
+                    await salesServices.updateSalesEntry(purchase);
+                  } else {
+                    print('Error: Unable to parse dueAmount.');
+                  }
+                }
+                print("exit billwise");
               }
+            } else {
+              print('No billwise data found.');
+            }
+          } else {
+            // Process data from _allValuesBillwise
+            for (var valueBillwise in _allValuesBillwise) {
+              var salesId = valueBillwise['selectedSales'];
+              var adjustmentAmount =
+                  double.parse(valueBillwise['amount'].toString());
+
+              SalesEntry? sale = await salesServices.fetchSalesById(salesId);
+              if (sale != null) {
+                double? dueAmount = double.tryParse(sale.dueAmount);
+                if (dueAmount != null) {
+                  dueAmount -= adjustmentAmount;
+                  sale.dueAmount = dueAmount.toString();
+                  await salesServices.updateSalesEntry(
+                    sale,
+                  );
+                } else {
+                  print('Error: Unable to parse dueAmount.');
+                }
+              }
+              print("exit billwise");
             }
           }
 
+          List<Ledger> ledgersToUpdate = [];
+          print("............updating ledger");
           for (var value in _allValues) {
             var type = value['type'];
             var ledgerId = value['ledger'];
@@ -565,25 +664,33 @@ class _DesktopBodyState extends State<RVDesktopBody> {
 
             Ledger? ledger = await ledgerServices.fetchLedgerById(ledgerId);
             if (ledger != null) {
-              if (type == 'Cr') {
-                ledger.debitBalance -= double.parse(credit);
-                ledgerServices.updateLedger2(
-                  ledger,
-                );
-              } else if (type == 'Dr') {
+              if (type == 'Dr') {
+                print("dr");
+                print(ledger);
                 ledger.debitBalance += double.parse(debit);
-                ledgerServices.updateLedger2(
-                  ledger,
-                );
+              } else if (type == 'Cr') {
+                print("cr");
+                print(ledger);
+                ledger.debitBalance -= double.parse(credit);
               } else {
-                print('Error: $e');
+                print('Error: Unable to update Ledger.');
               }
+
+              ledgersToUpdate.add(ledger);
             }
           }
 
-          setState(() {
-            isLoading = false;
-          });
+          if (ledgersToUpdate.isNotEmpty) {
+            for (var ledger in ledgersToUpdate) {
+              await ledgerServices.updateLedger2(
+                ledger,
+              );
+            }
+            print('All ledgers updated successfully.');
+          } else {
+            print('No ledgers to update.');
+          }
+
           _noController.clear();
           _dateController.clear();
 
@@ -598,50 +705,6 @@ class _DesktopBodyState extends State<RVDesktopBody> {
           _bankController.clear();
           _branchController.clear();
           rowDataList.clear();
-
-          fetchReceipt().then((_) {
-            final newReceipt = suggestedReceipt.firstWhere(
-              (element) => element.no == receipt.no,
-              orElse: () => rv.ReceiptVoucher(
-                id: '',
-                no: 0,
-                date: '',
-                companyCode: '',
-                billwise: [],
-                entries: [],
-                totalamount: 0,
-                narration: '',
-              ),
-            );
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: const Text("Print Receipt"),
-                  content: const Text("Do you want to print the receipt?"),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pushReplacement(
-                          MaterialPageRoute(
-                            builder: (context) => ReceiptVoucherPrint(
-                              receiptID: newReceipt.id,
-                              'RECEIPT VOUCHER PRINT',
-                            ),
-                          ),
-                        );
-                      },
-                      child: const Text("Yes"),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: const Text("No"),
-                    ),
-                  ],
-                );
-              },
-            );
-          });
         },
       ).catchError((error) {
         setState(() {
@@ -657,6 +720,69 @@ class _DesktopBodyState extends State<RVDesktopBody> {
     } catch (error) {
       print('Error in saveReceiptVouchertData: $error');
     }
+  }
+
+  restorePreviousState() async {
+    final rv.ReceiptVoucher? receipt =
+        await receiptServices.fetchReceiptVchById(widget.id);
+
+    if (receipt?.billwise != null && receipt!.billwise.isNotEmpty) {
+      for (var billwiseEntry in receipt.billwise) {
+        var purchaseId = billwiseEntry.purchase;
+        var adjustmentAmount = billwiseEntry.amount;
+
+        SalesEntry? sale = await salesServices.fetchSalesById(
+          purchaseId,
+        );
+        if (sale != null) {
+          double? dueAmount = double.tryParse(sale.dueAmount ?? '');
+          if (dueAmount != null) {
+            dueAmount += adjustmentAmount;
+            sale.dueAmount = dueAmount.toString();
+            await salesServices.updateSalesEntry(sale);
+          } else {
+            print('Error: Unable to parse dueAmount.');
+          }
+        }
+      }
+    } else {
+      print('No billwise data found.');
+    }
+
+    List<Ledger> ledgersToUpdate = [];
+
+    for (var value in receipt!.entries) {
+      var type = value.account;
+      var ledgerId = value.ledger;
+      var debit = value.debit;
+      var credit = value.credit;
+
+      Ledger? ledger = await ledgerServices.fetchLedgerById(ledgerId);
+      if (ledger != null) {
+        if (type == 'Dr') {
+          ledger.debitBalance -= debit!;
+          print(
+              "Updated ledger $ledgerId with debit, new balance: ${ledger.debitBalance}");
+        } else if (type == 'Cr') {
+          ledger.debitBalance += credit!;
+          print(
+              "Updated ledger $ledgerId with credit, new balance: ${ledger.debitBalance}");
+        } else {
+          print('Error: Unable to update Ledger.');
+        }
+        ledgersToUpdate.add(ledger);
+      }
+    }
+
+    if (ledgersToUpdate.isNotEmpty) {
+      for (var ledger in ledgersToUpdate) {
+        await ledgerServices.updateLedger2(ledger);
+      }
+      print('All ledgers updated successfully.');
+    } else {
+      print('No ledgers to update.');
+    }
+    print("exit restore");
   }
 
   void _updateChequeDepositDetailsFlag() {
@@ -722,14 +848,20 @@ class _DesktopBodyState extends State<RVDesktopBody> {
                     if (newValue == 'Cr') {
                       rowDataList[index].isCredit = true;
                       rowDataList[index].isDebit = false;
+                      rowDataList[index].ledger = "";
                       rowDataList[index].debitController.clear();
                       rowDataList[index].debit = '';
+                      rowDataList[index].credit = '';
                       calculateTotalDebitAmount();
                     } else {
                       rowDataList[index].isCredit = false;
                       rowDataList[index].isDebit = true;
                       rowDataList[index].creditController.clear();
                       rowDataList[index].credit = '';
+                      rowDataList[index].debit = '';
+
+                      rowDataList[index].ledger = "";
+
                       calculateTotalCreditAmount();
                     }
                   },
@@ -857,6 +989,7 @@ class _DesktopBodyState extends State<RVDesktopBody> {
                 rowDataList[index].debit = value;
                 saveValues(rowDataList[index].toMap());
                 calculateTotalDebitAmount();
+                calculateTotalCreditAmount();
                 if (totalDebitAmount < totalCreditAmount) {
                   addNewRowDr();
                 } else if (totalDebitAmount > totalCreditAmount) {
@@ -895,6 +1028,8 @@ class _DesktopBodyState extends State<RVDesktopBody> {
                   () {
                     if (totalCreditAmount > totalDebitAmount) {
                       addNewRowDr();
+                    } else if (totalCreditAmount < totalDebitAmount) {
+                      addNewRow();
                     }
                     _searchController.clear();
                   },
@@ -1855,7 +1990,12 @@ class _DesktopBodyState extends State<RVDesktopBody> {
                                   ),
                                 ),
                                 backgroundColor: Colors.yellow.shade100),
-                            onPressed: () {},
+                            onPressed: () async {
+                              print("delete");
+                              await restorePreviousState();
+                              await receiptServices.deleteReceipt(
+                                  widget.id, context);
+                            },
                             child: const Text(
                               'Delete',
                               style: TextStyle(
@@ -3815,7 +3955,12 @@ class _DesktopBodyState extends State<RVDesktopBody> {
                                           ),
                                           backgroundColor:
                                               Colors.yellow.shade100),
-                                      onPressed: () {},
+                                      onPressed: () async {
+                                        print("delete");
+                                        await restorePreviousState();
+                                        await receiptServices.deleteReceipt(
+                                            widget.id, context);
+                                      },
                                       child: const Text(
                                         'Delete',
                                         style: TextStyle(

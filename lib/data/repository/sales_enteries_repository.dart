@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:js';
 import 'package:billingsphere/utils/constant.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -226,7 +227,9 @@ class SalesEntryService {
 
   // Write Update Sales Repository
   Future<void> updateSalesEntry(
-      SalesEntry salesEntry, BuildContext context) async {
+    SalesEntry salesEntry,
+  ) async {
+    print("updating sales entry");
     String? token = await getToken();
 
     final response = await http.put(
@@ -242,7 +245,14 @@ class SalesEntryService {
     print(responseData);
 
     if (responseData['success'] == true) {
-      Navigator.of(context).pop();
+      Fluttertoast.showToast(
+        msg: "Purchase updated successfully!",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.black.withOpacity(0.8),
+        textColor: Colors.white,
+        fontSize: 16.0,
+      );
     } else {
       throw Exception('Failed to update sales entry');
     }

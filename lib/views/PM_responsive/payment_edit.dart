@@ -241,16 +241,13 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBodyE> {
     try {
       final Payment? payment = await paymentService.fetchPaymentById(widget.id);
 
-      // Clear previous data
       rowDataList.clear();
 
       setState(() {
-        // Update other payment fields
         _noController.text = (payment!.no).toString();
         _dateController.text = payment.date;
         _narrationController.text = payment.narration ?? '';
 
-        // Map fetched entries to rowDataList
         for (var entry in payment.entries) {
           rowDataList.add(RowData(
             type: entry.account,
@@ -277,6 +274,8 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBodyE> {
           _depositDateController =
               TextEditingController(text: payment.chequeDetails!.depositDate);
           _branchController.text = payment.chequeDetails!.branch!;
+          _batchNoController.text = payment.chequeDetails!.batchNo!;
+          _bankController.text = payment.chequeDetails!.bank!;
           setState(() {
             showChequeDepositDetails = true;
           });
@@ -293,6 +292,7 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBodyE> {
   Widget _buildRow(int index) {
     final double width = MediaQuery.of(context).size.width;
     final bool isDesktopBody = width >= 1200;
+    bool isFetchedRow = rowDataList[index].uniqueKey.isNotEmpty;
 
     return Row(
       children: [
@@ -313,19 +313,26 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBodyE> {
               onChanged: (String? newValue) {
                 setState(() {
                   rowDataList[index].type = newValue!;
+
+                  // Clear the row data when type is changed
+                  rowDataList[index].ledger = null;
+                  rowDataList[index].remarks = '';
+                  rowDataList[index].debit = '';
+                  rowDataList[index].credit = '';
+                  rowDataList[index].debitController.clear();
+                  rowDataList[index].creditController.clear();
+                  rowDataList[index].remarksController.clear();
+
                   if (newValue == 'Cr') {
                     rowDataList[index].isCredit = true;
                     rowDataList[index].isDebit = false;
-                    rowDataList[index].debitController.clear();
-                    rowDataList[index].debit = '';
-                    calculateTotalDebitAmount();
                   } else {
                     rowDataList[index].isCredit = false;
                     rowDataList[index].isDebit = true;
-                    rowDataList[index].creditController.clear();
-                    rowDataList[index].credit = '';
-                    calculateTotalCreditAmount();
                   }
+
+                  calculateTotalDebitAmount();
+                  calculateTotalCreditAmount();
                 });
               },
               items: types.map((String value) {
@@ -450,7 +457,6 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBodyE> {
                   (element) => element.id == rowDataList[index].ledger,
                 );
 
-                // Check if the selected ledger exists and bilwiseAccounting is "Yes"
                 if (selectedLedger.bilwiseAccounting == "Yes") {
                   openDialog1(
                     context,
@@ -521,15 +527,18 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBodyE> {
         debitAmount: debitAmount,
         allValuesCallback: (List<Map<String, dynamic>> newValues) {
           setState(() {
-            // Merge newValues into _allValuesBillwise
             for (var newValue in newValues) {
-              final existingIndex = _allValuesBillwise.indexWhere(
-                (entry) => entry['uniqueKey'] == newValue['uniqueKey'],
-              );
-              if (existingIndex != -1) {
-                _allValuesBillwise[existingIndex] = newValue;
-              } else {
-                _allValuesBillwise.add(newValue);
+              double amount = double.tryParse(newValue['amount']) ?? 0.0;
+
+              if (amount > 0) {
+                final existingIndex = _allValuesBillwise.indexWhere(
+                  (entry) => entry['uniqueKey'] == newValue['uniqueKey'],
+                );
+                if (existingIndex != -1) {
+                  _allValuesBillwise[existingIndex] = newValue;
+                } else {
+                  _allValuesBillwise.add(newValue);
+                }
               }
               print('Updated _allValuesBillwise: $_allValuesBillwise');
             }

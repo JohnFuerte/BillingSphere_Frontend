@@ -231,7 +231,7 @@ class _ChequeReturnEntryState extends State<QuickEntryBillwiseReceipt> {
             if (dueAmount != null) {
               dueAmount -= adjustmentAmount;
               sales.dueAmount = dueAmount.toString();
-              await salesServices.updateSalesEntry(sales, context);
+              await salesServices.updateSalesEntry(sales);
             } else {
               print('Error: Unable to parse dueAmount.');
             }
