@@ -196,7 +196,7 @@ class _PosMasterState extends State<PosMaster> {
     setState(() {
       fetchedSalesPos = fetchedSalesPos2
           .where((sales) =>
-              sales.remarks.toLowerCase().contains(value.toLowerCase()))
+              sales.remarks!.toLowerCase().contains(value.toLowerCase()))
           .toList();
     });
   }
@@ -964,7 +964,7 @@ class _PosMasterState extends State<PosMaster> {
                                                       overflow:
                                                           TextOverflow.ellipsis,
                                                       fetchedSalesPos[i]
-                                                          .remarks,
+                                                          .remarks!,
                                                       style:
                                                           GoogleFonts.poppins(
                                                         fontSize: 15,

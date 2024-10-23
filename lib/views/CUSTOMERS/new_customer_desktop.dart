@@ -149,7 +149,6 @@ class _NewCustomerState extends State<NewCustomer> {
               Navigator.of(context).pop();
               return null;
             },
-
           ),
           SubmitIntent: CallbackAction<SubmitIntent>(
             onInvoke: (SubmitIntent intent) {
@@ -1651,716 +1650,722 @@ class _NewCustomerState extends State<NewCustomer> {
                     ),
                     borderRadius: BorderRadius.circular(0),
                   ),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 10),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 10),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.08,
-                                child: RichText(
-                                  text: TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: "Mobile No",
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.deepPurple,
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: " *",
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.red,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )),
-                            SETopTextfield(
-                              controller: _mobileController,
-                              // focusNode: _mobileFocusNode,
-                              // onEditingComplete: () {
-                              //   FocusScope.of(context)
-                              //       .requestFocus(_firstNameFocusNode);
-
-                              //   setState(() {});
-                              // },
-                              onTap: () {
-                                FocusScope.of(context)
-                                    .requestFocus(_mobileFocusNode);
-
-                                setState(() {});
-                              },
-                              onSaved: (newValue) {},
-                              width: MediaQuery.of(context).size.width * 0.15,
-                              height: 40,
-                              padding: const EdgeInsets.only(
-                                  left: 8.0, bottom: 16.0),
-                              hintText: '',
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 10),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                                width: MediaQuery.of(context).size.width * 0.08,
-                                child: RichText(
-                                  text: TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: "First Name",
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.deepPurple,
-                                        ),
-                                      ),
-                                      TextSpan(
-                                        text: " *",
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 15,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.red,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )),
-                            SETopTextfield(
-                              controller: _firstNameController,
-                              // focusNode: _firstNameFocusNode,
-                              onTap: () {
-                                FocusScope.of(context)
-                                    .requestFocus(_firstNameFocusNode);
-
-                                setState(() {});
-                              },
-                              // onEditingComplete: () {
-                              //   FocusScope.of(context)
-                              //       .requestFocus(_middleNameFocusNode);
-
-                              //   setState(() {});
-                              // },
-                              onSaved: (newValue) {},
-                              width: MediaQuery.of(context).size.width * 0.15,
-                              height: 40,
-                              padding: const EdgeInsets.only(
-                                  left: 8.0, bottom: 16.0),
-                              hintText: '',
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 10),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.08,
-                              child: Text(
-                                "Middle Name",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              ),
-                            ),
-                            SETopTextfield(
-                              controller: _middleNameController,
-                              // focusNode: _middleNameFocusNode,
-                              // onEditingComplete: () {
-                              //   FocusScope.of(context)
-                              //       .requestFocus(_lastNameFocusNode);
-
-                              //   setState(() {});
-                              // },
-                              onTap: () {
-                                FocusScope.of(context)
-                                    .requestFocus(_middleNameFocusNode);
-
-                                setState(() {});
-                              },
-                              onSaved: (newValue) {},
-                              width: MediaQuery.of(context).size.width * 0.15,
-                              height: 40,
-                              padding: const EdgeInsets.only(
-                                  left: 8.0, bottom: 16.0),
-                              hintText: '',
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 10),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.08,
-                              child: Text(
-                                "Last Name",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              ),
-                            ),
-                            SETopTextfield(
-                              controller: _lastNameController,
-                              // focusNode: _lastNameFocusNode,
-                              // onEditingComplete: () {
-                              //   FocusScope.of(context)
-                              //       .requestFocus(_fullNameFocusNode);
-
-                              //   setState(() {});
-                              // },
-                              onTap: () {
-                                FocusScope.of(context)
-                                    .requestFocus(_lastNameFocusNode);
-
-                                setState(() {});
-                              },
-                              onSaved: (newValue) {},
-                              width: MediaQuery.of(context).size.width * 0.15,
-                              height: 40,
-                              padding: const EdgeInsets.only(
-                                  left: 8.0, bottom: 16.0),
-                              hintText: '',
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 10),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.08,
-                              child: Text(
-                                "Full Name",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              ),
-                            ),
-                            SETopTextfield(
-                              controller: _fullNameController,
-                              // focusNode: _fullNameFocusNode,
-                              onTap: () {
-                                FocusScope.of(context)
-                                    .requestFocus(_fullNameFocusNode);
-
-                                setState(() {});
-                              },
-                              // onEditingComplete: () {
-                              //   FocusScope.of(context)
-                              //       .requestFocus(_customerIdFocusNode);
-
-                              //   setState(() {});
-                              // },
-                              onSaved: (newValue) {},
-                              width: MediaQuery.of(context).size.width * 0.3,
-                              height: 40,
-                              padding: const EdgeInsets.only(
-                                  left: 8.0, bottom: 16.0),
-                              hintText: '',
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 10),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.08,
-                              child: Text(
-                                "Send SMS",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(border: Border.all()),
-                              width: MediaQuery.of(context).size.width * 0.1,
-                              height: 40,
-                              padding: const EdgeInsets.all(2.0),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: selectedSendSms,
-                                  underline: Container(),
-                                  icon: const SizedBox.shrink(),
-                                  onChanged: (String? newValue) {
-                                    setState(() {
-                                      selectedSendSms = newValue!;
-                                    });
-                                  },
-                                  items: ["No", "Yes"]
-                                      .map<DropdownMenuItem<String>>(
-                                          (String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            bottom: 0, left: 5),
-                                        child: Text(
-                                          value,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 10),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.08,
+                                  child: RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: "Mobile No",
                                           style: GoogleFonts.poppins(
-                                            color: Colors.black,
                                             fontSize: 15,
                                             fontWeight: FontWeight.bold,
+                                            color: Colors.deepPurple,
                                           ),
                                         ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 10),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.08,
-                              child: Text(
-                                "Customer Type",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(border: Border.all()),
-                              width: MediaQuery.of(context).size.width * 0.1,
-                              height: 40,
-                              padding: const EdgeInsets.all(2.0),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: selectedCustomerType,
-                                  underline: Container(),
-                                  icon: const SizedBox.shrink(),
-                                  onChanged: (String? newValue) {
-                                    setState(() {
-                                      selectedCustomerType = newValue!;
-                                    });
-                                  },
-                                  items: ["Walk In"]
-                                      .map<DropdownMenuItem<String>>(
-                                          (String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            bottom: 0, left: 5),
-                                        child: Text(
-                                          value,
+                                        TextSpan(
+                                          text: " *",
                                           style: GoogleFonts.poppins(
-                                            color: Colors.black,
                                             fontSize: 15,
                                             fontWeight: FontWeight.bold,
+                                            color: Colors.red,
                                           ),
                                         ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
+                                      ],
+                                    ),
+                                  )),
+                              SETopTextfield(
+                                controller: _mobileController,
+                                // focusNode: _mobileFocusNode,
+                                // onEditingComplete: () {
+                                //   FocusScope.of(context)
+                                //       .requestFocus(_firstNameFocusNode);
+
+                                //   setState(() {});
+                                // },
+                                onTap: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(_mobileFocusNode);
+
+                                  setState(() {});
+                                },
+                                onSaved: (newValue) {},
+                                width: MediaQuery.of(context).size.width * 0.15,
+                                height: 40,
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, bottom: 16.0),
+                                hintText: '',
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 10),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.08,
-                              child: Text(
-                                "Customer ID",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              ),
-                            ),
-                            SETopTextfield(
-                              controller: _customerIdController,
-                              // focusNode: _customerIdFocusNode,
-                              onTap: () {
-                                FocusScope.of(context)
-                                    .requestFocus(_customerIdFocusNode);
-
-                                setState(() {});
-                              },
-                              // onEditingComplete: () {
-                              //   FocusScope.of(context)
-                              //       .requestFocus(_addressFocusNode);
-
-                              //   setState(() {});
-                              // },
-                              onSaved: (newValue) {},
-                              width: MediaQuery.of(context).size.width * 0.3,
-                              height: 40,
-                              padding: const EdgeInsets.only(
-                                  left: 8.0, bottom: 16.0),
-                              hintText: '',
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 10),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.08,
-                              child: Text(
-                                "Address",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              ),
-                            ),
-                            SETopTextfield(
-                              controller: _addressController,
-                              // focusNode: _addressFocusNode,
-                              onTap: () {
-                                FocusScope.of(context)
-                                    .requestFocus(_addressFocusNode);
-
-                                setState(() {});
-                              },
-                              // onEditingComplete: () {
-                              //   FocusScope.of(context)
-                              //       .requestFocus(_cityFocusNode);
-
-                              //   setState(() {});
-                              // },
-                              onSaved: (newValue) {},
-                              width: MediaQuery.of(context).size.width * 0.3,
-                              padding: const EdgeInsets.only(
-                                  left: 8.0, bottom: 8.0, top: 8.0),
-                              hintText: '',
-                              maxLines: 2,
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 10),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.08,
-                              child: Text(
-                                "City/Town",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              ),
-                            ),
-                            SETopTextfield(
-                              controller: _cityController,
-                              // focusNode: _cityFocusNode,
-                              onTap: () {
-                                FocusScope.of(context)
-                                    .requestFocus(_cityFocusNode);
-
-                                setState(() {});
-                              },
-                              // onEditingComplete: () {
-                              //   FocusScope.of(context)
-                              //       .requestFocus(_aadharCardFocusNode);
-
-                              //   setState(() {});
-                              // },
-                              onSaved: (newValue) {},
-                              width: MediaQuery.of(context).size.width * 0.15,
-                              height: 40,
-                              padding: const EdgeInsets.only(
-                                  left: 8.0, bottom: 16.0),
-                              hintText: '',
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 10),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.08,
-                              child: Text(
-                                "Aadhar Card",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              ),
-                            ),
-                            SETopTextfield(
-                              controller: _aadharCardController,
-                              // focusNode: _aadharCardFocusNode,
-                              onTap: () {
-                                FocusScope.of(context)
-                                    .requestFocus(_aadharCardFocusNode);
-
-                                setState(() {});
-                              },
-                              // onEditingComplete: () {
-                              //   FocusScope.of(context)
-                              //       .requestFocus(_emailIdFocusNode);
-
-                              //   setState(() {});
-                              // },
-                              onSaved: (newValue) {},
-                              width: MediaQuery.of(context).size.width * 0.3,
-                              height: 40,
-                              padding: const EdgeInsets.only(
-                                  left: 8.0, bottom: 16.0),
-                              hintText: '',
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 10),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.08,
-                              child: Text(
-                                "Email ID",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              ),
-                            ),
-                            SETopTextfield(
-                              controller: _emailIdController,
-                              // focusNode: _emailIdFocusNode,
-                              onTap: () {
-                                FocusScope.of(context)
-                                    .requestFocus(_emailIdFocusNode);
-
-                                setState(() {});
-                              },
-                              // onEditingComplete: () {
-                              //   FocusScope.of(context)
-                              //       .requestFocus(_birthDateFocusNode);
-
-                              //   setState(() {});
-                              // },
-                              onSaved: (newValue) {},
-                              width: MediaQuery.of(context).size.width * 0.3,
-                              height: 40,
-                              padding: const EdgeInsets.only(
-                                  left: 8.0, bottom: 16.0),
-                              hintText: '',
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 10),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.08,
-                              child: Text(
-                                "Birth Date",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              ),
-                            ),
-                            SETopTextfield(
-                              controller: _birthDateController,
-                              // focusNode: _birthDateFocusNode,
-                              // onEditingComplete: () {
-                              //   FocusScope.of(context)
-                              //       .requestFocus(_mobileFocusNode);
-
-                              //   setState(() {});
-                              // },
-                              onTap: () {
-                                FocusScope.of(context)
-                                    .requestFocus(_birthDateFocusNode);
-
-                                setState(() {});
-                              },
-                              onSaved: (newValue) {},
-                              width: MediaQuery.of(context).size.width * 0.1,
-                              height: 40,
-                              padding: const EdgeInsets.only(
-                                  left: 8.0, bottom: 16.0),
-                              hintText: '',
-                            ),
-                          ],
-                        ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 2, horizontal: 10),
-                        child: Row(
-                          children: [
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.08,
-                              child: Text(
-                                "Is Active",
-                                style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.deepPurple,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              decoration: BoxDecoration(border: Border.all()),
-                              width: MediaQuery.of(context).size.width * 0.1,
-                              height: 40,
-                              padding: const EdgeInsets.all(2.0),
-                              child: DropdownButtonHideUnderline(
-                                child: DropdownButton<String>(
-                                  value: selectedIsActive,
-                                  underline: Container(),
-                                  icon: const SizedBox.shrink(),
-                                  onChanged: (String? newValue) {
-                                    setState(() {
-                                      selectedIsActive = newValue!;
-                                    });
-                                  },
-                                  items: ["Yes", "No"]
-                                      .map<DropdownMenuItem<String>>(
-                                          (String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Padding(
-                                        padding: const EdgeInsets.only(
-                                            bottom: 0, left: 5),
-                                        child: Text(
-                                          value,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.08,
+                                  child: RichText(
+                                    text: TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: "First Name",
                                           style: GoogleFonts.poppins(
-                                            color: Colors.black,
                                             fontSize: 15,
                                             fontWeight: FontWeight.bold,
+                                            color: Colors.deepPurple,
                                           ),
                                         ),
-                                      ),
-                                    );
-                                  }).toList(),
-                                ),
+                                        TextSpan(
+                                          text: " *",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.red,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )),
+                              SETopTextfield(
+                                controller: _firstNameController,
+                                // focusNode: _firstNameFocusNode,
+                                onTap: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(_firstNameFocusNode);
+
+                                  setState(() {});
+                                },
+                                // onEditingComplete: () {
+                                //   FocusScope.of(context)
+                                //       .requestFocus(_middleNameFocusNode);
+
+                                //   setState(() {});
+                                // },
+                                onSaved: (newValue) {},
+                                width: MediaQuery.of(context).size.width * 0.15,
+                                height: 40,
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, bottom: 16.0),
+                                hintText: '',
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 10),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            InkWell(
-                              onTap: createNewCustomer,
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFFFACD),
-                                  border: Border.all(
-                                    color: const Color(0xFFFFFACD),
-                                    width: 1,
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.08,
+                                child: Text(
+                                  "Middle Name",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
                                   ),
                                 ),
+                              ),
+                              SETopTextfield(
+                                controller: _middleNameController,
+                                // focusNode: _middleNameFocusNode,
+                                // onEditingComplete: () {
+                                //   FocusScope.of(context)
+                                //       .requestFocus(_lastNameFocusNode);
+
+                                //   setState(() {});
+                                // },
+                                onTap: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(_middleNameFocusNode);
+
+                                  setState(() {});
+                                },
+                                onSaved: (newValue) {},
+                                width: MediaQuery.of(context).size.width * 0.15,
+                                height: 40,
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, bottom: 16.0),
+                                hintText: '',
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(
                                 width: MediaQuery.of(context).size.width * 0.08,
+                                child: Text(
+                                  "Last Name",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
+                              ),
+                              SETopTextfield(
+                                controller: _lastNameController,
+                                // focusNode: _lastNameFocusNode,
+                                // onEditingComplete: () {
+                                //   FocusScope.of(context)
+                                //       .requestFocus(_fullNameFocusNode);
+
+                                //   setState(() {});
+                                // },
+                                onTap: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(_lastNameFocusNode);
+
+                                  setState(() {});
+                                },
+                                onSaved: (newValue) {},
+                                width: MediaQuery.of(context).size.width * 0.15,
+                                height: 40,
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, bottom: 16.0),
+                                hintText: '',
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.08,
+                                child: Text(
+                                  "Full Name",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
+                              ),
+                              SETopTextfield(
+                                controller: _fullNameController,
+                                // focusNode: _fullNameFocusNode,
+                                onTap: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(_fullNameFocusNode);
+
+                                  setState(() {});
+                                },
+                                // onEditingComplete: () {
+                                //   FocusScope.of(context)
+                                //       .requestFocus(_customerIdFocusNode);
+
+                                //   setState(() {});
+                                // },
+                                onSaved: (newValue) {},
+                                width: MediaQuery.of(context).size.width * 0.3,
+                                height: 40,
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, bottom: 16.0),
+                                hintText: '',
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.08,
+                                child: Text(
+                                  "Send SMS",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                decoration: BoxDecoration(border: Border.all()),
+                                width: MediaQuery.of(context).size.width * 0.1,
                                 height: 40,
                                 padding: const EdgeInsets.all(2.0),
-                                child: Center(
-                                  child: Text(
-                                    'Save[F4]',
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.black,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: selectedSendSms,
+                                    underline: Container(),
+                                    icon: const SizedBox.shrink(),
+                                    onChanged: (String? newValue) {
+                                      setState(() {
+                                        selectedSendSms = newValue!;
+                                      });
+                                    },
+                                    items: ["No", "Yes"]
+                                        .map<DropdownMenuItem<String>>(
+                                            (String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                              bottom: 0, left: 5),
+                                          child: Text(
+                                            value,
+                                            style: GoogleFonts.poppins(
+                                              color: Colors.black,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.08,
+                                child: Text(
+                                  "Customer Type",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                decoration: BoxDecoration(border: Border.all()),
+                                width: MediaQuery.of(context).size.width * 0.1,
+                                height: 40,
+                                padding: const EdgeInsets.all(2.0),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: selectedCustomerType,
+                                    underline: Container(),
+                                    icon: const SizedBox.shrink(),
+                                    onChanged: (String? newValue) {
+                                      setState(() {
+                                        selectedCustomerType = newValue!;
+                                      });
+                                    },
+                                    items: ["Walk In"]
+                                        .map<DropdownMenuItem<String>>(
+                                            (String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                              bottom: 0, left: 5),
+                                          child: Text(
+                                            value,
+                                            style: GoogleFonts.poppins(
+                                              color: Colors.black,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.08,
+                                child: Text(
+                                  "Customer ID",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
+                              ),
+                              SETopTextfield(
+                                controller: _customerIdController,
+                                // focusNode: _customerIdFocusNode,
+                                onTap: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(_customerIdFocusNode);
+
+                                  setState(() {});
+                                },
+                                // onEditingComplete: () {
+                                //   FocusScope.of(context)
+                                //       .requestFocus(_addressFocusNode);
+
+                                //   setState(() {});
+                                // },
+                                onSaved: (newValue) {},
+                                width: MediaQuery.of(context).size.width * 0.3,
+                                height: 40,
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, bottom: 16.0),
+                                hintText: '',
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.08,
+                                child: Text(
+                                  "Address",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
+                              ),
+                              SETopTextfield(
+                                controller: _addressController,
+                                // focusNode: _addressFocusNode,
+                                onTap: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(_addressFocusNode);
+
+                                  setState(() {});
+                                },
+                                // onEditingComplete: () {
+                                //   FocusScope.of(context)
+                                //       .requestFocus(_cityFocusNode);
+
+                                //   setState(() {});
+                                // },
+                                onSaved: (newValue) {},
+                                width: MediaQuery.of(context).size.width * 0.3,
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, bottom: 8.0, top: 8.0),
+                                hintText: '',
+                                maxLines: 2,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.08,
+                                child: Text(
+                                  "City/Town",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
+                              ),
+                              SETopTextfield(
+                                controller: _cityController,
+                                // focusNode: _cityFocusNode,
+                                onTap: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(_cityFocusNode);
+
+                                  setState(() {});
+                                },
+                                // onEditingComplete: () {
+                                //   FocusScope.of(context)
+                                //       .requestFocus(_aadharCardFocusNode);
+
+                                //   setState(() {});
+                                // },
+                                onSaved: (newValue) {},
+                                width: MediaQuery.of(context).size.width * 0.15,
+                                height: 40,
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, bottom: 16.0),
+                                hintText: '',
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.08,
+                                child: Text(
+                                  "Aadhar Card",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
+                              ),
+                              SETopTextfield(
+                                controller: _aadharCardController,
+                                // focusNode: _aadharCardFocusNode,
+                                onTap: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(_aadharCardFocusNode);
+
+                                  setState(() {});
+                                },
+                                // onEditingComplete: () {
+                                //   FocusScope.of(context)
+                                //       .requestFocus(_emailIdFocusNode);
+
+                                //   setState(() {});
+                                // },
+                                onSaved: (newValue) {},
+                                width: MediaQuery.of(context).size.width * 0.3,
+                                height: 40,
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, bottom: 16.0),
+                                hintText: '',
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.08,
+                                child: Text(
+                                  "Email ID",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
+                              ),
+                              SETopTextfield(
+                                controller: _emailIdController,
+                                // focusNode: _emailIdFocusNode,
+                                onTap: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(_emailIdFocusNode);
+
+                                  setState(() {});
+                                },
+                                // onEditingComplete: () {
+                                //   FocusScope.of(context)
+                                //       .requestFocus(_birthDateFocusNode);
+
+                                //   setState(() {});
+                                // },
+                                onSaved: (newValue) {},
+                                width: MediaQuery.of(context).size.width * 0.3,
+                                height: 40,
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, bottom: 16.0),
+                                hintText: '',
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.08,
+                                child: Text(
+                                  "Birth Date",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
+                              ),
+                              SETopTextfield(
+                                controller: _birthDateController,
+                                // focusNode: _birthDateFocusNode,
+                                // onEditingComplete: () {
+                                //   FocusScope.of(context)
+                                //       .requestFocus(_mobileFocusNode);
+
+                                //   setState(() {});
+                                // },
+                                onTap: () {
+                                  FocusScope.of(context)
+                                      .requestFocus(_birthDateFocusNode);
+
+                                  setState(() {});
+                                },
+                                onSaved: (newValue) {},
+                                width: MediaQuery.of(context).size.width * 0.1,
+                                height: 40,
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, bottom: 16.0),
+                                hintText: '',
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 2, horizontal: 10),
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: MediaQuery.of(context).size.width * 0.08,
+                                child: Text(
+                                  "Is Active",
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.deepPurple,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                decoration: BoxDecoration(border: Border.all()),
+                                width: MediaQuery.of(context).size.width * 0.1,
+                                height: 40,
+                                padding: const EdgeInsets.all(2.0),
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownButton<String>(
+                                    value: selectedIsActive,
+                                    underline: Container(),
+                                    icon: const SizedBox.shrink(),
+                                    onChanged: (String? newValue) {
+                                      setState(() {
+                                        selectedIsActive = newValue!;
+                                      });
+                                    },
+                                    items: ["Yes", "No"]
+                                        .map<DropdownMenuItem<String>>(
+                                            (String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Padding(
+                                          padding: const EdgeInsets.only(
+                                              bottom: 0, left: 5),
+                                          child: Text(
+                                            value,
+                                            style: GoogleFonts.poppins(
+                                              color: Colors.black,
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 10),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              InkWell(
+                                onTap: createNewCustomer,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFFACD),
+                                    border: Border.all(
+                                      color: const Color(0xFFFFFACD),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.08,
+                                  height: 40,
+                                  padding: const EdgeInsets.all(2.0),
+                                  child: Center(
+                                    child: Text(
+                                      'Save[F4]',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.black,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 10),
-                            InkWell(
-                              onTap: () {},
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFFFFACD),
-                                  border: Border.all(
+                              const SizedBox(width: 10),
+                              InkWell(
+                                onTap: () {},
+                                child: Container(
+                                  decoration: BoxDecoration(
                                     color: const Color(0xFFFFFACD),
-                                    width: 1,
+                                    border: Border.all(
+                                      color: const Color(0xFFFFFACD),
+                                      width: 1,
+                                    ),
                                   ),
-                                ),
-                                width: MediaQuery.of(context).size.width * 0.08,
-                                height: 40,
-                                padding: const EdgeInsets.all(2.0),
-                                child: Center(
-                                  child: Text(
-                                    'Cancel',
-                                    style: GoogleFonts.poppins(
-                                      color: Colors.black,
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.bold,
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.08,
+                                  height: 40,
+                                  padding: const EdgeInsets.all(2.0),
+                                  child: Center(
+                                    child: Text(
+                                      'Cancel',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.black,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -2375,7 +2380,6 @@ class _NewCustomerState extends State<NewCustomer> {
 class SubmitIntent extends Intent {
   const SubmitIntent();
 }
-
 
 class SaveIntent extends Intent {
   const SaveIntent();

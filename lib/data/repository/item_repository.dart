@@ -22,7 +22,6 @@ class ItemsService {
     return prefs.getString('token');
   }
 
-
   Future<List<String>?> getCompanyCode() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getStringList('companies');
@@ -532,7 +531,9 @@ class ItemsService {
           );
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (context) => const SalesHome(item: [],),
+              builder: (context) => const SalesHome(
+                item: [],
+              ),
             ),
           );
         },
@@ -550,6 +551,7 @@ class ItemsService {
   Future<List<Item>> searchItemsByBarcode(String query) async {
     try {
       final String? token = await getToken();
+      print("token $token");
       final response = await http.get(
         Uri.parse('${Constants.baseUrl}/items/get-item-by-barcode/$query'),
         headers: {
@@ -558,15 +560,15 @@ class ItemsService {
       );
 
       final responseData = json.decode(response.body);
-
+      print("responseData $responseData");
       if (responseData['success'] == true) {
         final itemData = responseData['data'];
-
+        print(itemData);
         final List<Item> items = List.from(itemData.map((entry) {
           entry.remove('images');
           return Item.fromMap(entry);
         }));
-
+        print("success");
         return items;
       } else {
         print('${responseData['message']}');

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:billingsphere/data/models/ledger/ledger_model.dart';
 import 'package:billingsphere/data/repository/item_repository.dart';
 import 'package:beep_player/beep_player.dart';
@@ -15,6 +17,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:velocity_x/velocity_x.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import 'package:audioplayers/audioplayers.dart';
 
@@ -47,6 +50,7 @@ class SalesReturn extends StatefulWidget {
 }
 
 class _SalesReturnState extends State<SalesReturn> {
+  Timer? _debounce;
   late AudioCache _audioCache;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -61,6 +65,7 @@ class _SalesReturnState extends State<SalesReturn> {
   late bool visible;
   bool isLoading = false;
   List<Item> itemList = [];
+  List<Item> rowItems = [];
   List<TaxRate> taxLists = [];
   late List<TableRow> tables = [];
   late List<TableRow> Ctables = [];
@@ -72,7 +77,7 @@ class _SalesReturnState extends State<SalesReturn> {
   List<Map<String, dynamic>> values = [];
   List<MeasurementLimit> measurement = [];
   List<NewCustomerModel> customerList = [];
-  Map<String, dynamic> _multiModeValues = {};
+  final Map<String, dynamic> multimodeDetails = {};
   ItemsService itemsService = ItemsService();
   TaxRateService taxRateService = TaxRateService();
   MeasurementLimitService measurementService = MeasurementLimitService();
@@ -86,7 +91,7 @@ class _SalesReturnState extends State<SalesReturn> {
 
   // Dropdown Select
   String? selectedAC;
-  String selectedCustomer = '';
+  String? selectedCustomer;
   String selecteSetDiscount = 'No';
   String selectedType = "Cash";
   String? selectedSalesMan;
@@ -97,6 +102,7 @@ class _SalesReturnState extends State<SalesReturn> {
   Item? selectedItem;
 
   late int currentIndex;
+
   void nextRecord() {
     setState(() {
       if (salesPosList.isNotEmpty && currentIndex < salesPosList.length) {
@@ -788,11 +794,13 @@ class _SalesReturnState extends State<SalesReturn> {
   final TextEditingController _basicController = TextEditingController();
   final TextEditingController _noController = TextEditingController();
   final TextEditingController _customerController = TextEditingController();
+  final TextEditingController _acController = TextEditingController();
   final TextEditingController _pointController = TextEditingController();
   final TextEditingController _batchNoController = TextEditingController();
   final TextEditingController _baseController = TextEditingController();
   final TextEditingController _mrpController = TextEditingController();
   final TextEditingController _amountController = TextEditingController();
+  final TextEditingController dataText = TextEditingController();
 
   final TextEditingController _billedToController = TextEditingController();
   final TextEditingController? _remarkController = TextEditingController();
@@ -810,6 +818,15 @@ class _SalesReturnState extends State<SalesReturn> {
       TextEditingController(text: "0.00");
 
   double overralTotal = 0.00;
+
+  String _discountType = "Fixed Percentage";
+
+  final TextEditingController _basicAmountController = TextEditingController();
+  final TextEditingController _discountPer =
+      TextEditingController(text: "0.00");
+  final TextEditingController _discountAmt =
+      TextEditingController(text: "0.00");
+  final TextEditingController _receivable = TextEditingController(text: "0.00");
 
   // final TextEditingController _rewardDiscController =
   //     TextEditingController(text: "0.00");
@@ -893,8 +910,6 @@ class _SalesReturnState extends State<SalesReturn> {
         _noController.text = (salesPos.length + 1).toString();
         currentIndex = salesPosList.length + 1;
       });
-
-      print("Current Index: $currentIndex");
     } catch (error) {
       print('Failed to fetch POS Entries: $error');
     }
@@ -947,7 +962,7 @@ class _SalesReturnState extends State<SalesReturn> {
 
       setState(() {
         customerList = customers;
-        selectedCustomer = customers[0].id;
+        selectedCustomer = "67188c95ce238809ff47a745";
       });
     } catch (error) {
       print('Failed to fetch Customers: $error');
@@ -1016,8 +1031,14 @@ class _SalesReturnState extends State<SalesReturn> {
     setState(() {
       _netTotalDiscController.text = totalAmount.toStringAsFixed(2);
     });
+  }
 
-    print(totalAmount);
+  double calculateTotalBasicAmount() {
+    double totalBasic = 0.0;
+    for (var item in rowItems) {
+      totalBasic += item.mrp;
+    }
+    return totalBasic;
   }
 
   List<String>? companyCode;
@@ -1039,35 +1060,6 @@ class _SalesReturnState extends State<SalesReturn> {
     });
 
     try {
-      // Print all the values before saving
-      print('Selected AC: $selectedAC');
-      print('Advance: ${_advanceController.text}');
-      print('Addition: ${_additionController.text}');
-      print('Less: ${_lessController.text}');
-      print('Round Off: ${_roundOffController.text}');
-      print('Set Discount: $selecteSetDiscount');
-      print('Type: $selectedType');
-      print('Company Code: ${companyCode![0]}');
-      print('Date: ${_controller.text}');
-      print('No: ${_noController.text}');
-      print('Place: $_selectedState');
-      print('Customer: ${_customerController.text}');
-      print('Billed To: $_selectedState');
-      print('Remarks: ${_remarkController?.text ?? 'No Remarks'}');
-      print('Total Amount: ${_netTotalDiscController.text}');
-      print('Entries:');
-      values.forEach((value) {
-        print('Item Name: ${value['itemName']}');
-        print('Qty: ${value['qty']}');
-        print('Rate: ${value['rate']}');
-        print('Unit: ${value['unit']}');
-        print('Basic: ${value['basic']}');
-        print('Discount Rs: ${value['discRs']}');
-        print('Discount %: ${value['discPer']}');
-        print('Tax: ${value['tax']}');
-        print('Net Amount: ${value['netAmount']}');
-      });
-
       final salesPos = SalesPos(
         id: '',
         ac: selectedAC!,
@@ -1098,7 +1090,18 @@ class _SalesReturnState extends State<SalesReturn> {
             mrp: double.parse(value['mrp']),
           );
         }).toList(),
-        customer: selectedCustomer,
+        multimode: multimodeDetails.isNotEmpty
+            ? [
+                Multimode(
+                  cash: multimodeDetails['cash'] ?? 0.0,
+                  debit: multimodeDetails['debit'] ?? 0.0,
+                  adjustedAmount: multimodeDetails['adjustedamount'] ?? 0.0,
+                  pending: multimodeDetails['pendingAmount'] ?? 0.0,
+                  finalAmount: multimodeDetails['finalAmount'] ?? 0.0,
+                ),
+              ]
+            : [],
+        customer: selectedCustomer!,
         billedTo: _billedToController.text,
         remarks: _remarkController?.text ?? 'No Remarks',
         totalAmount: double.parse(_netTotalDiscController.text),
@@ -1106,9 +1109,20 @@ class _SalesReturnState extends State<SalesReturn> {
         updatedAt: DateTime.now().toString(),
       );
 
-      print('Sales POS: $salesPos');
-
       await salesPosRepository.createPosEntry(salesPos);
+      if (selectedType == 'Credit') {
+        Ledger? ledger = await ledgerService.fetchLedgerById(selectedAC!);
+        ledger!.debitBalance += double.parse(_netTotalDiscController.text);
+        ledgerService.updateLedger2(
+          ledger,
+        );
+      } else if (selectedType == 'Multimode') {
+        Ledger? ledger = await ledgerService.fetchLedgerById(selectedAC!);
+        ledger!.debitBalance += multimodeDetails['debit'];
+        ledgerService.updateLedger2(
+          ledger,
+        );
+      }
 
       Fluttertoast.showToast(
         msg: 'POS Entry created successfully!',
@@ -1173,8 +1187,8 @@ class _SalesReturnState extends State<SalesReturn> {
             width: 700,
             height: 700,
             child: PopUp2(
-              multimodeDetails: _multiModeValues,
-              onSaveData: () {},
+              multimodeDetails: multimodeDetails,
+              onSaveData: createPOSEntry,
               totalAmount: double.parse(_netTotalDiscController.text),
               listWidget: Expanded(
                 child: ListView.builder(
@@ -1238,7 +1252,6 @@ class _SalesReturnState extends State<SalesReturn> {
     );
   }
 
-  // Function to delete a row from the table
   void deleteTableRow(int index) {
     setState(() {
       values.removeAt(index);
@@ -1248,361 +1261,10 @@ class _SalesReturnState extends State<SalesReturn> {
     _calculateTotalAmount();
   }
 
-  // Function to display the dialog box (Problematic)
-  void openDialog({int? rowIndex, Item? item}) {
-    if (rowIndex != null) {
-      selectedRowIndex = rowIndex;
-      final selectedItem = values[rowIndex];
-      selectedItemName = selectedItem['Item_Name'];
-      _qtyController.text = selectedItem['qty'];
-      _unitController.text = selectedItem['unit'];
-      _rateController.text = selectedItem['rate'];
-      _discPerController.text = selectedItem['discPer'] ?? '';
-      _discRsController.text = selectedItem['discRs'] ?? '';
-      _taxController.text = selectedItem['tax'] ?? '';
-      _netAmountController.text = selectedItem['netAmount'];
-      _basicController.text = selectedItem['basic'];
-      _baseController.text = selectedItem['base'];
-      _mrpController.text = selectedItem['mrp'];
-      _amountController.text = selectedItem['amount'];
-    } else {
-      tableKey = UniqueKey();
-      selectedRowIndex = null;
-    }
-    print('Selected ITEM: ${selectedItem}');
-    showDialog(
-      context: context,
-      builder: (context) {
-        // FocusScope.of(context).requestFocus(qtyFocus);
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(0),
-          ),
-          contentPadding: const EdgeInsets.all(0),
-          content: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width,
-                maxHeight: 200,
-              ),
-              height: 200,
-              width: MediaQuery.of(context).size.width * 0.70,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.black,
-                ),
-                borderRadius: BorderRadius.circular(0),
-              ),
-              child: StatefulBuilder(
-                builder: (context, setState) {
-                  return Shortcuts(
-                    shortcuts: {
-                      LogicalKeySet(LogicalKeyboardKey.space):
-                          const ActivateIntent(),
-                    },
-                    child: Focus(
-                      autofocus: true,
-                      onKey: (node, event) {
-                        if (event is RawKeyDownEvent &&
-                            event.logicalKey == LogicalKeyboardKey.space) {
-                          print('Pressed Space');
-                          _saveValues();
-                          _calculateTotalAmount();
-                          addTableRow2();
-                          Navigator.of(context).pop();
-
-                          return KeyEventResult.handled;
-                        }
-                        return KeyEventResult.ignored;
-                      },
-                      child: Column(
-                        children: [
-                          Container(
-                            height: 40,
-                            width: double.infinity,
-                            decoration: const BoxDecoration(
-                              color: Color.fromARGB(255, 0, 56, 102),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Column(
-                              children: [
-                                Text(
-                                  "$selectedItemName",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 5),
-                              child: Row(
-                                children: [
-                                  CustomTextField(
-                                    name: "Qty",
-                                    // focusNode: qtyFocus,
-                                    onEditingComplete: () {
-                                      // FocusScope.of(context)
-                                      //     .requestFocus(unitFocus);
-
-                                      setState(() {});
-                                    },
-                                    controller: _qtyController,
-                                    onchange: (String value) {
-                                      double qty = double.parse(value);
-
-                                      print("Pressed Edit QTY $qty");
-                                      print("MRP: ${_mrpController.text}");
-
-                                      double rate =
-                                          double.parse(_rateController.text);
-                                      double amount = qty * rate;
-                                      double netAmount = qty *
-                                          double.parse(_mrpController.text);
-                                      double tax =
-                                          double.parse(_taxController.text);
-                                      double finalTax = tax * qty;
-
-                                      setState(() {
-                                        _netAmountController.text = netAmount
-                                            .toStringAsFixed(2)
-                                            .toString();
-                                        _amountController.text = amount
-                                            .toStringAsFixed(2)
-                                            .toString();
-                                        _taxController.text =
-                                            finalTax.toStringAsFixed(2);
-                                      });
-                                    },
-                                  ),
-                                  CustomTextField(
-                                    name: "Unit",
-                                    // focusNode: unitFocus,
-                                    isReadOnly: true,
-                                    onEditingComplete: () {
-                                      // FocusScope.of(context)
-                                      //     .requestFocus(rateFocus);
-
-                                      // REBUILD UI
-                                      setState(() {});
-                                    },
-                                    controller: _unitController,
-                                    onchange: (String value) {},
-                                  ),
-                                  CustomTextField(
-                                    name: "Rate",
-                                    // focusNode: rateFocus,
-                                    isReadOnly: true,
-                                    onEditingComplete: () {
-                                      // FocusScope.of(context)
-                                      //     .requestFocus(perFocus);
-
-                                      // REBUILD UI
-                                      setState(() {});
-                                    },
-                                    controller: _rateController,
-                                    onchange: (String value) {},
-                                  ),
-                                  CustomTextField(
-                                    name: "Per",
-                                    // focusNode: perFocus,
-                                    isReadOnly: true,
-                                    onEditingComplete: () {
-                                      // FocusScope.of(context)
-                                      //     .requestFocus(amountFocus);
-
-                                      // REBUILD UI
-                                      setState(() {});
-                                    },
-                                    controller: _unitController,
-                                    onchange: (String value) {},
-                                  ),
-                                  CustomTextField(
-                                    name: "Amount",
-                                    // focusNode: amountFocus,
-                                    isReadOnly: true,
-                                    onEditingComplete: () {
-                                      // FocusScope.of(context)
-                                      //     .requestFocus(discPerFocus);
-
-                                      // REBUILD UI
-                                      setState(() {});
-                                    },
-                                    controller: _amountController,
-                                    textAlign: TextAlign.right,
-                                    onchange: (String value) {},
-                                  ),
-                                  CustomTextField(
-                                    name: "Disc.%",
-                                    // focusNode: discPerFocus,
-                                    onEditingComplete: () {
-                                      // FocusScope.of(context)
-                                      //     .requestFocus(discRsFocus);
-
-                                      // REBUILD UI
-                                      setState(() {});
-                                    },
-                                    controller: _discPerController,
-                                    textAlign: TextAlign.right,
-                                    onchange: (String value) {
-                                      // Get Controller and parse to double
-                                      double disc = double.parse(value);
-
-                                      double discPer = disc / 100;
-                                      double discRs = discPer *
-                                          double.parse(_amountController.text);
-
-                                      double netAmount =
-                                          double.parse(_amountController.text) -
-                                              discRs;
-
-                                      // Set discRs to the controller
-                                      setState(() {
-                                        _discRsController.text =
-                                            discRs.toStringAsFixed(2);
-                                        _netAmountController.text =
-                                            netAmount.toStringAsFixed(2);
-                                      });
-
-                                      print('Rate: ${_rateController.text}');
-                                      print(
-                                          'Amount: ${_amountController.text}');
-                                      print(
-                                          'Disc Rs: ${_discRsController.text}');
-                                      print(
-                                          'Disc %: ${_discPerController.text}');
-                                    },
-                                  ),
-                                  CustomTextField(
-                                    name: "DiscRs",
-                                    // focusNode: discRsFocus,
-                                    onEditingComplete: () {
-                                      // FocusScope.of(context)
-                                      //     .requestFocus(taxFocus);
-
-                                      // REBUILD UI
-                                      setState(() {});
-                                    },
-                                    controller: _discRsController,
-                                    textAlign: TextAlign.right,
-                                    onchange: (String value) {
-                                      // Get Controller and parse to double
-                                      double discRs = double.parse(value);
-                                      double discountPercentage = (discRs /
-                                              double.parse(
-                                                  _amountController.text)) *
-                                          100;
-
-                                      double netAmount =
-                                          double.parse(_amountController.text) -
-                                              discRs;
-
-                                      // Set discRs to the controller
-                                      setState(() {
-                                        _discPerController.text =
-                                            discountPercentage
-                                                .toStringAsFixed(2);
-                                        _netAmountController.text =
-                                            netAmount.toStringAsFixed(2);
-                                      });
-                                    },
-                                  ),
-                                  CustomTextField(
-                                    name: "Tax",
-                                    isReadOnly: true,
-                                    // focusNode: taxFocus,
-                                    onEditingComplete: () {
-                                      // FocusScope.of(context)
-                                      //     .requestFocus(netAmountFocus);
-
-                                      // REBUILD UI
-                                      setState(() {});
-                                    },
-                                    controller: _taxController,
-                                    textAlign: TextAlign.right,
-                                    onchange: (String value) {},
-                                  ),
-                                  CustomTextField(
-                                    name: "Net Amount",
-                                    isReadOnly: true,
-                                    // focusNode: netAmountFocus,
-                                    onEditingComplete: () {
-                                      // Unfocus the current focus node
-                                      // netAmountFocus.unfocus();
-
-                                      // Rebuild UI
-                                      setState(() {});
-                                    },
-                                    controller: _netAmountController,
-                                    textAlign: TextAlign.right,
-                                    onchange: (String value) {},
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const Divider(
-                            thickness: 2,
-                            height: 40,
-                            color: Colors.black,
-                          ),
-                          Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                    bottom: 10, left: 5, right: 5),
-                                child: Buttons(
-                                  onTap: () {
-                                    // Pop
-                                    Navigator.of(context).pop();
-
-                                    _saveValues();
-                                    _calculateTotalAmount();
-                                    addTableRow2();
-                                  },
-                                  name: "Save",
-                                  Skey: "[space]",
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: Buttons(
-                                  onTap: () => Navigator.pop(context),
-                                  name: "Cancel",
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                    bottom: 10, left: 5, right: 5),
-                                child: Buttons(
-                                  name: "Delete",
-                                  onTap: () {
-                                    deleteTableRow(selectedRowIndex!);
-                                    Navigator.pop(context);
-                                  },
-                                ),
-                              ),
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              )),
-        );
-      },
-    );
-  }
-
   void openDialog2({int? rowIndex, Item? item}) {
+    if (rowItems.contains(item)) {
+      rowIndex = rowItems.indexOf(item!);
+    }
     if (rowIndex != null) {
       selectedRowIndex = rowIndex;
       final selectedItem = values[rowIndex];
@@ -1619,10 +1281,72 @@ class _SalesReturnState extends State<SalesReturn> {
       _mrpController.text = selectedItem['mrp'];
       _amountController.text = selectedItem['amount'];
     } else {
+      final selectedItem = item;
+
+      selectedItemName = selectedItem!.itemName;
+
+      selectedItemId = selectedItem.id;
+
+      String newId = '';
+      String newId2 = '';
+
+      for (Item item in itemList) {
+        if (item.id == selectedItemId) {
+          newId = item.taxCategory;
+          newId2 = item.measurementUnit;
+        }
+      }
+      for (TaxRate tax in taxLists) {
+        if (tax.id == newId) {
+          setState(() {
+            _taxController.text = tax.rate;
+          });
+        }
+      }
+      for (MeasurementLimit meu in measurement) {
+        if (meu.id == newId2) {
+          setState(() {
+            _unitController.text = meu.measurement.toString();
+          });
+        }
+      }
+
+      // Calculate the Rate
+      double ratepercent = (double.parse(_taxController.text) / 100);
+
+      ratepercent += 1.00;
+
+      double mpr = selectedItem.mrp;
+
+      double rate = mpr / ratepercent;
+
+      _qtyController.text = "1";
+      _rateController.text = rate.toStringAsFixed(2);
+      _discPerController.text = "0.00";
+      _discRsController.text = "0.00";
+      _basicController.text = rate.toStringAsFixed(2);
+
+      _amountController.text = rate.toStringAsFixed(2);
+
+      _mrpController.text = selectedItem.mrp.toStringAsFixed(2);
+      _baseController.text = selectedItem.mrp.toStringAsFixed(2);
+
+      final tax = selectedItem.mrp - rate;
+
+      // Change to taxAmountController
+
+      _taxController.text = tax.toStringAsFixed(2);
+
+      // For Net Amount, multiply qty with real rate
+      double qty = double.parse(_qtyController.text);
+      double rate2 = double.parse(selectedItem.mrp.toString());
+
+      double netAmount = qty * rate2;
+
+      _netAmountController.text = netAmount.toStringAsFixed(2).toString();
       tableKey = UniqueKey();
       selectedRowIndex = null;
     }
-    print('Selected ITEM: ${selectedItem}');
     showDialog(
       context: context,
       builder: (context) {
@@ -1659,12 +1383,11 @@ class _SalesReturnState extends State<SalesReturn> {
                     onKey: (node, event) {
                       if (event is RawKeyDownEvent &&
                           event.logicalKey == LogicalKeyboardKey.space) {
-                        print('Pressed Space');
                         _saveValues();
                         _calculateTotalAmount();
-                        addTableRow1();
+                        addTableRow2();
                         Navigator.of(context).pop();
-
+                        selectedItemName = null;
                         // FocusScope.of(context).requestFocus(billedToFocus);
 
                         setState(() {});
@@ -1706,24 +1429,12 @@ class _SalesReturnState extends State<SalesReturn> {
                                   name: "Qty",
                                   // focusNode: qtyFocus,
                                   controller: _qtyController,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    // qtyFocus.unfocus();
-
-                                    // FocusScope.of(context)
-                                    //     .requestFocus(unitFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   onchange: (String value) {
                                     double qty = double.parse(value);
-                                    print('Qty: $qty');
-                                    print(
-                                        'Selected Item Max: ${item!.maximumStock}');
                                     if (qty <= 0) {
-                                      _qtyController.text = '1';
-                                      qty = 1;
+                                      setState(() {
+                                        _qtyController.text = '1';
+                                      });
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         const SnackBar(
@@ -1736,57 +1447,28 @@ class _SalesReturnState extends State<SalesReturn> {
                                           backgroundColor: Colors.red,
                                         ),
                                       );
-                                    } else {
-                                      if (qty > item.maximumStock) {
+                                    } else if (qty >
+                                        (item?.maximumStock ??
+                                            double.infinity)) {
+                                      // Validate against maximum stock only if the item exists
+                                      setState(() {
                                         _qtyController.text =
-                                            item.maximumStock.toString();
-                                        // qty = selectedItem!.maximumStock.toDouble();
-
-                                        ScaffoldMessenger.of(context)
-                                            .showSnackBar(
-                                          const SnackBar(
-                                            content: Text(
-                                              'Quantity cannot be greater than Maximum Stock',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                              ),
+                                            item!.maximumStock.toString();
+                                      });
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Quantity cannot be greater than Maximum Stock',
+                                            style: TextStyle(
+                                              color: Colors.white,
                                             ),
-                                            backgroundColor: Colors.red,
                                           ),
-                                        );
-
-                                        // For Net Amount, multiply qty with rate
-                                        double rate =
-                                            double.parse(_rateController.text);
-                                        double netAmount = qty * rate;
-
-                                        setState(() {
-                                          _netAmountController.text = netAmount
-                                              .toStringAsFixed(2)
-                                              .toString();
-                                        });
-                                      } else {
-                                        // For Net Amount, multiply qty with rate
-                                        double rate =
-                                            double.parse(_rateController.text);
-                                        double amount = qty * rate;
-                                        double netAmount = qty *
-                                            double.parse(_mrpController.text);
-                                        double tax =
-                                            double.parse(_taxController.text);
-                                        double finalTax = tax * qty;
-
-                                        setState(() {
-                                          _netAmountController.text = netAmount
-                                              .toStringAsFixed(2)
-                                              .toString();
-                                          _amountController.text = amount
-                                              .toStringAsFixed(2)
-                                              .toString();
-                                          _taxController.text =
-                                              finalTax.toStringAsFixed(2);
-                                        });
-                                      }
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    } else {
+                                      _performCalculations();
                                     }
                                   },
                                 ),
@@ -1795,16 +1477,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                   // focusNode: unitFocus,
                                   isReadOnly: true,
                                   controller: _unitController,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    // unitFocus.unfocus();
 
-                                    // FocusScope.of(context)
-                                    //     .requestFocus(rateFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   onchange: (String value) {},
                                 ),
                                 CustomTextField(
@@ -1813,32 +1486,13 @@ class _SalesReturnState extends State<SalesReturn> {
                                   // focusNode: rateFocus,
                                   controller: _rateController,
                                   onchange: (String value) {},
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    // rateFocus.unfocus();
-
-                                    // FocusScope.of(context)
-                                    //     .requestFocus(perFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                 ),
                                 CustomTextField(
                                   name: "Per",
                                   // focusNode: perFocus,
                                   isReadOnly: true,
                                   controller: _unitController,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    // perFocus.unfocus();
 
-                                    // FocusScope.of(context)
-                                    //     .requestFocus(amountFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   onchange: (String value) {},
                                 ),
                                 CustomTextField(
@@ -1847,16 +1501,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                   isReadOnly: true,
                                   controller: _amountController,
                                   textAlign: TextAlign.right,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    // amountFocus.unfocus();
 
-                                    // FocusScope.of(context)
-                                    //     .requestFocus(discPerFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   onchange: (String value) {},
                                 ),
                                 CustomTextField(
@@ -1864,35 +1509,9 @@ class _SalesReturnState extends State<SalesReturn> {
                                   // focusNode: discPerFocus,
                                   controller: _discPerController,
                                   textAlign: TextAlign.right,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    // discPerFocus.unfocus();
 
-                                    // FocusScope.of(context)
-                                    //     .requestFocus(discRsFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   onchange: (String value) {
-                                    // Get Controller and parse to double
-                                    double disc = double.parse(value);
-                                    double discPer = disc / 100;
-                                    double discRs = discPer *
-                                        double.parse(_amountController.text);
-                                    double netAmount =
-                                        double.parse(_amountController.text) -
-                                            discRs;
-
-                                    // Set discRs to the controller
-                                    setState(() {
-                                      _discRsController.text =
-                                          discRs.toStringAsFixed(2);
-                                      _netAmountController.text =
-                                          netAmount.toStringAsFixed(2);
-                                    });
-
-                                    // Get the rate
+                                    _performCalculations();
                                   },
                                 ),
                                 CustomTextField(
@@ -1900,35 +1519,9 @@ class _SalesReturnState extends State<SalesReturn> {
                                   // focusNode: discRsFocus,
                                   controller: _discRsController,
                                   textAlign: TextAlign.right,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    // discRsFocus.unfocus();
 
-                                    // FocusScope.of(context)
-                                    //     .requestFocus(taxFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   onchange: (String value) {
-                                    // Get Controller and parse to double
-                                    double discRs = double.parse(value);
-                                    double discountPercentage = (discRs /
-                                            double.parse(
-                                                _amountController.text)) *
-                                        100;
-
-                                    double netAmount =
-                                        double.parse(_amountController.text) -
-                                            discRs;
-
-                                    // Set discRs to the controller
-                                    setState(() {
-                                      _discPerController.text =
-                                          discountPercentage.toStringAsFixed(2);
-                                      _netAmountController.text =
-                                          netAmount.toStringAsFixed(2);
-                                    });
+                                    _performCalculations();
                                   },
                                 ),
                                 CustomTextField(
@@ -1937,16 +1530,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                   isReadOnly: true,
                                   controller: _taxController,
                                   textAlign: TextAlign.right,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    // taxFocus.unfocus();
 
-                                    // FocusScope.of(context)
-                                    //     .requestFocus(netAmountFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   onchange: (String value) {},
                                 ),
                                 CustomTextField(
@@ -1954,13 +1538,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                   // focusNode: netAmountFocus,
                                   isReadOnly: true,
                                   controller: _netAmountController,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    // netAmountFocus.unfocus();
 
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   textAlign: TextAlign.right,
                                   onchange: (String value) {},
                                 ),
@@ -1982,10 +1560,11 @@ class _SalesReturnState extends State<SalesReturn> {
                                 onTap: () {
                                   // Pop
                                   Navigator.of(context).pop();
-
+                                  rowItems.add(item!);
                                   _saveValues();
                                   _calculateTotalAmount();
-                                  addTableRow1();
+                                  addTableRow2();
+                                  dataText.clear();
                                 },
                                 name: "Save",
                                 Skey: "[space]",
@@ -2019,6 +1598,367 @@ class _SalesReturnState extends State<SalesReturn> {
     );
   }
 
+  void _performCalculations() {
+    double qty = double.tryParse(_qtyController.text) ?? 1.0;
+    double rate = double.tryParse(_rateController.text) ?? 0.0;
+    double base = double.tryParse(_basicController.text) ?? 0.0;
+    double mrp = double.tryParse(_mrpController.text) ?? 0.0;
+    double discPer = double.tryParse(_discPerController.text) ?? 0.0;
+    double discRs = double.tryParse(_discRsController.text) ?? 0.0;
+    double tax = double.tryParse(_taxController.text) ?? 0.0;
+
+    double netAmount = (qty * base);
+    double amount = qty * rate;
+
+    double taxAmount = tax * qty;
+    netAmount += taxAmount;
+
+    discRs = (discPer / 100) * netAmount;
+
+    if (discRs > 0) {
+      discPer = (discRs / netAmount) * 100;
+    }
+
+    double discountedAmount = netAmount - discRs;
+
+    double finalAmount = discountedAmount;
+
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _amountController.text = amount.toStringAsFixed(2);
+        _netAmountController.text = finalAmount.toStringAsFixed(2);
+        _taxController.text = taxAmount.toStringAsFixed(2);
+        _discPerController.text = discPer.toStringAsFixed(2);
+        _discRsController.text = discRs.toStringAsFixed(2);
+      });
+    });
+  }
+
+  void _showAlert(BuildContext context) {
+    double totalBasicAmount = calculateTotalBasicAmount();
+    _basicAmountController.text =
+        totalBasicAmount.toStringAsFixed(2); // formatted to 2 decimal places
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              contentPadding: EdgeInsets.zero,
+              shape: InputBorder.none,
+              content: Container(
+                height: 350,
+                width: 500,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.zero,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.only(
+                          left: 13, top: 10, bottom: 5, right: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        border:
+                            Border.all(color: Colors.grey.shade300, width: .5),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                "Set Discount",
+                                style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            icon: const Icon(
+                              Icons.cancel,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 5),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    "Basic Amount",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepPurple,
+                                    ),
+                                  ),
+                                ),
+                                SETopTextfield(
+                                  readOnly: true,
+                                  controller: _basicAmountController,
+                                  width: 160,
+                                  height: 40,
+                                  padding: const EdgeInsets.only(
+                                      left: 8.0, bottom: 16.0),
+                                  hintText: '',
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 5),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    "Discount Type",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepPurple,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Radio<String>(
+                                        value: "Fixed Percentage",
+                                        groupValue: _discountType,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _discountType = value!;
+                                          });
+                                        },
+                                      ),
+                                      const Text("Fixed Percentage"),
+                                      const SizedBox(
+                                        width: 10,
+                                      ),
+                                      Radio<String>(
+                                        value: "Fixed Amount",
+                                        groupValue: _discountType,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _discountType = value!;
+                                          });
+                                        },
+                                      ),
+                                      const Text("Fixed Amount"),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    "Discount %",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepPurple,
+                                    ),
+                                  ),
+                                ),
+                                SETopTextfield(
+                                  readOnly: _discountType == "Fixed Percentage"
+                                      ? false
+                                      : true,
+                                  onChanged: (value) {
+                                    _calculateDiscountFromPercentage();
+                                  },
+                                  controller: _discountPer,
+                                  width: 160,
+                                  height: 40,
+                                  padding: const EdgeInsets.only(
+                                      left: 8.0, bottom: 16.0),
+                                  hintText: '',
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 5),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    "Discount Amt",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepPurple,
+                                    ),
+                                  ),
+                                ),
+                                SETopTextfield(
+                                  readOnly: _discountType == "Fixed Percentage"
+                                      ? false
+                                      : true,
+                                  onChanged: (newValue) {
+                                    _calculateDiscountFromAmount();
+                                  },
+                                  controller: _discountAmt,
+                                  width: 160,
+                                  height: 40,
+                                  padding: const EdgeInsets.only(
+                                      left: 8.0, bottom: 16.0),
+                                  hintText: '',
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 5),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    "Receivable",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepPurple,
+                                    ),
+                                  ),
+                                ),
+                                SETopTextfield(
+                                  readOnly: _discountType != "Fixed Percentage"
+                                      ? false
+                                      : true,
+                                  onChanged: (newValue) {
+                                    _calculateDiscountFromReceivable();
+                                  },
+                                  controller: _receivable,
+                                  width: 160,
+                                  height: 40,
+                                  padding: const EdgeInsets.only(
+                                      left: 8.0, bottom: 16.0),
+                                  hintText: '',
+                                ),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: 15,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Buttons(
+                                  name: "Save",
+                                  Skey: "[F4]",
+                                  onTap: () {
+                                    double discountPercent =
+                                        double.tryParse(_discountPer.text) ??
+                                            0.0;
+
+                                    _applyDiscountToAllRows(discountPercent);
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Buttons(
+                                  name: "Cancel",
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ).px12(),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _calculateDiscountFromPercentage() {
+    double discPer = double.parse(_discountPer.text);
+    double basicAmount = double.parse(_basicAmountController.text);
+    double discountAmt = basicAmount * (discPer / 100);
+    double receivable = basicAmount - discountAmt;
+    _discountAmt.text = discountAmt.toStringAsFixed(2);
+    _receivable.text = receivable.toStringAsFixed(2);
+  }
+
+  void _calculateDiscountFromAmount() {
+    double discountAmt = double.parse(_discountAmt.text);
+    double basicAmount = double.parse(_basicAmountController.text);
+    double receivable = basicAmount - discountAmt;
+    double discPer = (discountAmt / basicAmount) * 100;
+    _discountPer.text = discPer.toStringAsFixed(2);
+    _receivable.text = receivable.toStringAsFixed(2);
+  }
+
+  void _calculateDiscountFromReceivable() {
+    double receivable = double.parse(_receivable.text);
+    double basicAmount = double.parse(_basicAmountController.text);
+    double discountAmt = basicAmount - receivable;
+    double discPer = (discountAmt / basicAmount) * 100;
+    _discountPer.text = discPer.toStringAsFixed(2);
+    _discountAmt.text = discountAmt.toStringAsFixed(2);
+  }
+
+  void _applyDiscountToAllRows(double discountPercent) {
+    for (int i = 0; i < tables.length; i++) {
+      String quantityText = _getTextFromTableRow(tables[i], 4);
+      double quantity = double.tryParse(quantityText) ?? 1.0;
+
+      String basicText = _getTextFromTableRow(tables[i], 9);
+      double basicAmount = double.tryParse(basicText) ?? 0.0;
+
+      double totalBasicAmount = basicAmount * quantity;
+
+      double discountAmount = (totalBasicAmount * discountPercent) / 100;
+
+      double netAmount = totalBasicAmount - discountAmount;
+
+      _updateTableCell(i, 10, discountPercent.toStringAsFixed(2));
+      _updateTableCell(i, 11, discountAmount.toStringAsFixed(2));
+      _updateTableCell(i, 13, netAmount.toStringAsFixed(2));
+    }
+    _calculateTotalAmount();
+    setState(() {
+      tables = tables;
+    });
+  }
+
   void _initializeAllData() async {
     await Future.wait([
       fetchAllPOS(),
@@ -2035,831 +1975,119 @@ class _SalesReturnState extends State<SalesReturn> {
   void updateselectedTable(int index) {
     final key = tables[index].key;
     final rowIndex = tables.indexWhere((row) => row.key == key);
-    openDialog(rowIndex: rowIndex);
-  }
-
-  void addTableRow1() {
-    int existingIndex = tables.indexWhere((row) {
-      final isTableCell = row.children[1] is TableCell;
-      final tableCell = isTableCell ? row.children[1] as TableCell : null;
-      final isInkWell = tableCell?.child is InkWell;
-      final inkWell = isInkWell ? tableCell!.child as InkWell : null;
-      final isSizedBox = inkWell?.child is SizedBox;
-      final sizedBox = isSizedBox ? inkWell!.child as SizedBox : null;
-      final isAlign = sizedBox?.child is Align;
-      final align = isAlign ? sizedBox!.child as Align : null;
-      final isTextChild = align?.child is Text;
-      final childData =
-          isTextChild ? ((align!.child as Text).data ?? 'N/A') : 'N/A';
-
-      return childData == selectedItemName;
-    });
-
-    print('ADD TABLE ROW 1 Existing Index: $existingIndex');
-
-    if (existingIndex != -1) {
-      final isTableCell = tables[existingIndex].children[4] is TableCell;
-      final tableCell =
-          isTableCell ? tables[existingIndex].children[4] as TableCell : null;
-      final isInkWell = tableCell?.child is InkWell;
-      final inkWell = isInkWell ? tableCell!.child as InkWell : null;
-      final isSizedBox = inkWell?.child is SizedBox;
-      final sizedBox = isSizedBox ? inkWell!.child as SizedBox : null;
-      final isAlign = sizedBox?.child is Align;
-      final align = isAlign ? sizedBox!.child as Align : null;
-      final isTextChild = align?.child is Text;
-      final childData =
-          isTextChild ? ((align!.child as Text).data ?? 'N/A') : 'N/A';
-
-      print("CHILD DATA: $childData");
-      final qty =
-          int.parse(_qtyController.text) + int.parse(childData.toString());
-      // final qty = int.parse(_qtyController.text);
-      final rate = double.parse(_mrpController.text);
-      final netAmount = qty * rate;
-
-      // Update the TableCell widgets
-      tables[existingIndex].children[4] = TableCell(
-        child: InkWell(
-          child: SizedBox(
-            height: 40,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                qty.toString(),
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      tables[existingIndex].children[13] = TableCell(
-        child: InkWell(
-          child: SizedBox(
-            height: 40,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                netAmount.toStringAsFixed(2),
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      setState(() {
-        tables = tables;
-      });
-
-      return;
-    }
-
-    int index = tables.length;
-
-    setState(() {
-      tables.add(
-        TableRow(
-          key: tableKey,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-          ),
-          children: [
-            // Index
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      (tables.length + 1).toString(),
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  width: 100,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                      selectedItemName!,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  width: 100,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      '0',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  width: 100,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      '',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _qtyController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _unitController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _baseController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _rateController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _mrpController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _basicController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _discPerController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _discRsController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _taxController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _netAmountController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    });
+    openDialog2(rowIndex: rowIndex, item: rowItems[index]);
   }
 
   void addTableRow2() {
     int existingIndex = tables.indexWhere((row) {
-      final isTableCell = row.children[1] is TableCell;
-      final tableCell = isTableCell ? row.children[1] as TableCell : null;
-      final isInkWell = tableCell?.child is InkWell;
-      final inkWell = isInkWell ? tableCell!.child as InkWell : null;
-      final isSizedBox = inkWell?.child is SizedBox;
-      final sizedBox = isSizedBox ? inkWell!.child as SizedBox : null;
-      final isAlign = sizedBox?.child is Align;
-      final align = isAlign ? sizedBox!.child as Align : null;
-      final isTextChild = align?.child is Text;
-      final childData =
-          isTextChild ? ((align!.child as Text).data ?? 'N/A') : 'N/A';
-
-      print("SELECTED ITEM NAME " + selectedItemName!);
-      print("CHILD DATA " + childData);
-
-      return childData == selectedItemName;
+      final tableCell = _getTextFromTableRow(row, 1);
+      return tableCell == selectedItemName;
     });
 
-    print('ADD TABLE ROW 2 Existing Index: $existingIndex');
-
     if (existingIndex != -1) {
-      final isTableCell = tables[existingIndex].children[4] is TableCell;
-      final tableCell =
-          isTableCell ? tables[existingIndex].children[4] as TableCell : null;
-      final isInkWell = tableCell?.child is InkWell;
-      final inkWell = isInkWell ? tableCell!.child as InkWell : null;
-      final isSizedBox = inkWell?.child is SizedBox;
-      final sizedBox = isSizedBox ? inkWell!.child as SizedBox : null;
-      final isAlign = sizedBox?.child is Align;
-      final align = isAlign ? sizedBox!.child as Align : null;
-      final isTextChild = align?.child is Text;
-      final childData =
-          isTextChild ? ((align!.child as Text).data ?? 'N/A') : 'N/A';
-
-      print("CHILD DATA 2 " + childData);
-      // final qty =
-      //     int.parse(_qtyController.text) + int.parse(childData.toString());
-      final qty = int.parse(_qtyController.text);
-      // Check Net Amount
-      final rate = double.parse(_mrpController.text);
-      final netAmount = qty * rate;
-
-      // Update the TableCell widgets
-      tables[existingIndex].children[4] = TableCell(
-        child: InkWell(
-          child: SizedBox(
-            height: 40,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                qty.toString(),
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      tables[existingIndex].children[10] = TableCell(
-        child: InkWell(
-          child: SizedBox(
-            height: 40,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                _discPerController.text,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      tables[existingIndex].children[11] = TableCell(
-        child: InkWell(
-          child: SizedBox(
-            height: 40,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                _discRsController.text,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      tables[existingIndex].children[13] = TableCell(
-        child: InkWell(
-          child: SizedBox(
-            height: 40,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                netAmount.toStringAsFixed(2),
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      setState(() {
-        tables = tables;
-      });
-
-      return;
+      _updateExistingRow(existingIndex);
+    } else {
+      _addNewRow();
     }
+  }
 
+  String _getTextFromTableRow(TableRow row, int index) {
+    final isTableCell = row.children[index] is TableCell;
+    final tableCell = isTableCell ? row.children[index] as TableCell : null;
+    final isInkWell = tableCell?.child is InkWell;
+    final inkWell = isInkWell ? tableCell!.child as InkWell : null;
+    final isSizedBox = inkWell?.child is SizedBox;
+    final sizedBox = isSizedBox ? inkWell!.child as SizedBox : null;
+    final isAlign = sizedBox?.child is Align;
+    final align = isAlign ? sizedBox!.child as Align : null;
+    final isTextChild = align?.child is Text;
+    return isTextChild ? ((align!.child as Text).data ?? 'N/A') : 'N/A';
+  }
+
+  void _updateExistingRow(int existingIndex) {
+    _updateTableCell(existingIndex, 4, _qtyController.text);
+    _updateTableCell(existingIndex, 10, _discPerController.text);
+    _updateTableCell(existingIndex, 11, _discRsController.text);
+    _updateTableCell(existingIndex, 12, _taxController.text);
+    _updateTableCell(existingIndex, 13, _netAmountController.text);
+
+    setState(() {
+      tables = tables;
+    });
+  }
+
+  void _updateTableCell(int rowIndex, int cellIndex, String value) {
+    tables[rowIndex].children[cellIndex] = TableCell(
+      child: InkWell(
+        child: SizedBox(
+          height: 40,
+          child: Align(
+            alignment: Alignment.center,
+            child: Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _addNewRow() {
     int index = tables.length;
 
     setState(() {
       tables.add(
         TableRow(
           key: tableKey,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-          ),
+          decoration: const BoxDecoration(color: Colors.white),
           children: [
-            // Index
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      (tables.length + 1).toString(),
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  width: 100,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                      selectedItemName!,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      '0',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      '',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _qtyController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _unitController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _baseController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _rateController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _mrpController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _basicController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _discPerController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _discRsController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _taxController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _netAmountController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
+            _buildTableCell(index, (index + 1).toString()),
+            _buildTableCell(index, selectedItemName ?? 'N/A'),
+            _buildTableCell(index, '0'),
+            _buildTableCell(index, ''),
+            _buildTableCell(index, _qtyController.text),
+            _buildTableCell(index, _unitController.text),
+            _buildTableCell(index, _baseController.text),
+            _buildTableCell(index, _rateController.text),
+            _buildTableCell(index, _mrpController.text),
+            _buildTableCell(index, _basicController.text),
+            _buildTableCell(index, _discPerController.text),
+            _buildTableCell(index, _discRsController.text),
+            _buildTableCell(index, _taxController.text),
+            _buildTableCell(index, _netAmountController.text),
           ],
         ),
       );
     });
+  }
+
+  TableCell _buildTableCell(int index, String value) {
+    return TableCell(
+      child: InkWell(
+        onTap: () => updateselectedTable(index),
+        child: SizedBox(
+          height: 40,
+          child: Align(
+            alignment: Alignment.center,
+            child: Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -3008,7 +2236,6 @@ class _SalesReturnState extends State<SalesReturn> {
     }).toList();
   }
 
-  //  Show Customer History Pop-up....
   void showCustomerHistory() {
     final List<SalesPos> selectedCustomerData = salesPosList
         .where((element) => element.customer == selectedCustomer)
@@ -3023,8 +2250,6 @@ class _SalesReturnState extends State<SalesReturn> {
         return '$month-$year';
       },
     );
-
-    // Construct table rows from the map data
 
     final List<TableRow> tableRows =
         selectedCustomerData.expand((data) => data.entries).map((entry) {
@@ -3120,7 +2345,6 @@ class _SalesReturnState extends State<SalesReturn> {
       Ctables2 = tableRows;
     });
 
-    // Construct table data
     final List<TableRow> tableData = selectedCustomerData.map((data) {
       return TableRow(
         children: [
@@ -3247,7 +2471,6 @@ class _SalesReturnState extends State<SalesReturn> {
             child: Column(
               children: [
                 Container(
-                  // height: MediaQuery.of(context).size.height * 0.9,
                   width: MediaQuery.of(context).size.width * 0.85,
                   decoration: BoxDecoration(
                     border: Border.all(
@@ -3581,7 +2804,6 @@ class _SalesReturnState extends State<SalesReturn> {
                               ],
                             ),
                           ),
-
                           const SizedBox(height: 30),
                           Padding(
                             padding: const EdgeInsets.symmetric(
@@ -3593,7 +2815,9 @@ class _SalesReturnState extends State<SalesReturn> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Expanded(
+                                  Container(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.65,
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -3612,240 +2836,24 @@ class _SalesReturnState extends State<SalesReturn> {
                                               color: Colors.black,
                                             ),
                                           ),
-                                          child: Column(
-                                            children: [
-                                              Table(
-                                                border: TableBorder.all(
-                                                    width: 1,
-                                                    color: Colors.black),
-                                                columnWidths: const {
-                                                  0: FlexColumnWidth(4),
-                                                  1: FlexColumnWidth(2),
-                                                  2: FlexColumnWidth(2),
-                                                  3: FlexColumnWidth(3),
-                                                  4: FlexColumnWidth(3),
-                                                  5: FlexColumnWidth(3),
-                                                  6: FlexColumnWidth(3),
-                                                },
-                                                children: [
-                                                  TableRow(children: [
-                                                    TableCell(
-                                                        child: SizedBox(
-                                                      height: 40,
-                                                      child: Align(
-                                                        alignment:
-                                                            Alignment.center,
-                                                        child: Text(
-                                                          "Date",
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                          style: GoogleFonts
-                                                              .poppins(
-                                                            fontSize: 15,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: const Color(
-                                                                0xff4B0082),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    )),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment:
-                                                              Alignment.center,
-                                                          child: Text(
-                                                            "Time",
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                            style: GoogleFonts
-                                                                .poppins(
-                                                              fontSize: 15,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color: const Color(
-                                                                  0xff4B0082),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment:
-                                                              Alignment.center,
-                                                          child: Text(
-                                                            "No",
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                            style: GoogleFonts
-                                                                .poppins(
-                                                              fontSize: 15,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color: const Color(
-                                                                  0xff4B0082),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment: Alignment
-                                                              .centerRight,
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(4.0),
-                                                            child: Text(
-                                                              "Amount",
-                                                              textAlign:
-                                                                  TextAlign.end,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment: Alignment
-                                                              .centerRight,
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(4.0),
-                                                            child: Text(
-                                                              "Items",
-                                                              textAlign:
-                                                                  TextAlign.end,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment: Alignment
-                                                              .centerRight,
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(4.0),
-                                                            child: Text(
-                                                              "Points",
-                                                              textAlign:
-                                                                  TextAlign.end,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment: Alignment
-                                                              .centerRight,
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(4.0),
-                                                            child: Text(
-                                                              "Redeem",
-                                                              textAlign:
-                                                                  TextAlign.end,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ]),
-                                                  ...Ctables,
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Container(
-                                          height: MediaQuery.of(context)
-                                                  .size
-                                                  .height *
-                                              0.30,
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.40,
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: Colors.black,
-                                            ),
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              Table(
-                                                border: TableBorder.all(
-                                                    width: 1,
-                                                    color: Colors.black),
-                                                columnWidths: const {
-                                                  0: FlexColumnWidth(3),
-                                                  1: FlexColumnWidth(2),
-                                                  2: FlexColumnWidth(2),
-                                                  3: FlexColumnWidth(2),
-                                                  4: FlexColumnWidth(2),
-                                                },
-                                                children: [
-                                                  TableRow(
-                                                    children: [
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              children: [
+                                                Table(
+                                                  border: TableBorder.all(
+                                                      width: 1,
+                                                      color: Colors.black),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(4),
+                                                    1: FlexColumnWidth(2),
+                                                    2: FlexColumnWidth(2),
+                                                    3: FlexColumnWidth(3),
+                                                    4: FlexColumnWidth(3),
+                                                    5: FlexColumnWidth(3),
+                                                    6: FlexColumnWidth(3),
+                                                  },
+                                                  children: [
+                                                    TableRow(children: [
                                                       TableCell(
                                                           child: SizedBox(
                                                         height: 40,
@@ -3853,7 +2861,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                                           alignment:
                                                               Alignment.center,
                                                           child: Text(
-                                                            "Month",
+                                                            "Date",
                                                             textAlign: TextAlign
                                                                 .center,
                                                             style: GoogleFonts
@@ -3875,7 +2883,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                                             alignment: Alignment
                                                                 .center,
                                                             child: Text(
-                                                              "Bill",
+                                                              "Time",
                                                               textAlign:
                                                                   TextAlign
                                                                       .center,
@@ -3899,7 +2907,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                                             alignment: Alignment
                                                                 .center,
                                                             child: Text(
-                                                              "Amount",
+                                                              "No",
                                                               textAlign:
                                                                   TextAlign
                                                                       .center,
@@ -3921,20 +2929,26 @@ class _SalesReturnState extends State<SalesReturn> {
                                                           height: 40,
                                                           child: Align(
                                                             alignment: Alignment
-                                                                .center,
-                                                            child: Text(
-                                                              "Points",
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .center,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
+                                                                .centerRight,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(4.0),
+                                                              child: Text(
+                                                                "Amount",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .end,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
                                                               ),
                                                             ),
                                                           ),
@@ -3945,9 +2959,139 @@ class _SalesReturnState extends State<SalesReturn> {
                                                           height: 40,
                                                           child: Align(
                                                             alignment: Alignment
+                                                                .centerRight,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(4.0),
+                                                              child: Text(
+                                                                "Items",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .end,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      TableCell(
+                                                        child: SizedBox(
+                                                          height: 40,
+                                                          child: Align(
+                                                            alignment: Alignment
+                                                                .centerRight,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(4.0),
+                                                              child: Text(
+                                                                "Points",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .end,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      TableCell(
+                                                        child: SizedBox(
+                                                          height: 40,
+                                                          child: Align(
+                                                            alignment: Alignment
+                                                                .centerRight,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(4.0),
+                                                              child: Text(
+                                                                "Redeem",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .end,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ]),
+                                                    ...Ctables,
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        Container(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.30,
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.40,
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              children: [
+                                                Table(
+                                                  border: TableBorder.all(
+                                                      width: 1,
+                                                      color: Colors.black),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(3),
+                                                    1: FlexColumnWidth(2),
+                                                    2: FlexColumnWidth(2),
+                                                    3: FlexColumnWidth(2),
+                                                    4: FlexColumnWidth(2),
+                                                  },
+                                                  children: [
+                                                    TableRow(
+                                                      children: [
+                                                        TableCell(
+                                                            child: SizedBox(
+                                                          height: 40,
+                                                          child: Align(
+                                                            alignment: Alignment
                                                                 .center,
                                                             child: Text(
-                                                              "Redeem",
+                                                              "Month",
                                                               textAlign:
                                                                   TextAlign
                                                                       .center,
@@ -3962,15 +3106,119 @@ class _SalesReturnState extends State<SalesReturn> {
                                                               ),
                                                             ),
                                                           ),
+                                                        )),
+                                                        TableCell(
+                                                          child: SizedBox(
+                                                            height: 40,
+                                                            child: Align(
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              child: Text(
+                                                                "Bill",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
                                                         ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  ..._buildTableRows(
-                                                      groupedData),
-                                                ],
-                                              ),
-                                            ],
+                                                        TableCell(
+                                                          child: SizedBox(
+                                                            height: 40,
+                                                            child: Align(
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              child: Text(
+                                                                "Amount",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        TableCell(
+                                                          child: SizedBox(
+                                                            height: 40,
+                                                            child: Align(
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              child: Text(
+                                                                "Points",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        TableCell(
+                                                          child: SizedBox(
+                                                            height: 40,
+                                                            child: Align(
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              child: Text(
+                                                                "Redeem",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    ..._buildTableRows(
+                                                        groupedData),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -3986,102 +3234,57 @@ class _SalesReturnState extends State<SalesReturn> {
                                         color: Colors.black,
                                       ),
                                     ),
-                                    child: Column(
-                                      children: [
-                                        Table(
-                                          border: TableBorder.all(
-                                              width: 1, color: Colors.black),
-                                          columnWidths: const {
-                                            0: FlexColumnWidth(5),
-                                            1: FlexColumnWidth(2),
-                                            2: FlexColumnWidth(2),
-                                            3: FlexColumnWidth(3),
-                                            4: FlexColumnWidth(2),
-                                          },
-                                          children: [
-                                            TableRow(children: [
-                                              TableCell(
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          Table(
+                                            border: TableBorder.all(
+                                                width: 1, color: Colors.black),
+                                            columnWidths: const {
+                                              0: FlexColumnWidth(5),
+                                              1: FlexColumnWidth(2),
+                                              2: FlexColumnWidth(2),
+                                              3: FlexColumnWidth(3),
+                                              4: FlexColumnWidth(2),
+                                            },
+                                            children: [
+                                              TableRow(children: [
+                                                TableCell(
+                                                    child: SizedBox(
+                                                  height: 40,
+                                                  child: Align(
+                                                    alignment:
+                                                        Alignment.centerLeft,
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              4.0),
+                                                      child: Text(
+                                                        "Item Name",
+                                                        textAlign:
+                                                            TextAlign.start,
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                          fontSize: 15,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: const Color(
+                                                              0xff4B0082),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                )),
+                                                TableCell(
                                                   child: SizedBox(
-                                                height: 40,
-                                                child: Align(
-                                                  alignment:
-                                                      Alignment.centerLeft,
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            4.0),
-                                                    child: Text(
-                                                      "Item Name",
-                                                      textAlign:
-                                                          TextAlign.start,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              )),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Qty",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Rate",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment:
-                                                        Alignment.centerRight,
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              4.0),
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.center,
                                                       child: Text(
-                                                        "Total Amount",
+                                                        "Qty",
                                                         textAlign:
-                                                            TextAlign.end,
+                                                            TextAlign.center,
                                                         style:
                                                             GoogleFonts.poppins(
                                                           fontSize: 15,
@@ -4094,21 +3297,16 @@ class _SalesReturnState extends State<SalesReturn> {
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment:
-                                                        Alignment.centerRight,
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              4.0),
+                                                TableCell(
+                                                  child: SizedBox(
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.center,
                                                       child: Text(
-                                                        "Points",
+                                                        "Rate",
                                                         textAlign:
-                                                            TextAlign.end,
+                                                            TextAlign.center,
                                                         style:
                                                             GoogleFonts.poppins(
                                                           fontSize: 15,
@@ -4121,20 +3319,72 @@ class _SalesReturnState extends State<SalesReturn> {
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                            ]),
-                                            ...Ctables2,
-                                          ],
-                                        ),
-                                      ],
+                                                TableCell(
+                                                  child: SizedBox(
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.centerRight,
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(4.0),
+                                                        child: Text(
+                                                          "Total Amount",
+                                                          textAlign:
+                                                              TextAlign.end,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                TableCell(
+                                                  child: SizedBox(
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.centerRight,
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(4.0),
+                                                        child: Text(
+                                                          "Points",
+                                                          textAlign:
+                                                              TextAlign.end,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ]),
+                                              ...Ctables2,
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                           ),
-
-                          //  Total Amount Here....
                           Padding(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 10),
@@ -4367,7 +3617,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                               (1 * value.first.mrp)
                                                   .toStringAsFixed(2);
                                         }),
-                                        openDialog(),
+                                        openDialog2(),
                                       });
                             },
                             useKeyDownEvent: kIsWeb,
@@ -4744,6 +3994,8 @@ class _SalesReturnState extends State<SalesReturn> {
                                                             DropdownButtonHideUnderline(
                                                           child: DropdownMenu<
                                                               Item>(
+                                                            controller:
+                                                                dataText,
                                                             requestFocusOnTap:
                                                                 true,
                                                             // focusNode:
@@ -4854,152 +4106,9 @@ class _SalesReturnState extends State<SalesReturn> {
                                                             onSelected:
                                                                 (Item? value) {
                                                               _playBeep();
-                                                              setState(() {
-                                                                final selectedItem =
-                                                                    value;
 
-                                                                selectedItemName =
-                                                                    selectedItem!
-                                                                        .itemName;
-
-                                                                selectedItemId =
-                                                                    selectedItem
-                                                                        .id;
-
-                                                                String newId =
-                                                                    '';
-                                                                String newId2 =
-                                                                    '';
-
-                                                                for (Item item
-                                                                    in itemList) {
-                                                                  if (item.id ==
-                                                                      selectedItemId) {
-                                                                    newId = item
-                                                                        .taxCategory;
-                                                                    newId2 = item
-                                                                        .measurementUnit;
-                                                                  }
-                                                                }
-
-                                                                for (TaxRate tax
-                                                                    in taxLists) {
-                                                                  if (tax.id ==
-                                                                      newId) {
-                                                                    setState(
-                                                                        () {
-                                                                      _taxController
-                                                                              .text =
-                                                                          tax.rate;
-                                                                    });
-                                                                  }
-                                                                }
-                                                                for (MeasurementLimit meu
-                                                                    in measurement) {
-                                                                  if (meu.id ==
-                                                                      newId2) {
-                                                                    setState(
-                                                                        () {
-                                                                      _unitController.text = meu
-                                                                          .measurement
-                                                                          .toString();
-                                                                    });
-                                                                  }
-                                                                }
-
-                                                                // Calculate the Rate
-                                                                double
-                                                                    ratepercent =
-                                                                    (double.parse(
-                                                                            _taxController.text) /
-                                                                        100);
-
-                                                                ratepercent +=
-                                                                    1.00;
-
-                                                                print(
-                                                                    ratepercent);
-
-                                                                double mpr =
-                                                                    selectedItem
-                                                                        .mrp;
-
-                                                                double rate = mpr /
-                                                                    ratepercent;
-
-                                                                _qtyController
-                                                                    .text = "1";
-                                                                _rateController
-                                                                        .text =
-                                                                    rate.toStringAsFixed(
-                                                                        2);
-                                                                _discPerController
-                                                                        .text =
-                                                                    "0.00";
-                                                                _discRsController
-                                                                        .text =
-                                                                    "0.00";
-                                                                _basicController
-                                                                        .text =
-                                                                    rate.toStringAsFixed(
-                                                                        2);
-
-                                                                _amountController
-                                                                        .text =
-                                                                    rate.toStringAsFixed(
-                                                                        2);
-
-                                                                _mrpController
-                                                                        .text =
-                                                                    selectedItem
-                                                                        .mrp
-                                                                        .toStringAsFixed(
-                                                                            2);
-                                                                _baseController
-                                                                        .text =
-                                                                    selectedItem
-                                                                        .mrp
-                                                                        .toStringAsFixed(
-                                                                            2);
-
-                                                                final tax =
-                                                                    selectedItem
-                                                                            .mrp -
-                                                                        rate;
-
-                                                                // Change to taxAmountController
-
-                                                                _taxController
-                                                                        .text =
-                                                                    tax.toStringAsFixed(
-                                                                        2);
-
-                                                                // For Net Amount, multiply qty with real rate
-                                                                double qty =
-                                                                    double.parse(
-                                                                        _qtyController
-                                                                            .text);
-                                                                double rate2 =
-                                                                    double.parse(
-                                                                        selectedItem
-                                                                            .mrp
-                                                                            .toString());
-
-                                                                double
-                                                                    netAmount =
-                                                                    qty * rate2;
-
-                                                                _netAmountController
-                                                                        .text =
-                                                                    netAmount
-                                                                        .toStringAsFixed(
-                                                                            2)
-                                                                        .toString();
-
-                                                                openDialog2(
-                                                                    item:
-                                                                        value);
-                                                              });
+                                                              openDialog2(
+                                                                  item: value);
                                                             },
                                                             dropdownMenuEntries:
                                                                 itemList.map<
@@ -5576,6 +4685,9 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                                 onChanged: (String? newValue) {
                                                                                   setState(() {
                                                                                     selecteSetDiscount = newValue!;
+                                                                                    if (selecteSetDiscount == "Yes" && double.parse(_netTotalDiscController.text) > 0) {
+                                                                                      _showAlert(context);
+                                                                                    }
                                                                                   });
                                                                                 },
                                                                                 items: [
@@ -5639,19 +4751,11 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                                   setState(() {
                                                                                     selectedType = newValue!;
                                                                                   });
-
-                                                                                  if (selectedType == 'Multimode') {
-                                                                                    openMultiModeDialog();
-                                                                                  }
                                                                                 },
                                                                                 items: [
                                                                                   "Cash",
                                                                                   "Credit",
                                                                                   "Multimode",
-                                                                                  "UPI",
-                                                                                  "CARD",
-                                                                                  "PAYMENT",
-                                                                                  "CHECQUE",
                                                                                 ].map<DropdownMenuItem<String>>((String value) {
                                                                                   return DropdownMenuItem<String>(
                                                                                     value: value,
@@ -5717,12 +4821,17 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                         DropdownButtonHideUnderline(
                                                                       child: DropdownMenu<
                                                                           Ledger>(
+                                                                        controller:
+                                                                            _acController,
                                                                         width:
                                                                             400,
                                                                         requestFocusOnTap:
                                                                             true,
-                                                                        initialSelection: ledgerList.isNotEmpty
-                                                                            ? ledgerList.first
+                                                                        initialSelection: selectedAC !=
+                                                                                null
+                                                                            ? ledgerList.firstWhere((ledger) =>
+                                                                                ledger.id ==
+                                                                                selectedAC)
                                                                             : null,
                                                                         enableSearch:
                                                                             true,
@@ -5767,6 +4876,9 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                               null) {
                                                                             setState(() {
                                                                               selectedAC = value.id;
+                                                                              selectedCustomer = "67188c95ce238809ff47a745";
+                                                                              _billedToController.text = value.name;
+                                                                              _customerController.text = "Registered Ledger";
                                                                             });
                                                                           }
                                                                         },
@@ -5826,7 +4938,9 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                     Container(
                                                                       decoration:
                                                                           BoxDecoration(
-                                                                              border: Border.all()),
+                                                                        border:
+                                                                            Border.all(),
+                                                                      ),
                                                                       width: MediaQuery.of(context)
                                                                               .size
                                                                               .width *
@@ -5838,77 +4952,75 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                           2.0),
                                                                       child:
                                                                           DropdownButtonHideUnderline(
-                                                                        child: DropdownMenu<
-                                                                            NewCustomerModel>(
-                                                                          width:
-                                                                              400,
-                                                                          requestFocusOnTap:
-                                                                              true,
-                                                                          initialSelection: customerList.isNotEmpty
-                                                                              ? customerList.first
-                                                                              : null,
-                                                                          enableSearch:
-                                                                              true,
-                                                                          trailingIcon:
-                                                                              const SizedBox.shrink(),
-                                                                          textStyle:
-                                                                              GoogleFonts.poppins(
-                                                                            fontSize:
-                                                                                16,
-                                                                            fontWeight:
-                                                                                FontWeight.bold,
-                                                                            color:
-                                                                                Colors.black,
-                                                                            decoration:
-                                                                                TextDecoration.none,
-                                                                          ),
-                                                                          menuHeight:
-                                                                              300,
-                                                                          selectedTrailingIcon:
-                                                                              const SizedBox.shrink(),
-                                                                          inputDecorationTheme:
-                                                                              const InputDecorationTheme(
-                                                                            border:
-                                                                                InputBorder.none,
-                                                                            contentPadding:
-                                                                                EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-                                                                            isDense:
-                                                                                true,
-                                                                            activeIndicatorBorder:
-                                                                                BorderSide(
-                                                                              color: Colors.transparent,
-                                                                            ),
-                                                                          ),
-                                                                          expandedInsets:
-                                                                              EdgeInsets.zero,
-                                                                          onSelected:
-                                                                              (NewCustomerModel? value) {
-                                                                            setState(() {
-                                                                              selectedCustomer = value!.id;
-
-                                                                              for (NewCustomerModel customer in customerList) {
-                                                                                if (customer.id.contains(value.id)) {
-                                                                                  _billedToController.text = '${customer.fname} M.(${customer.mobile})';
-                                                                                }
-                                                                              }
-                                                                            });
-                                                                          },
-                                                                          dropdownMenuEntries:
-                                                                              customerList.map<DropdownMenuEntry<NewCustomerModel>>((NewCustomerModel value) {
-                                                                            return DropdownMenuEntry<NewCustomerModel>(
-                                                                              value: value,
-                                                                              label: value.fname,
-                                                                              style: ButtonStyle(
-                                                                                textStyle: WidgetStateProperty.all(
-                                                                                  GoogleFonts.poppins(
-                                                                                    fontSize: 16,
-                                                                                    fontWeight: FontWeight.bold,
-                                                                                    color: Colors.black,
-                                                                                  ),
+                                                                        child:
+                                                                            IgnorePointer(
+                                                                          ignoring:
+                                                                              selectedType != 'Cash',
+                                                                          child:
+                                                                              Opacity(
+                                                                            opacity: selectedType == 'Cash'
+                                                                                ? 1.0
+                                                                                : 1.0,
+                                                                            child:
+                                                                                DropdownMenu<NewCustomerModel>(
+                                                                              controller: _customerController,
+                                                                              width: 400,
+                                                                              requestFocusOnTap: true,
+                                                                              initialSelection: selectedCustomer != null
+                                                                                  ? customerList.firstWhere(
+                                                                                      (customer) => customer.id == selectedCustomer,
+                                                                                    )
+                                                                                  : null,
+                                                                              enableSearch: true,
+                                                                              trailingIcon: const SizedBox.shrink(),
+                                                                              textStyle: GoogleFonts.poppins(
+                                                                                fontSize: 16,
+                                                                                fontWeight: FontWeight.bold,
+                                                                                color: Colors.black,
+                                                                                decoration: TextDecoration.none,
+                                                                              ),
+                                                                              menuHeight: 300,
+                                                                              selectedTrailingIcon: const SizedBox.shrink(),
+                                                                              inputDecorationTheme: const InputDecorationTheme(
+                                                                                border: InputBorder.none,
+                                                                                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+                                                                                isDense: true,
+                                                                                activeIndicatorBorder: BorderSide(
+                                                                                  color: Colors.transparent,
                                                                                 ),
                                                                               ),
-                                                                            );
-                                                                          }).toList(),
+                                                                              expandedInsets: EdgeInsets.zero,
+                                                                              onSelected: (NewCustomerModel? value) {
+                                                                                if (value != null) {
+                                                                                  setState(() {
+                                                                                    selectedCustomer = value.id;
+                                                                                    selectedAC = "6676b4f41383f35fe6ba9abc";
+                                                                                  });
+
+                                                                                  for (NewCustomerModel customer in customerList) {
+                                                                                    if (customer.id == value.id) {
+                                                                                      _billedToController.text = '${customer.fname} M.(${customer.mobile})';
+                                                                                    }
+                                                                                  }
+                                                                                }
+                                                                              },
+                                                                              dropdownMenuEntries: customerList.where((customer) => customer.id != '67188c95ce238809ff47a745').map<DropdownMenuEntry<NewCustomerModel>>((NewCustomerModel value) {
+                                                                                return DropdownMenuEntry<NewCustomerModel>(
+                                                                                  value: value,
+                                                                                  label: value.fname,
+                                                                                  style: ButtonStyle(
+                                                                                    textStyle: WidgetStateProperty.all(
+                                                                                      GoogleFonts.poppins(
+                                                                                        fontSize: 16,
+                                                                                        fontWeight: FontWeight.bold,
+                                                                                        color: Colors.black,
+                                                                                      ),
+                                                                                    ),
+                                                                                  ),
+                                                                                );
+                                                                              }).toList(),
+                                                                            ),
+                                                                          ),
                                                                         ),
                                                                       ),
                                                                     ),
@@ -5916,8 +5028,10 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                       width: 10,
                                                                     ),
                                                                     InkWell(
-                                                                      onTap:
-                                                                          showCustomerHistory,
+                                                                      onTap: selectedCustomer ==
+                                                                              "67188c95ce238809ff47a745"
+                                                                          ? null
+                                                                          : showCustomerHistory,
                                                                       child:
                                                                           Container(
                                                                         width:
@@ -5944,7 +5058,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                           ),
                                                                         ),
                                                                       ),
-                                                                    )
+                                                                    ),
                                                                   ],
                                                                 ),
                                                               ),
@@ -6043,23 +5157,9 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                     ),
                                                                     SETopTextfield(
                                                                       onTap:
-                                                                          () {
-                                                                        // FocusScope.of(context)
-                                                                        //     .requestFocus(remarkFocus);
-                                                                        // setState(
-                                                                        //     () {});
-                                                                      },
+                                                                          () {},
                                                                       controller:
                                                                           _remarkController,
-                                                                      // focusNode:
-                                                                      //     remarkFocus,
-                                                                      // onEditingComplete:
-                                                                      //     () {
-                                                                      //   FocusScope.of(context)
-                                                                      //       .requestFocus(advanceFocus);
-                                                                      //   setState(
-                                                                      //       () {});
-                                                                      // },
                                                                       onSaved:
                                                                           (newValue) {},
                                                                       width: MediaQuery.of(context)
@@ -6755,7 +5855,14 @@ class _SalesReturnState extends State<SalesReturn> {
                                                 Button(
                                                   name: "Save",
                                                   Skey: "[F4]",
-                                                  onTap: createPOSEntry,
+                                                  onTap: () {
+                                                    if (selectedType ==
+                                                        'Multimode') {
+                                                      openMultiModeDialog();
+                                                    } else {
+                                                      createPOSEntry();
+                                                    }
+                                                  },
                                                 ),
                                                 const Button(
                                                   name: "Cancel",
@@ -6969,8 +6076,6 @@ class _SalesReturnState extends State<SalesReturn> {
                                                         });
                                                       }
                                                     });
-
-                                                    print('Result: $result');
                                                   },
                                                 ),
                                                 List2(

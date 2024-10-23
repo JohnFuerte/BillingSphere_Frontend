@@ -140,6 +140,42 @@ class Item {
 
   factory Item.fromJson(String source) =>
       Item.fromMap(json.decode(source) as Map<String, dynamic>);
+
+  @override
+  String toString() {
+    return '''
+    Item: {
+      id: $id, 
+      companyCode: $companyCode, 
+      itemGroup: $itemGroup, 
+      itemBrand: $itemBrand, 
+      itemName: $itemName, 
+      printName: $printName, 
+      codeNo: $codeNo, 
+      barcode: $barcode, 
+      taxCategory: $taxCategory, 
+      hsnCode: $hsnCode, 
+      storeLocation: $storeLocation, 
+      measurementUnit: $measurementUnit, 
+      secondaryUnit: $secondaryUnit, 
+      minimumStock: $minimumStock, 
+      maximumStock: $maximumStock, 
+      monthlySalesQty: $monthlySalesQty, 
+      date: $date, 
+      dealer: $dealer, 
+      subDealer: $subDealer, 
+      retail: $retail, 
+      mrp: $mrp, 
+      openingStock: $openingStock, 
+      status: $status, 
+      openingBalanceQty: $openingBalanceQty, 
+      openingBalanceAmt: $openingBalanceAmt, 
+      price: $price, 
+      images: $images, 
+      openingBalance: $openingBalance
+    }
+    ''';
+  }
 }
 
 class ImageData {

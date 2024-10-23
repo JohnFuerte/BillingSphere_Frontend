@@ -10,22 +10,23 @@ class SETopTextfield extends StatefulWidget {
     required this.hintText,
     this.controller,
     this.onSaved,
-    // this.focusNode,
+    this.onChanged, // Added onChanged
+    this.readOnly = false, // Added readOnly with default value
     this.alignment,
     this.maxLines,
-    // this.onEditingComplete,
     this.onTap,
   });
-  final width;
-  final height;
-  final padding;
-  final controller;
-  final onSaved;
+
+  final double? width;
+  final double? height;
+  final EdgeInsetsGeometry? padding;
+  final TextEditingController? controller;
+  final FormFieldSetter<String>? onSaved;
+  final FormFieldSetter<String>? onChanged; // onChanged option
+  final bool readOnly; // readOnly option
   final String hintText;
-  // final FocusNode? focusNode;
   final TextAlign? alignment;
   final int? maxLines;
-  // final VoidCallback? onEditingComplete;
   final VoidCallback? onTap;
 
   @override
@@ -40,34 +41,31 @@ class _SETopTextfieldState extends State<SETopTextfield> {
         width: widget.width,
         height: widget.height,
         decoration: BoxDecoration(
-            border: Border.all(color: Colors.black),
-            borderRadius: BorderRadius.circular(0),
-            // color: widget.focusNode!.hasFocus ? Colors.black : Colors.transparent,
-            color: Colors.transparent),
+          border: Border.all(color: Colors.black),
+          borderRadius: BorderRadius.circular(0),
+          color: Colors.transparent,
+        ),
         child: Padding(
-          padding: widget.padding,
+          padding: widget.padding ?? EdgeInsets.zero,
           child: TextFormField(
-            canRequestFocus: true,
+            readOnly:
+                widget.readOnly, // Making the field read-only if specified
             onTap: widget.onTap,
             textAlign: widget.alignment ?? TextAlign.start,
             maxLines: widget.maxLines ?? 1,
             controller: widget.controller,
-            // focusNode: widget.focusNode,
             onSaved: widget.onSaved,
+            onChanged: widget.onChanged, // Handle the onChanged callback
             style: GoogleFonts.poppins(
               color: Colors.black,
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
-            onEditingComplete: () {
-              // widget.onEditingComplete
-              //     ?.call(); // Updated to call function if not null
-              // print('Focus Node: ${widget.focusNode}');
-            },
             validator: (value) {
               if (value!.isEmpty) {
                 return 'Please enter some text';
               }
+              return null;
             },
             decoration: InputDecoration(
               border: InputBorder.none,

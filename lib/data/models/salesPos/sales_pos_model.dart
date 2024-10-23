@@ -1,4 +1,3 @@
-// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'dart:convert';
 
 class SalesPos {
@@ -14,7 +13,7 @@ class SalesPos {
   final List<POSEntry> entries;
   final String customer;
   final String billedTo;
-  final String remarks;
+  final String? remarks;
   final double advance;
   final double addition;
   final double less;
@@ -22,6 +21,7 @@ class SalesPos {
   final double totalAmount;
   final String? createdAt;
   final String? updatedAt;
+  final List<Multimode> multimode; // List of multimode
 
   SalesPos({
     required this.id,
@@ -33,17 +33,18 @@ class SalesPos {
     required this.setDiscount,
     required this.ac,
     required this.noc,
+    required this.entries,
+    required this.customer,
+    required this.billedTo,
+    this.remarks,
     required this.advance,
     required this.addition,
     required this.less,
     required this.roundOff,
-    required this.entries,
-    required this.customer,
-    required this.billedTo,
-    required this.remarks,
     required this.totalAmount,
-    required this.createdAt,
-    required this.updatedAt,
+    this.createdAt,
+    this.updatedAt,
+    required this.multimode, // Include list of multimode in constructor
   });
 
   Map<String, dynamic> toMap() {
@@ -68,6 +69,9 @@ class SalesPos {
       'totalAmount': totalAmount,
       'createdAt': createdAt,
       'updatedAt': updatedAt,
+      'multimode': multimode
+          .map((x) => x.toMap())
+          .toList(), // Serialize list of multimode
     };
   }
 
@@ -91,10 +95,14 @@ class SalesPos {
           .toList(),
       customer: map['customer'] as String,
       billedTo: map['billedTo'] as String,
-      remarks: map['remarks'] as String,
+      remarks: map['remarks'] as String?,
       totalAmount: map['totalAmount'] as double,
       createdAt: map['createdAt'] as String?,
       updatedAt: map['updatedAt'] as String?,
+      multimode:
+          (map['multimode'] as List<dynamic>) // Deserialize list of multimode
+              .map((multimodeJson) => Multimode.fromMap(multimodeJson))
+              .toList(),
     );
   }
 
@@ -171,4 +179,45 @@ class POSEntry {
 
   factory POSEntry.fromJson(String source) =>
       POSEntry.fromMap(json.decode(source) as Map<String, dynamic>);
+}
+
+class Multimode {
+  final double? cash;
+  final double? debit;
+  final double? adjustedAmount;
+  final double? pending;
+  final double? finalAmount;
+
+  Multimode({
+    this.cash,
+    this.debit,
+    this.adjustedAmount,
+    this.pending,
+    this.finalAmount,
+  });
+
+  Map<String, dynamic> toMap() {
+    return <String, dynamic>{
+      'cash': cash,
+      'debit': debit,
+      'adjustedAmount': adjustedAmount,
+      'pending': pending,
+      'finalAmount': finalAmount,
+    };
+  }
+
+  factory Multimode.fromMap(Map<String, dynamic> map) {
+    return Multimode(
+      cash: map['cash'] as double?,
+      debit: map['debit'] as double?,
+      adjustedAmount: map['adjustedAmount'] as double?,
+      pending: map['pending'] as double?,
+      finalAmount: map['finalAmount'] as double?,
+    );
+  }
+
+  String toJson() => json.encode(toMap());
+
+  factory Multimode.fromJson(String source) =>
+      Multimode.fromMap(json.decode(source) as Map<String, dynamic>);
 }

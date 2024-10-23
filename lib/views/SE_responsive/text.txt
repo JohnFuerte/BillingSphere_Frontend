@@ -92,9 +92,8 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
   final TextEditingController _netAmountController = TextEditingController();
   final TextEditingController _basicController = TextEditingController();
   final TextEditingController _noController = TextEditingController();
-  final TextEditingController _customerController = TextEditingController();
   final TextEditingController _acController = TextEditingController();
-
+  final TextEditingController _customerController = TextEditingController();
   final TextEditingController _pointController = TextEditingController();
   final TextEditingController _batchNoController = TextEditingController();
   final TextEditingController _baseController = TextEditingController();
@@ -147,8 +146,8 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
   FocusNode pointBalance = FocusNode();
 
   // Dropdown Select
-  String? selectedAC;
-  String? selectedCustomer;
+  String selectedAC = '';
+  String selectedCustomer = '';
   String selecteSetDiscount = 'No';
   String selectedType = "Cash";
   String? selectedSalesMan;
@@ -245,7 +244,7 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
 
       final salesPos = SalesPos(
         id: widget.salesPos.id,
-        ac: selectedAC!,
+        ac: selectedAC,
         advance: double.parse(_advanceController.text),
         addition: double.parse(_additionController.text),
         less: double.parse(_lessController.text),
@@ -284,7 +283,7 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                 ),
               ]
             : [],
-        customer: selectedCustomer!,
+        customer: selectedCustomer,
         billedTo: _billedToController.text,
         remarks: _remarkController?.text ?? 'No Remarks',
         totalAmount: double.parse(_netTotalDiscController.text),
@@ -1594,11 +1593,13 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                           width: 400,
                                                           requestFocusOnTap:
                                                               true,
-                                                          initialSelection: selectedAC !=
-                                                                  null
+                                                          initialSelection: selectedAC
+                                                                      .isNotEmpty &&
+                                                                  ledgerList
+                                                                      .isNotEmpty
                                                               ? ledgerList.firstWhere(
-                                                                  (ledger) =>
-                                                                      ledger
+                                                                  (element) =>
+                                                                      element
                                                                           .id ==
                                                                       selectedAC)
                                                               : null,
@@ -3133,7 +3134,7 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
           await newCustomerRepository.getAllCustomers();
 
       customerList = customers;
-      selectedCustomer = customers[0].id;
+      selectedCustomer = "67188c95ce238809ff47a745";
 
       print('Customer Length: ${customerList.length}');
     } catch (error) {
@@ -5220,8 +5221,6 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
       },
     );
 
-    // Construct table rows from the map data
-
     final List<TableRow> tableRows =
         selectedCustomerData.expand((data) => data.entries).map((entry) {
       final item = itemList.firstWhere((item) => item.id == entry.itemName);
@@ -5316,7 +5315,6 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
       Ctables2 = tableRows;
     });
 
-    // Construct table data
     final List<TableRow> tableData = selectedCustomerData.map((data) {
       return TableRow(
         children: [
@@ -5443,7 +5441,6 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
             child: Column(
               children: [
                 Container(
-                  // height: MediaQuery.of(context).size.height,
                   width: MediaQuery.of(context).size.width * 0.85,
                   decoration: BoxDecoration(
                     border: Border.all(
@@ -5788,7 +5785,9 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Expanded(
+                                  Container(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.65,
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -5807,240 +5806,24 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                               color: Colors.black,
                                             ),
                                           ),
-                                          child: Column(
-                                            children: [
-                                              Table(
-                                                border: TableBorder.all(
-                                                    width: 1,
-                                                    color: Colors.black),
-                                                columnWidths: const {
-                                                  0: FlexColumnWidth(4),
-                                                  1: FlexColumnWidth(2),
-                                                  2: FlexColumnWidth(2),
-                                                  3: FlexColumnWidth(3),
-                                                  4: FlexColumnWidth(3),
-                                                  5: FlexColumnWidth(3),
-                                                  6: FlexColumnWidth(3),
-                                                },
-                                                children: [
-                                                  TableRow(children: [
-                                                    TableCell(
-                                                        child: SizedBox(
-                                                      height: 40,
-                                                      child: Align(
-                                                        alignment:
-                                                            Alignment.center,
-                                                        child: Text(
-                                                          "Date",
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                          style: GoogleFonts
-                                                              .poppins(
-                                                            fontSize: 15,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: const Color(
-                                                                0xff4B0082),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    )),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment:
-                                                              Alignment.center,
-                                                          child: Text(
-                                                            "Time",
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                            style: GoogleFonts
-                                                                .poppins(
-                                                              fontSize: 15,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color: const Color(
-                                                                  0xff4B0082),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment:
-                                                              Alignment.center,
-                                                          child: Text(
-                                                            "No",
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                            style: GoogleFonts
-                                                                .poppins(
-                                                              fontSize: 15,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color: const Color(
-                                                                  0xff4B0082),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment: Alignment
-                                                              .centerRight,
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(4.0),
-                                                            child: Text(
-                                                              "Amount",
-                                                              textAlign:
-                                                                  TextAlign.end,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment: Alignment
-                                                              .centerRight,
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(4.0),
-                                                            child: Text(
-                                                              "Items",
-                                                              textAlign:
-                                                                  TextAlign.end,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment: Alignment
-                                                              .centerRight,
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(4.0),
-                                                            child: Text(
-                                                              "Points",
-                                                              textAlign:
-                                                                  TextAlign.end,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment: Alignment
-                                                              .centerRight,
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(4.0),
-                                                            child: Text(
-                                                              "Redeem",
-                                                              textAlign:
-                                                                  TextAlign.end,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ]),
-                                                  ...Ctables,
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Container(
-                                          height: MediaQuery.of(context)
-                                                  .size
-                                                  .height *
-                                              0.30,
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.40,
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: Colors.black,
-                                            ),
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              Table(
-                                                border: TableBorder.all(
-                                                    width: 1,
-                                                    color: Colors.black),
-                                                columnWidths: const {
-                                                  0: FlexColumnWidth(3),
-                                                  1: FlexColumnWidth(2),
-                                                  2: FlexColumnWidth(2),
-                                                  3: FlexColumnWidth(2),
-                                                  4: FlexColumnWidth(2),
-                                                },
-                                                children: [
-                                                  TableRow(
-                                                    children: [
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              children: [
+                                                Table(
+                                                  border: TableBorder.all(
+                                                      width: 1,
+                                                      color: Colors.black),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(4),
+                                                    1: FlexColumnWidth(2),
+                                                    2: FlexColumnWidth(2),
+                                                    3: FlexColumnWidth(3),
+                                                    4: FlexColumnWidth(3),
+                                                    5: FlexColumnWidth(3),
+                                                    6: FlexColumnWidth(3),
+                                                  },
+                                                  children: [
+                                                    TableRow(children: [
                                                       TableCell(
                                                           child: SizedBox(
                                                         height: 40,
@@ -6048,7 +5831,7 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                           alignment:
                                                               Alignment.center,
                                                           child: Text(
-                                                            "Month",
+                                                            "Date",
                                                             textAlign: TextAlign
                                                                 .center,
                                                             style: GoogleFonts
@@ -6070,7 +5853,7 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                             alignment: Alignment
                                                                 .center,
                                                             child: Text(
-                                                              "Bill",
+                                                              "Time",
                                                               textAlign:
                                                                   TextAlign
                                                                       .center,
@@ -6094,7 +5877,7 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                             alignment: Alignment
                                                                 .center,
                                                             child: Text(
-                                                              "Amount",
+                                                              "No",
                                                               textAlign:
                                                                   TextAlign
                                                                       .center,
@@ -6116,20 +5899,26 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                           height: 40,
                                                           child: Align(
                                                             alignment: Alignment
-                                                                .center,
-                                                            child: Text(
-                                                              "Points",
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .center,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
+                                                                .centerRight,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(4.0),
+                                                              child: Text(
+                                                                "Amount",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .end,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
                                                               ),
                                                             ),
                                                           ),
@@ -6140,9 +5929,139 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                           height: 40,
                                                           child: Align(
                                                             alignment: Alignment
+                                                                .centerRight,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(4.0),
+                                                              child: Text(
+                                                                "Items",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .end,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      TableCell(
+                                                        child: SizedBox(
+                                                          height: 40,
+                                                          child: Align(
+                                                            alignment: Alignment
+                                                                .centerRight,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(4.0),
+                                                              child: Text(
+                                                                "Points",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .end,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      TableCell(
+                                                        child: SizedBox(
+                                                          height: 40,
+                                                          child: Align(
+                                                            alignment: Alignment
+                                                                .centerRight,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(4.0),
+                                                              child: Text(
+                                                                "Redeem",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .end,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ]),
+                                                    ...Ctables,
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        Container(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.30,
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.40,
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              children: [
+                                                Table(
+                                                  border: TableBorder.all(
+                                                      width: 1,
+                                                      color: Colors.black),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(3),
+                                                    1: FlexColumnWidth(2),
+                                                    2: FlexColumnWidth(2),
+                                                    3: FlexColumnWidth(2),
+                                                    4: FlexColumnWidth(2),
+                                                  },
+                                                  children: [
+                                                    TableRow(
+                                                      children: [
+                                                        TableCell(
+                                                            child: SizedBox(
+                                                          height: 40,
+                                                          child: Align(
+                                                            alignment: Alignment
                                                                 .center,
                                                             child: Text(
-                                                              "Redeem",
+                                                              "Month",
                                                               textAlign:
                                                                   TextAlign
                                                                       .center,
@@ -6157,15 +6076,119 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                               ),
                                                             ),
                                                           ),
+                                                        )),
+                                                        TableCell(
+                                                          child: SizedBox(
+                                                            height: 40,
+                                                            child: Align(
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              child: Text(
+                                                                "Bill",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
                                                         ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  ..._buildTableRows(
-                                                      groupedData),
-                                                ],
-                                              ),
-                                            ],
+                                                        TableCell(
+                                                          child: SizedBox(
+                                                            height: 40,
+                                                            child: Align(
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              child: Text(
+                                                                "Amount",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        TableCell(
+                                                          child: SizedBox(
+                                                            height: 40,
+                                                            child: Align(
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              child: Text(
+                                                                "Points",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        TableCell(
+                                                          child: SizedBox(
+                                                            height: 40,
+                                                            child: Align(
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              child: Text(
+                                                                "Redeem",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    ..._buildTableRows(
+                                                        groupedData),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -6181,102 +6204,57 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                         color: Colors.black,
                                       ),
                                     ),
-                                    child: Column(
-                                      children: [
-                                        Table(
-                                          border: TableBorder.all(
-                                              width: 1, color: Colors.black),
-                                          columnWidths: const {
-                                            0: FlexColumnWidth(5),
-                                            1: FlexColumnWidth(2),
-                                            2: FlexColumnWidth(2),
-                                            3: FlexColumnWidth(3),
-                                            4: FlexColumnWidth(2),
-                                          },
-                                          children: [
-                                            TableRow(children: [
-                                              TableCell(
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          Table(
+                                            border: TableBorder.all(
+                                                width: 1, color: Colors.black),
+                                            columnWidths: const {
+                                              0: FlexColumnWidth(5),
+                                              1: FlexColumnWidth(2),
+                                              2: FlexColumnWidth(2),
+                                              3: FlexColumnWidth(3),
+                                              4: FlexColumnWidth(2),
+                                            },
+                                            children: [
+                                              TableRow(children: [
+                                                TableCell(
+                                                    child: SizedBox(
+                                                  height: 40,
+                                                  child: Align(
+                                                    alignment:
+                                                        Alignment.centerLeft,
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              4.0),
+                                                      child: Text(
+                                                        "Item Name",
+                                                        textAlign:
+                                                            TextAlign.start,
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                          fontSize: 15,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: const Color(
+                                                              0xff4B0082),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                )),
+                                                TableCell(
                                                   child: SizedBox(
-                                                height: 40,
-                                                child: Align(
-                                                  alignment:
-                                                      Alignment.centerLeft,
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            4.0),
-                                                    child: Text(
-                                                      "Item Name",
-                                                      textAlign:
-                                                          TextAlign.start,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              )),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Qty",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Rate",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment:
-                                                        Alignment.centerRight,
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              4.0),
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.center,
                                                       child: Text(
-                                                        "Total Amount",
+                                                        "Qty",
                                                         textAlign:
-                                                            TextAlign.end,
+                                                            TextAlign.center,
                                                         style:
                                                             GoogleFonts.poppins(
                                                           fontSize: 15,
@@ -6289,21 +6267,16 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment:
-                                                        Alignment.centerRight,
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              4.0),
+                                                TableCell(
+                                                  child: SizedBox(
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.center,
                                                       child: Text(
-                                                        "Points",
+                                                        "Rate",
                                                         textAlign:
-                                                            TextAlign.end,
+                                                            TextAlign.center,
                                                         style:
                                                             GoogleFonts.poppins(
                                                           fontSize: 15,
@@ -6316,20 +6289,72 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                            ]),
-                                            ...Ctables2,
-                                          ],
-                                        ),
-                                      ],
+                                                TableCell(
+                                                  child: SizedBox(
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.centerRight,
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(4.0),
+                                                        child: Text(
+                                                          "Total Amount",
+                                                          textAlign:
+                                                              TextAlign.end,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                TableCell(
+                                                  child: SizedBox(
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.centerRight,
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(4.0),
+                                                        child: Text(
+                                                          "Points",
+                                                          textAlign:
+                                                              TextAlign.end,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ]),
+                                              ...Ctables2,
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                           ),
-
-                          //  Total Amount Here....
                           Padding(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 10),

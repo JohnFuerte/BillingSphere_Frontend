@@ -1,3 +1,4 @@
+import 'package:billingsphere/data/repository/sales_pos_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,6 +9,7 @@ class PopUp2 extends StatefulWidget {
   final double totalAmount;
   final VoidCallback onSaveData;
   final Map<String, dynamic> multimodeDetails;
+  final String? id;
 
   PopUp2({
     super.key,
@@ -15,6 +17,7 @@ class PopUp2 extends StatefulWidget {
     required this.listWidget,
     required this.onSaveData,
     required this.multimodeDetails,
+    this.id,
   });
 
   @override
@@ -22,17 +25,15 @@ class PopUp2 extends StatefulWidget {
 }
 
 class _PopUp2State extends State<PopUp2> {
+  SalesPosRepository salesPosRepository = SalesPosRepository();
+
   final TextEditingController _controller = TextEditingController();
 
   final TextEditingController _controllercash =
       TextEditingController(text: '0');
 
-  final TextEditingController _controllerupi = TextEditingController();
-
-  final TextEditingController _controllercheque = TextEditingController();
-
-  final TextEditingController _controllercardPaymentamount =
-      TextEditingController();
+  final TextEditingController _controllerdebit =
+      TextEditingController(text: '0');
 
   final TextEditingController _controllerpending =
       TextEditingController(text: '0');
@@ -43,15 +44,11 @@ class _PopUp2State extends State<PopUp2> {
   double? defaultValue;
 
   bool? isCashEditable;
-  bool? isUpiEditable;
-  bool? isCardEditable;
-  bool? isChequeEditable;
+  bool? isDebitEditable;
 
   void setEditableValues() {
     isCashEditable = widget.totalAmount != 0.0 ? true : false;
-    isUpiEditable = widget.totalAmount != 0.0 ? true : false;
-    isCardEditable = widget.totalAmount != 0.0 ? true : false;
-    isChequeEditable = widget.totalAmount != 0.0 ? true : false;
+    isDebitEditable = widget.totalAmount != 0.0 ? true : false;
   }
 
   @override
@@ -60,49 +57,48 @@ class _PopUp2State extends State<PopUp2> {
     _controllerpending.text = widget.totalAmount.toString();
     setEditableValues();
     super.initState();
+    if (widget.id != null && widget.id!.isNotEmpty) {
+      fetchDataById(widget.id!);
+    }
+  }
+
+  // Function to fetch data by ID (if provided)
+  Future<void> fetchDataById(String id) async {
+    try {
+      // Call your fetch function here, e.g., fetchSalesPosById
+      final salesData = await salesPosRepository.fetchSalesPosById(id);
+
+      if (salesData != null) {
+        setState(() {
+          _controllercash.text = salesData.multimode[0].cash.toString();
+          _controllerdebit.text = salesData.multimode[0].debit.toString();
+        });
+      }
+    } catch (error) {
+      print("Error fetching data: $error");
+    }
   }
 
   void saveMultiModeValues() {
     double cashValue = double.tryParse(_controllercash.text) ?? 0.0;
-    double debitValue = double.tryParse(_controllerupi.text) ?? 0.0;
-    double cardPaymentamountValue =
-        double.tryParse(_controllercardPaymentamount.text) ?? 0.0;
-    double chequeValue = double.tryParse(_controllercheque.text) ?? 0.0;
+    double debitValue = double.tryParse(_controllerdebit.text) ?? 0.0;
     double cashPending = double.tryParse(_controllerpending.text) ?? 0.0;
     double cashFinalAmount = double.tryParse(_controllertotal.text) ?? 0.0;
 
     widget.multimodeDetails['cash'] = cashValue;
-    widget.multimodeDetails['upi'] = debitValue;
-    widget.multimodeDetails['cardPayment'] = cardPaymentamountValue;
-    widget.multimodeDetails['cheque'] = chequeValue;
+    widget.multimodeDetails['debit'] = debitValue;
     widget.multimodeDetails['pendingAmount'] = cashPending;
     widget.multimodeDetails['finalAmount'] = cashFinalAmount;
 
     print(widget.multimodeDetails);
   }
 
-  // void grandtotal() {
-  //   double grandtotal = 0.0;
-
-  //   grandtotal += double.tryParse(_controllercash.text) ?? 0.0;
-  //   grandtotal += double.tryParse(_controllerupi.text) ?? 0.0;
-  //   grandtotal -= double.tryParse(_controllercardPaymentamount.text) ?? 0.0;
-  //   grandtotal += double.tryParse(_controllercheque.text) ?? 0.0;
-
-  //   _controllertotal.text = grandtotal.toStringAsFixed(2);
-  // }
-
   void voidpending() {
-    // Get all payment values
     double cashValue = double.tryParse(_controllercash.text) ?? 0.0;
-    double upiValue = double.tryParse(_controllerupi.text) ?? 0.0;
-    double cardPaymentamountValue =
-        double.tryParse(_controllercardPaymentamount.text) ?? 0.0;
-    double chequeValue = double.tryParse(_controllercheque.text) ?? 0.0;
+    double debitValue = double.tryParse(_controllerdebit.text) ?? 0.0;
 
     // Calculate pending amount
-    double pendingAmount = widget.totalAmount -
-        (cashValue + upiValue + cardPaymentamountValue + chequeValue);
+    double pendingAmount = widget.totalAmount - (cashValue + debitValue);
 
     _controllerpending.text = pendingAmount.toStringAsFixed(2);
     // Clamp the pendinjg amount so that it doesn't go below 0 using clamp method
@@ -117,40 +113,6 @@ class _PopUp2State extends State<PopUp2> {
     double pendingAmount = double.tryParse(_controllerpending.text) ?? 0.0;
 
     return value <= pendingAmount;
-  }
-
-  void handleTextFieldAction({
-    required TextEditingController pendingController,
-    required TextEditingController upiController,
-    required TextEditingController cardPaymentController,
-    required TextEditingController chequeController,
-    required TextEditingController cashController,
-    required TextEditingController currentController,
-    required VoidCallback voidPendingAction,
-    required VoidCallback saveMultiModeValues,
-    required double totalAmount,
-    required ValueChanged<bool> onUpiEditableChanged,
-    required ValueChanged<bool> onCardEditableChanged,
-    required ValueChanged<bool> onChequeEditableChanged,
-  }) {
-    // Delay for 1 sec
-    Future.delayed(const Duration(seconds: 2));
-    if (double.tryParse(pendingController.text) != null &&
-        double.parse(pendingController.text) > 0) {
-      voidPendingAction();
-      saveMultiModeValues();
-    } else {
-      // Check all controllers that are empty
-      if (upiController.text.isEmpty) {
-        onUpiEditableChanged(false);
-      }
-      if (cardPaymentController.text.isEmpty) {
-        onCardEditableChanged(false);
-      }
-      if (chequeController.text.isEmpty) {
-        onChequeEditableChanged(false);
-      }
-    }
   }
 
   @override
@@ -289,55 +251,19 @@ class _PopUp2State extends State<PopUp2> {
                             Row(
                               children: [
                                 CurrencyRow(
-                                  heading: "UPI",
+                                  heading: "Debit",
                                   isTrue: false,
-                                  inputController: _controllerupi,
+                                  inputController: _controllerdebit,
                                   onAmountChanged: (newValue) {
                                     setState(() {
-                                      _controllerupi.text = newValue.toString();
-                                    });
-
-                                    voidpending();
-                                    saveMultiModeValues();
-                                  },
-                                  isEditable: isUpiEditable,
-                                )
-                              ],
-                            ).pOnly(right: 30, top: 2),
-                            Row(
-                              children: [
-                                CurrencyRow(
-                                  heading: "CARD PAYMENT ",
-                                  isTrue: false,
-                                  inputController: _controllercardPaymentamount,
-                                  onAmountChanged: (newValue) {
-                                    setState(() {
-                                      _controllercardPaymentamount.text =
+                                      _controllerdebit.text =
                                           newValue.toString();
                                     });
 
                                     voidpending();
                                     saveMultiModeValues();
                                   },
-                                  isEditable: isCardEditable,
-                                )
-                              ],
-                            ).pOnly(right: 30, top: 2),
-                            Row(
-                              children: [
-                                CurrencyRow(
-                                  heading: "CHEQUE ",
-                                  isTrue: false,
-                                  inputController: _controllercheque,
-                                  onAmountChanged: (newValue) {
-                                    setState(() {
-                                      _controllercheque.text =
-                                          newValue.toString();
-                                    });
-                                    voidpending();
-                                    saveMultiModeValues();
-                                  },
-                                  isEditable: isChequeEditable,
+                                  isEditable: isDebitEditable,
                                 )
                               ],
                             ).pOnly(right: 30, top: 2),
@@ -405,7 +331,6 @@ class _PopUp2State extends State<PopUp2> {
                         height: 10,
                       ),
 
-                      // Total Amount Text Field
                       Row(
                         children: [
                           SizedBox(
@@ -471,7 +396,9 @@ class _PopUp2State extends State<PopUp2> {
                             ),
                             child: InkWell(
                               onTap: () {
-                                if (_controllerpending.text != defaultValue) {
+                                print(" : ${_controllerpending.text}");
+                                if (double.parse(_controllerpending.text) !=
+                                    0) {
                                   showDialog(
                                     context: context,
                                     builder: (BuildContext context) {
@@ -508,6 +435,7 @@ class _PopUp2State extends State<PopUp2> {
                                   return;
                                 } else {
                                   widget.onSaveData();
+                                  Navigator.pop(context);
                                 }
                               },
                               child: Center(
