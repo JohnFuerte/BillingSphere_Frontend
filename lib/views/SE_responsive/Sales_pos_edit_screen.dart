@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:billingsphere/data/models/salesPos/sales_pos_model.dart';
 import 'package:billingsphere/utils/constant.dart';
@@ -10,6 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:velocity_x/velocity_x.dart';
 
 import '../../data/models/customer/new_customer_model.dart';
 import '../../data/models/item/item_model.dart';
@@ -43,6 +46,8 @@ class SalesPosEditScreen extends StatefulWidget {
 }
 
 class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
+  Timer? _debounce;
+
   late AudioCache _audioCache;
 
   final AudioPlayer _audioPlayer = AudioPlayer();
@@ -59,6 +64,8 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
 
   // Lists of data
   List<Item> itemList = [];
+  List<Item> rowItems = [];
+
   List<TaxRate> taxLists = [];
   late List<TableRow> tables = [];
   late List<TableRow> Ctables = [];
@@ -117,8 +124,18 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
       TextEditingController(text: "0.00");
   final TextEditingController _roundOffController =
       TextEditingController(text: "0.00");
+  final TextEditingController dataText = TextEditingController();
 
   double overralTotal = 0.00;
+  String _discountType = "Fixed Percentage";
+
+  final TextEditingController _basicAmountController = TextEditingController();
+  final TextEditingController _discountPer =
+      TextEditingController(text: "0.00");
+  final TextEditingController _discountAmt =
+      TextEditingController(text: "0.00");
+  final TextEditingController _receivable = TextEditingController(text: "0.00");
+
   final TextEditingController _netTotalDiscController = TextEditingController();
 
   // FocusNode
@@ -765,6 +782,7 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                           height: 40,
                                           child: DropdownButtonHideUnderline(
                                             child: DropdownMenu<Item>(
+                                              controller: dataText,
                                               requestFocusOnTap: true,
                                               focusNode: itemFocus,
                                               initialSelection: null,
@@ -1407,6 +1425,13 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                                         () {
                                                                       selecteSetDiscount =
                                                                           newValue!;
+                                                                      if (selecteSetDiscount ==
+                                                                              "Yes" &&
+                                                                          double.parse(_netTotalDiscController.text) >
+                                                                              0) {
+                                                                        _showAlert(
+                                                                            context);
+                                                                      }
                                                                     });
                                                                   },
                                                                   items: [
@@ -3143,10 +3168,16 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
 
   Future<void> fetchItems() async {
     final items = await itemsService.fetchITEMS();
-    items.removeWhere((element) => element.maximumStock == 0);
-    itemList = items;
 
-    print('Items Length: ${itemList.length}');
+    for (var entry in widget.salesPos.entries) {
+      final Item? matchedItem = items.firstWhere(
+        (item) => item.id == entry.itemName,
+      );
+
+      rowItems.add(matchedItem!);
+    }
+
+    itemList = items;
   }
 
   Future<List<String>?> getCompanyCode() async {
@@ -3162,15 +3193,136 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
   }
 
   void updateselectedTable(int index) {
+    print("length of table: ${tables.length}");
+    print("length of rowItems: ${rowItems.length}");
     final key = tables[index].key;
     final rowIndex = tables.indexWhere((row) => row.key == key);
-    openDialog(rowIndex: rowIndex);
+    print("row index : ${rowIndex}");
+    openDialog2(rowIndex: rowIndex, item: rowItems[index]);
+  }
+
+  void addTableRow2() {
+    print("selectedItemName : $selectedItemName");
+    int existingIndex = tables.indexWhere((row) {
+      final tableCell = _getTextFromTableRow(row, 1);
+      return tableCell == selectedItemName;
+    });
+
+    if (existingIndex != -1) {
+      _updateExistingRow(existingIndex);
+    } else {
+      _addNewRow();
+    }
+  }
+
+  String _getTextFromTableRow(TableRow row, int index) {
+    final isTableCell = row.children[index] is TableCell;
+    final tableCell = isTableCell ? row.children[index] as TableCell : null;
+    final isInkWell = tableCell?.child is InkWell;
+    final inkWell = isInkWell ? tableCell!.child as InkWell : null;
+    final isSizedBox = inkWell?.child is SizedBox;
+    final sizedBox = isSizedBox ? inkWell!.child as SizedBox : null;
+    final isAlign = sizedBox?.child is Align;
+    final align = isAlign ? sizedBox!.child as Align : null;
+    final isTextChild = align?.child is Text;
+    return isTextChild ? ((align!.child as Text).data ?? 'N/A') : 'N/A';
+  }
+
+  void _updateExistingRow(int existingIndex) {
+    _updateTableCell(existingIndex, 4, _qtyController.text);
+    _updateTableCell(existingIndex, 10, _discPerController.text);
+    _updateTableCell(existingIndex, 11, _discRsController.text);
+    _updateTableCell(existingIndex, 12, _taxController.text);
+    _updateTableCell(existingIndex, 13, _netAmountController.text);
+
+    setState(() {
+      tables = tables;
+    });
+  }
+
+  void _updateTableCell(int rowIndex, int cellIndex, String value) {
+    tables[rowIndex].children[cellIndex] = TableCell(
+      child: InkWell(
+        child: SizedBox(
+          height: 40,
+          child: Align(
+            alignment: Alignment.center,
+            child: Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _addNewRow() {
+    int index = tables.length;
+
+    setState(() {
+      tables.add(
+        TableRow(
+          key: tableKey,
+          decoration: const BoxDecoration(color: Colors.white),
+          children: [
+            _buildTableCell(index, (index + 1).toString()),
+            _buildTableCell(index, selectedItemName ?? 'N/A'),
+            _buildTableCell(index, '0'),
+            _buildTableCell(index, ''),
+            _buildTableCell(index, _qtyController.text),
+            _buildTableCell(index, _unitController.text),
+            _buildTableCell(index, _baseController.text),
+            _buildTableCell(index, _rateController.text),
+            _buildTableCell(index, _mrpController.text),
+            _buildTableCell(index, _basicController.text),
+            _buildTableCell(index, _discPerController.text),
+            _buildTableCell(index, _discRsController.text),
+            _buildTableCell(index, _taxController.text),
+            _buildTableCell(index, _netAmountController.text),
+          ],
+        ),
+      );
+    });
+  }
+
+  TableCell _buildTableCell(int index, String value) {
+    return TableCell(
+      child: InkWell(
+        onTap: () => updateselectedTable(index),
+        child: SizedBox(
+          height: 40,
+          child: Align(
+            alignment: Alignment.center,
+            child: Text(
+              value,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void openDialog2({int? rowIndex, Item? item}) {
+    if (rowItems.contains(item)) {
+      rowIndex = rowItems.indexOf(item!);
+    }
     if (rowIndex != null) {
       selectedRowIndex = rowIndex;
       final selectedItem = values[rowIndex];
+      print(selectedItem);
+
       selectedItemName = selectedItem['Item_Name'];
       _qtyController.text = selectedItem['qty'];
       _unitController.text = selectedItem['unit'];
@@ -3184,15 +3336,77 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
       _mrpController.text = selectedItem['mrp'];
       _amountController.text = selectedItem['amount'];
     } else {
+      final selectedItem = item;
+
+      selectedItemName = selectedItem!.itemName;
+
+      selectedItemId = selectedItem.id;
+
+      String newId = '';
+      String newId2 = '';
+
+      for (Item item in itemList) {
+        if (item.id == selectedItemId) {
+          newId = item.taxCategory;
+          newId2 = item.measurementUnit;
+        }
+      }
+      for (TaxRate tax in taxLists) {
+        if (tax.id == newId) {
+          setState(() {
+            _taxController.text = tax.rate;
+          });
+        }
+      }
+      for (MeasurementLimit meu in measurement) {
+        if (meu.id == newId2) {
+          setState(() {
+            _unitController.text = meu.measurement.toString();
+          });
+        }
+      }
+
+      // Calculate the Rate
+      double ratepercent = (double.parse(_taxController.text) / 100);
+
+      ratepercent += 1.00;
+
+      double mpr = selectedItem.mrp;
+
+      double rate = mpr / ratepercent;
+
+      _qtyController.text = "1";
+      _rateController.text = rate.toStringAsFixed(2);
+      _discPerController.text = "0.00";
+      _discRsController.text = "0.00";
+      _basicController.text = rate.toStringAsFixed(2);
+
+      _amountController.text = rate.toStringAsFixed(2);
+
+      _mrpController.text = selectedItem.mrp.toStringAsFixed(2);
+      _baseController.text = selectedItem.mrp.toStringAsFixed(2);
+
+      final tax = selectedItem.mrp - rate;
+
+      // Change to taxAmountController
+
+      _taxController.text = tax.toStringAsFixed(2);
+
+      // For Net Amount, multiply qty with real rate
+      double qty = double.parse(_qtyController.text);
+      double rate2 = double.parse(selectedItem.mrp.toString());
+
+      double netAmount = qty * rate2;
+
+      _netAmountController.text = netAmount.toStringAsFixed(2).toString();
       tableKey = UniqueKey();
       selectedRowIndex = null;
     }
-
     showDialog(
       context: context,
       builder: (context) {
         // Request Focus to Qty
-        FocusScope.of(context).requestFocus(qtyFocus);
+        // FocusScope.of(context).requestFocus(qtyFocus);
         return AlertDialog(
           backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
@@ -3224,13 +3438,16 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                     onKey: (node, event) {
                       if (event is RawKeyDownEvent &&
                           event.logicalKey == LogicalKeyboardKey.space) {
-                        print('Pressed Space');
+                        // Pop
+                        Navigator.of(context).pop();
+                        if (!rowItems.contains(item)) {
+                          rowItems.add(item!);
+                        }
+
                         _saveValues();
                         _calculateTotalAmount();
-                        addTableRow1();
-                        Navigator.of(context).pop();
-
-                        FocusScope.of(context).requestFocus(billedToFocus);
+                        addTableRow2();
+                        dataText.clear();
 
                         setState(() {});
 
@@ -3271,26 +3488,32 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                   name: "Qty",
                                   // focusNode: qtyFocus,
                                   controller: _qtyController,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    qtyFocus.unfocus();
-
-                                    FocusScope.of(context)
-                                        .requestFocus(unitFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   onchange: (String value) {
                                     double qty = double.parse(value);
-                                    print('Qty: $qty');
-                                    print(
-                                        'Selected Item Max: ${item!.maximumStock}');
-                                    if (qty > item.maximumStock) {
-                                      _qtyController.text =
-                                          item.maximumStock.toString();
-                                      // qty = selectedItem!.maximumStock.toDouble();
-
+                                    if (qty <= 0) {
+                                      setState(() {
+                                        _qtyController.text = '1';
+                                      });
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Quantity cannot be less than 1',
+                                            style: TextStyle(
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    } else if (qty >
+                                        (item?.maximumStock ??
+                                            double.infinity)) {
+                                      // Validate against maximum stock only if the item exists
+                                      setState(() {
+                                        _qtyController.text =
+                                            item!.maximumStock.toString();
+                                      });
                                       ScaffoldMessenger.of(context)
                                           .showSnackBar(
                                         const SnackBar(
@@ -3303,104 +3526,41 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                           backgroundColor: Colors.red,
                                         ),
                                       );
-
-                                      // For Net Amount, multiply qty with rate
-                                      double rate =
-                                          double.parse(_rateController.text);
-                                      double netAmount = qty * rate;
-
-                                      setState(() {
-                                        _netAmountController.text = netAmount
-                                            .toStringAsFixed(2)
-                                            .toString();
-                                      });
                                     } else {
-                                      // For Net Amount, multiply qty with rate
-                                      double rate =
-                                          double.parse(_rateController.text);
-                                      double amount = qty * rate;
-                                      double netAmount = qty *
-                                          double.parse(_mrpController.text);
-                                      double tax =
-                                          double.parse(_taxController.text);
-                                      double finalTax = tax * qty;
-
-                                      setState(() {
-                                        _netAmountController.text = netAmount
-                                            .toStringAsFixed(2)
-                                            .toString();
-                                        _amountController.text = amount
-                                            .toStringAsFixed(2)
-                                            .toString();
-                                        _taxController.text =
-                                            finalTax.toStringAsFixed(2);
-                                      });
+                                      _performCalculations();
                                     }
                                   },
                                 ),
                                 CustomTextField(
                                   name: "Unit",
                                   // focusNode: unitFocus,
+                                  isReadOnly: true,
                                   controller: _unitController,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    unitFocus.unfocus();
 
-                                    FocusScope.of(context)
-                                        .requestFocus(rateFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   onchange: (String value) {},
                                 ),
                                 CustomTextField(
                                   name: "Rate",
+                                  isReadOnly: true,
                                   // focusNode: rateFocus,
                                   controller: _rateController,
                                   onchange: (String value) {},
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    rateFocus.unfocus();
-
-                                    FocusScope.of(context)
-                                        .requestFocus(perFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                 ),
                                 CustomTextField(
                                   name: "Per",
                                   // focusNode: perFocus,
+                                  isReadOnly: true,
                                   controller: _unitController,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    perFocus.unfocus();
 
-                                    FocusScope.of(context)
-                                        .requestFocus(amountFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   onchange: (String value) {},
                                 ),
                                 CustomTextField(
                                   name: "Amount",
                                   // focusNode: amountFocus,
+                                  isReadOnly: true,
                                   controller: _amountController,
                                   textAlign: TextAlign.right,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    amountFocus.unfocus();
 
-                                    FocusScope.of(context)
-                                        .requestFocus(discPerFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   onchange: (String value) {},
                                 ),
                                 CustomTextField(
@@ -3408,30 +3568,9 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                   // focusNode: discPerFocus,
                                   controller: _discPerController,
                                   textAlign: TextAlign.right,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    discPerFocus.unfocus();
 
-                                    FocusScope.of(context)
-                                        .requestFocus(discRsFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   onchange: (String value) {
-                                    // Get Controller and parse to double
-                                    double disc = double.parse(value);
-                                    double discPer = disc / 100;
-                                    double discRs = discPer *
-                                        double.parse(_amountController.text);
-
-                                    // Set discRs to the controller
-                                    setState(() {
-                                      _discRsController.text =
-                                          discRs.toStringAsFixed(2);
-                                    });
-
-                                    // Get the rate
+                                    _performCalculations();
                                   },
                                 ),
                                 CustomTextField(
@@ -3439,46 +3578,26 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                   // focusNode: discRsFocus,
                                   controller: _discRsController,
                                   textAlign: TextAlign.right,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    discRsFocus.unfocus();
 
-                                    FocusScope.of(context)
-                                        .requestFocus(taxFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
+                                  onchange: (String value) {
+                                    _performCalculationsforRS();
                                   },
-                                  onchange: (String value) {},
                                 ),
                                 CustomTextField(
                                   name: "Tax",
                                   // focusNode: taxFocus,
+                                  isReadOnly: true,
                                   controller: _taxController,
                                   textAlign: TextAlign.right,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    taxFocus.unfocus();
 
-                                    FocusScope.of(context)
-                                        .requestFocus(netAmountFocus);
-
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   onchange: (String value) {},
                                 ),
                                 CustomTextField(
                                   name: "Net Amount",
                                   // focusNode: netAmountFocus,
+                                  isReadOnly: true,
                                   controller: _netAmountController,
-                                  onEditingComplete: () {
-                                    // Unfocus the current focus node
-                                    netAmountFocus.unfocus();
 
-                                    // Rebuild UI
-                                    setState(() {});
-                                  },
                                   textAlign: TextAlign.right,
                                   onchange: (String value) {},
                                 ),
@@ -3500,10 +3619,14 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                 onTap: () {
                                   // Pop
                                   Navigator.of(context).pop();
+                                  if (!rowItems.contains(item)) {
+                                    rowItems.add(item!);
+                                  }
 
                                   _saveValues();
                                   _calculateTotalAmount();
-                                  addTableRow1();
+                                  addTableRow2();
+                                  dataText.clear();
                                 },
                                 name: "Save",
                                 Skey: "[space]",
@@ -3537,396 +3660,393 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
     );
   }
 
-  void addTableRow1() {
-    int existingIndex = tables.indexWhere((row) {
-      final isTableCell = row.children[1] is TableCell;
-      final tableCell = isTableCell ? row.children[1] as TableCell : null;
-      final isInkWell = tableCell?.child is InkWell;
-      final inkWell = isInkWell ? tableCell!.child as InkWell : null;
-      final isSizedBox = inkWell?.child is SizedBox;
-      final sizedBox = isSizedBox ? inkWell!.child as SizedBox : null;
-      final isAlign = sizedBox?.child is Align;
-      final align = isAlign ? sizedBox!.child as Align : null;
-      final isTextChild = align?.child is Text;
-      final childData =
-          isTextChild ? ((align!.child as Text).data ?? 'N/A') : 'N/A';
+  void _performCalculations() {
+    double qty = double.tryParse(_qtyController.text) ?? 1.0;
+    double rate = double.tryParse(_rateController.text) ?? 0.0;
+    double base = double.tryParse(_basicController.text) ?? 0.0;
+    double mrp = double.tryParse(_mrpController.text) ?? 0.0;
+    double discPer = double.tryParse(_discPerController.text) ?? 0.0;
+    double discRs = double.tryParse(_discRsController.text) ?? 0.0;
+    double tax = double.tryParse(_taxController.text) ?? 0.0;
 
-      return childData == selectedItemName;
-    });
+    double netAmount = (qty * base);
+    double amount = qty * rate;
 
-    print('ADD TABLE ROW 1 Existing Index: $existingIndex');
+    double taxAmount = tax * qty;
+    netAmount += taxAmount;
 
-    if (existingIndex != -1) {
-      final isTableCell = tables[existingIndex].children[4] is TableCell;
-      final tableCell =
-          isTableCell ? tables[existingIndex].children[4] as TableCell : null;
-      final isInkWell = tableCell?.child is InkWell;
-      final inkWell = isInkWell ? tableCell!.child as InkWell : null;
-      final isSizedBox = inkWell?.child is SizedBox;
-      final sizedBox = isSizedBox ? inkWell!.child as SizedBox : null;
-      final isAlign = sizedBox?.child is Align;
-      final align = isAlign ? sizedBox!.child as Align : null;
-      final isTextChild = align?.child is Text;
-      final childData =
-          isTextChild ? ((align!.child as Text).data ?? 'N/A') : 'N/A';
+    discRs = (discPer / 100) * netAmount;
+    discPer = (discRs / netAmount) * 100;
+    double discountedAmount = netAmount - discRs;
 
-      print("CHILD DATA: $childData");
-      final qty =
-          int.parse(_qtyController.text) + int.parse(childData.toString());
-      // final qty = int.parse(_qtyController.text);
-      final rate = double.parse(_mrpController.text);
-      final netAmount = qty * rate;
+    double finalAmount = discountedAmount;
 
-      // Update the TableCell widgets
-      tables[existingIndex].children[4] = TableCell(
-        child: InkWell(
-          child: SizedBox(
-            height: 40,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                qty.toString(),
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      tables[existingIndex].children[13] = TableCell(
-        child: InkWell(
-          child: SizedBox(
-            height: 40,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                netAmount.toStringAsFixed(2),
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ),
-      );
-
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
       setState(() {
-        tables = tables;
+        _amountController.text = amount.toStringAsFixed(2);
+        _netAmountController.text = finalAmount.toStringAsFixed(2);
+        _taxController.text = taxAmount.toStringAsFixed(2);
+        _discPerController.text = discPer.toStringAsFixed(2);
+        _discRsController.text = discRs.toStringAsFixed(2);
       });
+    });
+  }
 
-      return;
+  void _performCalculationsforRS() {
+    double qty = double.tryParse(_qtyController.text) ?? 1.0;
+    double rate = double.tryParse(_rateController.text) ?? 0.0;
+    double base = double.tryParse(_basicController.text) ?? 0.0;
+    double mrp = double.tryParse(_mrpController.text) ?? 0.0;
+    double discPer = double.tryParse(_discPerController.text) ?? 0.0;
+    double discRs = double.tryParse(_discRsController.text) ?? 0.0;
+    double tax = double.tryParse(_taxController.text) ?? 0.0;
+
+    double netAmount = (qty * base);
+    double amount = qty * rate;
+
+    double taxAmount = tax * qty;
+    netAmount += taxAmount;
+
+    discPer = (discRs / netAmount) * 100;
+
+    discRs = (discPer / 100) * netAmount;
+    double discountedAmount = netAmount - discRs;
+
+    double finalAmount = discountedAmount;
+
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _amountController.text = amount.toStringAsFixed(2);
+        _netAmountController.text = finalAmount.toStringAsFixed(2);
+        _taxController.text = taxAmount.toStringAsFixed(2);
+        _discPerController.text = discPer.toStringAsFixed(2);
+        _discRsController.text = discRs.toStringAsFixed(2);
+      });
+    });
+  }
+
+  void _showAlert(BuildContext context) {
+    double totalBasicAmount = calculateTotalBasicAmount();
+    _basicAmountController.text = totalBasicAmount.toStringAsFixed(2);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              contentPadding: EdgeInsets.zero,
+              shape: InputBorder.none,
+              content: Container(
+                height: 350,
+                width: 500,
+                decoration: const BoxDecoration(
+                  borderRadius: BorderRadius.zero,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.only(
+                          left: 13, top: 10, bottom: 5, right: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue,
+                        border:
+                            Border.all(color: Colors.grey.shade300, width: .5),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                "Set Discount",
+                                style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white),
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                            },
+                            icon: const Icon(
+                              Icons.cancel,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(top: 5),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    "Basic Amount",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepPurple,
+                                    ),
+                                  ),
+                                ),
+                                SETopTextfield(
+                                  readOnly: true,
+                                  controller: _basicAmountController,
+                                  width: 160,
+                                  height: 40,
+                                  padding: const EdgeInsets.only(
+                                      left: 8.0, bottom: 16.0),
+                                  hintText: '',
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 5),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    "Discount Type",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepPurple,
+                                    ),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      Radio<String>(
+                                        value: "Fixed Percentage",
+                                        groupValue: _discountType,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _discountType = value!;
+                                          });
+                                        },
+                                      ),
+                                      const Text("Fixed Percentage"),
+                                      const SizedBox(
+                                        width: 10,
+                                      ),
+                                      Radio<String>(
+                                        value: "Fixed Amount",
+                                        groupValue: _discountType,
+                                        onChanged: (value) {
+                                          setState(() {
+                                            _discountType = value!;
+                                          });
+                                        },
+                                      ),
+                                      const Text("Fixed Amount"),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    "Discount %",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepPurple,
+                                    ),
+                                  ),
+                                ),
+                                SETopTextfield(
+                                  readOnly: _discountType == "Fixed Percentage"
+                                      ? false
+                                      : true,
+                                  onChanged: (value) {
+                                    _calculateDiscountFromPercentage();
+                                  },
+                                  controller: _discountPer,
+                                  width: 160,
+                                  height: 40,
+                                  padding: const EdgeInsets.only(
+                                      left: 8.0, bottom: 16.0),
+                                  hintText: '',
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 5),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    "Discount Amt",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepPurple,
+                                    ),
+                                  ),
+                                ),
+                                SETopTextfield(
+                                  readOnly: _discountType == "Fixed Percentage"
+                                      ? false
+                                      : true,
+                                  onChanged: (newValue) {
+                                    _calculateDiscountFromAmount();
+                                  },
+                                  controller: _discountAmt,
+                                  width: 160,
+                                  height: 40,
+                                  padding: const EdgeInsets.only(
+                                      left: 8.0, bottom: 16.0),
+                                  hintText: '',
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(top: 5),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 150,
+                                  child: Text(
+                                    "Receivable",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.deepPurple,
+                                    ),
+                                  ),
+                                ),
+                                SETopTextfield(
+                                  readOnly: _discountType != "Fixed Percentage"
+                                      ? false
+                                      : true,
+                                  onChanged: (newValue) {
+                                    _calculateDiscountFromReceivable();
+                                  },
+                                  controller: _receivable,
+                                  width: 160,
+                                  height: 40,
+                                  padding: const EdgeInsets.only(
+                                      left: 8.0, bottom: 16.0),
+                                  hintText: '',
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(
+                            height: 15,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Buttons(
+                                  name: "Save",
+                                  Skey: "[F4]",
+                                  onTap: () {
+                                    double discountPercent =
+                                        double.tryParse(_discountPer.text) ??
+                                            0.0;
+
+                                    _applyDiscountToAllRows(discountPercent);
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              ),
+                              const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Buttons(
+                                  name: "Cancel",
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ).px12(),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _calculateDiscountFromPercentage() {
+    double discPer = double.parse(_discountPer.text);
+    double basicAmount = double.parse(_basicAmountController.text);
+    double discountAmt = basicAmount * (discPer / 100);
+    double receivable = basicAmount - discountAmt;
+    _discountAmt.text = discountAmt.toStringAsFixed(2);
+    _receivable.text = receivable.toStringAsFixed(2);
+  }
+
+  void _calculateDiscountFromAmount() {
+    double discountAmt = double.parse(_discountAmt.text);
+    double basicAmount = double.parse(_basicAmountController.text);
+    double receivable = basicAmount - discountAmt;
+    double discPer = (discountAmt / basicAmount) * 100;
+    _discountPer.text = discPer.toStringAsFixed(2);
+    _receivable.text = receivable.toStringAsFixed(2);
+  }
+
+  void _calculateDiscountFromReceivable() {
+    double receivable = double.parse(_receivable.text);
+    double basicAmount = double.parse(_basicAmountController.text);
+    double discountAmt = basicAmount - receivable;
+    double discPer = (discountAmt / basicAmount) * 100;
+    _discountPer.text = discPer.toStringAsFixed(2);
+    _discountAmt.text = discountAmt.toStringAsFixed(2);
+  }
+
+  void _applyDiscountToAllRows(double discountPercent) {
+    for (int i = 0; i < tables.length; i++) {
+      String quantityText = _getTextFromTableRow(tables[i], 4);
+      double quantity = double.tryParse(quantityText) ?? 1.0;
+
+      String basicText = _getTextFromTableRow(tables[i], 9);
+      double basicAmount = double.tryParse(basicText) ?? 0.0;
+
+      double totalBasicAmount = basicAmount * quantity;
+
+      double discountAmount = (totalBasicAmount * discountPercent) / 100;
+
+      double netAmount = totalBasicAmount - discountAmount;
+
+      _updateTableCell(i, 10, discountPercent.toStringAsFixed(2));
+      _updateTableCell(i, 11, discountAmount.toStringAsFixed(2));
+      _updateTableCell(i, 13, netAmount.toStringAsFixed(2));
     }
-
-    int index = tables.length;
-
+    _calculateTotalAmount();
     setState(() {
-      tables.add(
-        TableRow(
-          key: tableKey,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-          ),
-          children: [
-            // Index
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      (tables.length + 1).toString(),
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  width: 100,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                      selectedItemName!,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  width: 100,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      '0',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  width: 100,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      '',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _qtyController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _unitController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _baseController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _rateController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _mrpController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _basicController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _discPerController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _discRsController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _taxController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _netAmountController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
+      tables = tables;
     });
   }
 
@@ -4104,755 +4224,6 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
     );
   }
 
-  void openDialog({int? rowIndex, Item? item}) {
-    if (rowIndex != null) {
-      selectedRowIndex = rowIndex;
-      final selectedItem = values[rowIndex];
-      selectedItemName = selectedItem['Item_Name'];
-      _qtyController.text = selectedItem['qty'];
-      _unitController.text = selectedItem['unit'];
-      _rateController.text = selectedItem['rate'];
-      _discPerController.text = selectedItem['discPer'] ?? '';
-      _discRsController.text = selectedItem['discRs'] ?? '';
-      _taxController.text = selectedItem['tax'] ?? '';
-      _netAmountController.text = selectedItem['netAmount'];
-      _basicController.text = selectedItem['basic'];
-      _baseController.text = selectedItem['base'];
-      _mrpController.text = selectedItem['mrp'];
-      _amountController.text = selectedItem['amount'];
-    } else {
-      tableKey = UniqueKey();
-      selectedRowIndex = null;
-    }
-    showDialog(
-      context: context,
-      builder: (context) {
-        FocusScope.of(context).requestFocus(qtyFocus);
-        return AlertDialog(
-          backgroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(0),
-          ),
-          contentPadding: const EdgeInsets.all(0),
-          content: Container(
-              constraints: BoxConstraints(
-                maxWidth: MediaQuery.of(context).size.width,
-                maxHeight: 200,
-              ),
-              height: 200,
-              width: MediaQuery.of(context).size.width * 0.70,
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Colors.black,
-                ),
-                borderRadius: BorderRadius.circular(0),
-              ),
-              child: StatefulBuilder(
-                builder: (context, setState) {
-                  return Shortcuts(
-                    shortcuts: {
-                      LogicalKeySet(LogicalKeyboardKey.space):
-                          const ActivateIntent(),
-                    },
-                    child: Focus(
-                      autofocus: true,
-                      onKey: (node, event) {
-                        if (event is RawKeyDownEvent &&
-                            event.logicalKey == LogicalKeyboardKey.space) {
-                          print('Pressed Space');
-                          _saveValues();
-                          _calculateTotalAmount();
-                          addTableRow2();
-                          Navigator.of(context).pop();
-
-                          return KeyEventResult.handled;
-                        }
-                        return KeyEventResult.ignored;
-                      },
-                      child: Column(
-                        children: [
-                          Container(
-                            height: 40,
-                            width: double.infinity,
-                            decoration: const BoxDecoration(
-                              color: Color.fromARGB(255, 0, 56, 102),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: Column(
-                              children: [
-                                Text(
-                                  "$selectedItemName",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.black,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 5),
-                              child: Row(
-                                children: [
-                                  CustomTextField(
-                                    name: "Qty",
-                                    // focusNode: qtyFocus,
-                                    onEditingComplete: () {
-                                      FocusScope.of(context)
-                                          .requestFocus(unitFocus);
-
-                                      setState(() {});
-                                    },
-                                    controller: _qtyController,
-                                    onchange: (String value) {
-                                      double qty = double.parse(value);
-
-                                      print("Pressed Edit QTY $qty");
-                                      print("MRP: ${_mrpController.text}");
-
-                                      double rate =
-                                          double.parse(_rateController.text);
-                                      double amount = qty * rate;
-                                      double netAmount = qty *
-                                          double.parse(_mrpController.text);
-                                      double tax =
-                                          double.parse(_taxController.text);
-                                      double finalTax = tax * qty;
-
-                                      setState(() {
-                                        _netAmountController.text = netAmount
-                                            .toStringAsFixed(2)
-                                            .toString();
-                                        _amountController.text = amount
-                                            .toStringAsFixed(2)
-                                            .toString();
-                                        _taxController.text =
-                                            finalTax.toStringAsFixed(2);
-                                      });
-                                    },
-                                  ),
-                                  CustomTextField(
-                                    name: "Unit",
-                                    // focusNode: unitFocus,
-                                    onEditingComplete: () {
-                                      FocusScope.of(context)
-                                          .requestFocus(rateFocus);
-
-                                      // REBUILD UI
-                                      setState(() {});
-                                    },
-                                    controller: _unitController,
-                                    onchange: (String value) {},
-                                  ),
-                                  CustomTextField(
-                                    name: "Rate",
-                                    // focusNode: rateFocus,
-                                    onEditingComplete: () {
-                                      FocusScope.of(context)
-                                          .requestFocus(perFocus);
-
-                                      // REBUILD UI
-                                      setState(() {});
-                                    },
-                                    controller: _rateController,
-                                    onchange: (String value) {},
-                                  ),
-                                  CustomTextField(
-                                    name: "Per",
-                                    // focusNode: perFocus,
-                                    onEditingComplete: () {
-                                      FocusScope.of(context)
-                                          .requestFocus(amountFocus);
-
-                                      // REBUILD UI
-                                      setState(() {});
-                                    },
-                                    controller: _unitController,
-                                    onchange: (String value) {},
-                                  ),
-                                  CustomTextField(
-                                    name: "Amount",
-                                    // focusNode: amountFocus,
-                                    onEditingComplete: () {
-                                      FocusScope.of(context)
-                                          .requestFocus(discPerFocus);
-
-                                      // REBUILD UI
-                                      setState(() {});
-                                    },
-                                    controller: _amountController,
-                                    textAlign: TextAlign.right,
-                                    onchange: (String value) {},
-                                  ),
-                                  CustomTextField(
-                                    name: "Disc.%",
-                                    // focusNode: discPerFocus,
-                                    onEditingComplete: () {
-                                      FocusScope.of(context)
-                                          .requestFocus(discRsFocus);
-
-                                      // REBUILD UI
-                                      setState(() {});
-                                    },
-                                    controller: _discPerController,
-                                    textAlign: TextAlign.right,
-                                    onchange: (String value) {
-                                      // Get Controller and parse to double
-                                      double disc = double.parse(value);
-
-                                      double discPer = disc / 100;
-                                      double discRs = discPer *
-                                          double.parse(_amountController.text);
-
-                                      // Set discRs to the controller
-                                      setState(() {
-                                        _discRsController.text =
-                                            discRs.toStringAsFixed(2);
-
-                                        // _discPerController.text = disc.toString();
-                                      });
-
-                                      print('Rate: ${_rateController.text}');
-                                      print(
-                                          'Amount: ${_amountController.text}');
-                                      print(
-                                          'Disc Rs: ${_discRsController.text}');
-                                      print(
-                                          'Disc %: ${_discPerController.text}');
-                                    },
-                                  ),
-                                  CustomTextField(
-                                    name: "DiscRs",
-                                    // focusNode: discRsFocus,
-                                    onEditingComplete: () {
-                                      FocusScope.of(context)
-                                          .requestFocus(taxFocus);
-
-                                      // REBUILD UI
-                                      setState(() {});
-                                    },
-                                    controller: _discRsController,
-                                    textAlign: TextAlign.right,
-                                    onchange: (String value) {},
-                                  ),
-                                  CustomTextField(
-                                    name: "Tax",
-                                    // focusNode: taxFocus,
-                                    onEditingComplete: () {
-                                      FocusScope.of(context)
-                                          .requestFocus(netAmountFocus);
-
-                                      // REBUILD UI
-                                      setState(() {});
-                                    },
-                                    controller: _taxController,
-                                    textAlign: TextAlign.right,
-                                    onchange: (String value) {},
-                                  ),
-                                  CustomTextField(
-                                    name: "Net Amount",
-                                    // focusNode: netAmountFocus,
-                                    onEditingComplete: () {
-                                      // Unfocus the current focus node
-                                      netAmountFocus.unfocus();
-
-                                      // Rebuild UI
-                                      setState(() {});
-                                    },
-                                    controller: _netAmountController,
-                                    textAlign: TextAlign.right,
-                                    onchange: (String value) {},
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          const Divider(
-                            thickness: 2,
-                            height: 40,
-                            color: Colors.black,
-                          ),
-                          Row(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                    bottom: 10, left: 5, right: 5),
-                                child: Buttons(
-                                  onTap: () {
-                                    // Pop
-                                    Navigator.of(context).pop();
-
-                                    _saveValues();
-                                    _calculateTotalAmount();
-                                    addTableRow2();
-                                  },
-                                  name: "Save",
-                                  Skey: "[space]",
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 10),
-                                child: Buttons(
-                                  onTap: () => Navigator.pop(context),
-                                  name: "Cancel",
-                                ),
-                              ),
-                              const Padding(
-                                padding: EdgeInsets.only(
-                                    bottom: 10, left: 5, right: 5),
-                                child: Buttons(
-                                  name: "Delete",
-                                ),
-                              ),
-                            ],
-                          )
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              )),
-        );
-      },
-    );
-  }
-
-  void addTableRow2() {
-    int existingIndex = tables.indexWhere((row) {
-      final isTableCell = row.children[1] is TableCell;
-      final tableCell = isTableCell ? row.children[1] as TableCell : null;
-      final isInkWell = tableCell?.child is InkWell;
-      final inkWell = isInkWell ? tableCell!.child as InkWell : null;
-      final isSizedBox = inkWell?.child is SizedBox;
-      final sizedBox = isSizedBox ? inkWell!.child as SizedBox : null;
-      final isAlign = sizedBox?.child is Align;
-      final align = isAlign ? sizedBox!.child as Align : null;
-      final isTextChild = align?.child is Text;
-      final childData =
-          isTextChild ? ((align!.child as Text).data ?? 'N/A') : 'N/A';
-
-      print("SELECTED ITEM NAME " + selectedItemName!);
-      print("CHILD DATA " + childData);
-
-      return childData == selectedItemName;
-    });
-
-    print('ADD TABLE ROW 2 Existing Index: $existingIndex');
-
-    if (existingIndex != -1) {
-      final isTableCell = tables[existingIndex].children[4] is TableCell;
-      final tableCell =
-          isTableCell ? tables[existingIndex].children[4] as TableCell : null;
-      final isInkWell = tableCell?.child is InkWell;
-      final inkWell = isInkWell ? tableCell!.child as InkWell : null;
-      final isSizedBox = inkWell?.child is SizedBox;
-      final sizedBox = isSizedBox ? inkWell!.child as SizedBox : null;
-      final isAlign = sizedBox?.child is Align;
-      final align = isAlign ? sizedBox!.child as Align : null;
-      final isTextChild = align?.child is Text;
-      final childData =
-          isTextChild ? ((align!.child as Text).data ?? 'N/A') : 'N/A';
-
-      print("CHILD DATA 2 " + childData);
-      // final qty =
-      //     int.parse(_qtyController.text) + int.parse(childData.toString());
-      final qty = int.parse(_qtyController.text);
-      // Check Net Amount
-      final rate = double.parse(_mrpController.text);
-      final netAmount = qty * rate;
-
-      // Update the TableCell widgets
-      tables[existingIndex].children[4] = TableCell(
-        child: InkWell(
-          child: SizedBox(
-            height: 40,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                qty.toString(),
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      tables[existingIndex].children[10] = TableCell(
-        child: InkWell(
-          child: SizedBox(
-            height: 40,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                _discPerController.text,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      tables[existingIndex].children[11] = TableCell(
-        child: InkWell(
-          child: SizedBox(
-            height: 40,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                _discRsController.text,
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      tables[existingIndex].children[13] = TableCell(
-        child: InkWell(
-          child: SizedBox(
-            height: 40,
-            child: Align(
-              alignment: Alignment.center,
-              child: Text(
-                netAmount.toStringAsFixed(2),
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      setState(() {
-        tables = tables;
-      });
-
-      return;
-    }
-
-    int index = tables.length;
-
-    setState(() {
-      tables.add(
-        TableRow(
-          key: tableKey,
-          decoration: const BoxDecoration(
-            color: Colors.white,
-          ),
-          children: [
-            // Index
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      (tables.length + 1).toString(),
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  width: 100,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 2,
-                      selectedItemName!,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      '0',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      '',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _qtyController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _unitController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _baseController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _rateController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _mrpController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _basicController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _discPerController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _discRsController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _taxController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            TableCell(
-              child: InkWell(
-                onTap: () => updateselectedTable(index),
-                child: SizedBox(
-                  height: 40,
-                  child: Align(
-                    alignment: Alignment.center,
-                    child: Text(
-                      _netAmountController.text,
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
-    });
-  }
-
 // Calculate the total amount
   void _calculateTotalAmount() {
     double totalAmount = 0.0;
@@ -4865,6 +4236,14 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
     });
 
     print(totalAmount);
+  }
+
+  double calculateTotalBasicAmount() {
+    double totalBasic = 0.0;
+    for (var item in rowItems) {
+      totalBasic += item.mrp;
+    }
+    return totalBasic;
   }
 
   void addTableRow4firstTime({
