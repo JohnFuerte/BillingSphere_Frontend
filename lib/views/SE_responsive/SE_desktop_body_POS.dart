@@ -1383,12 +1383,16 @@ class _SalesReturnState extends State<SalesReturn> {
                     onKey: (node, event) {
                       if (event is RawKeyDownEvent &&
                           event.logicalKey == LogicalKeyboardKey.space) {
+                        // Pop
+                        Navigator.of(context).pop();
+                        if (!rowItems.contains(item)) {
+                          rowItems.add(item!);
+                        }
+
                         _saveValues();
                         _calculateTotalAmount();
                         addTableRow2();
-                        Navigator.of(context).pop();
-                        selectedItemName = null;
-                        // FocusScope.of(context).requestFocus(billedToFocus);
+                        dataText.clear();
 
                         setState(() {});
 
@@ -1521,7 +1525,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                   textAlign: TextAlign.right,
 
                                   onchange: (String value) {
-                                    _performCalculations();
+                                    _performCalculationsforRS();
                                   },
                                 ),
                                 CustomTextField(
@@ -1560,7 +1564,10 @@ class _SalesReturnState extends State<SalesReturn> {
                                 onTap: () {
                                   // Pop
                                   Navigator.of(context).pop();
-                                  rowItems.add(item!);
+                                  if (!rowItems.contains(item)) {
+                                    rowItems.add(item!);
+                                  }
+
                                   _saveValues();
                                   _calculateTotalAmount();
                                   addTableRow2();
@@ -1614,11 +1621,41 @@ class _SalesReturnState extends State<SalesReturn> {
     netAmount += taxAmount;
 
     discRs = (discPer / 100) * netAmount;
+    discPer = (discRs / netAmount) * 100;
+    double discountedAmount = netAmount - discRs;
 
-    if (discRs > 0) {
-      discPer = (discRs / netAmount) * 100;
-    }
+    double finalAmount = discountedAmount;
 
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _amountController.text = amount.toStringAsFixed(2);
+        _netAmountController.text = finalAmount.toStringAsFixed(2);
+        _taxController.text = taxAmount.toStringAsFixed(2);
+        _discPerController.text = discPer.toStringAsFixed(2);
+        _discRsController.text = discRs.toStringAsFixed(2);
+      });
+    });
+  }
+
+  void _performCalculationsforRS() {
+    double qty = double.tryParse(_qtyController.text) ?? 1.0;
+    double rate = double.tryParse(_rateController.text) ?? 0.0;
+    double base = double.tryParse(_basicController.text) ?? 0.0;
+    double mrp = double.tryParse(_mrpController.text) ?? 0.0;
+    double discPer = double.tryParse(_discPerController.text) ?? 0.0;
+    double discRs = double.tryParse(_discRsController.text) ?? 0.0;
+    double tax = double.tryParse(_taxController.text) ?? 0.0;
+
+    double netAmount = (qty * base);
+    double amount = qty * rate;
+
+    double taxAmount = tax * qty;
+    netAmount += taxAmount;
+
+    discPer = (discRs / netAmount) * 100;
+
+    discRs = (discPer / 100) * netAmount;
     double discountedAmount = netAmount - discRs;
 
     double finalAmount = discountedAmount;
@@ -1973,8 +2010,11 @@ class _SalesReturnState extends State<SalesReturn> {
   }
 
   void updateselectedTable(int index) {
+    print("length of table: ${tables.length}");
+    print("length of rowItems: ${rowItems.length}");
     final key = tables[index].key;
     final rowIndex = tables.indexWhere((row) => row.key == key);
+    print("row index : ${rowIndex}");
     openDialog2(rowIndex: rowIndex, item: rowItems[index]);
   }
 
