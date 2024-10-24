@@ -922,7 +922,7 @@ class _SalesReturnState extends State<SalesReturn> {
 
       setState(() {
         ledgerList = ledgers;
-        selectedAC = ledgers[0].id;
+        selectedAC = "6676b4f41383f35fe6ba9abc";
       });
     } catch (error) {
       print('Failed to fetch Ledgers: $error');
@@ -962,7 +962,8 @@ class _SalesReturnState extends State<SalesReturn> {
 
       setState(() {
         customerList = customers;
-        selectedCustomer = "67188c95ce238809ff47a745";
+        selectedCustomer = "671a134f7613ca30122d0c7c";
+        _customerController.text = "Walk In";
       });
     } catch (error) {
       print('Failed to fetch Customers: $error');
@@ -1035,9 +1036,14 @@ class _SalesReturnState extends State<SalesReturn> {
 
   double calculateTotalBasicAmount() {
     double totalBasic = 0.0;
-    for (var item in rowItems) {
-      totalBasic += item.mrp;
+
+    for (var item in values) {
+      double qty = double.tryParse(item['qty'].toString()) ?? 1.0;
+      double basic = double.tryParse(item['basic'].toString()) ?? 0.0;
+
+      totalBasic += basic * qty;
     }
+
     return totalBasic;
   }
 
@@ -1674,8 +1680,7 @@ class _SalesReturnState extends State<SalesReturn> {
 
   void _showAlert(BuildContext context) {
     double totalBasicAmount = calculateTotalBasicAmount();
-    _basicAmountController.text =
-        totalBasicAmount.toStringAsFixed(2); // formatted to 2 decimal places
+    _basicAmountController.text = totalBasicAmount.toStringAsFixed(2);
 
     showDialog(
       context: context,
@@ -1980,20 +1985,27 @@ class _SalesReturnState extends State<SalesReturn> {
       String basicText = _getTextFromTableRow(tables[i], 9);
       double basicAmount = double.tryParse(basicText) ?? 0.0;
 
+      double taxAmount = double.tryParse(values[i]['tax'].toString()) ?? 0.0;
+
       double totalBasicAmount = basicAmount * quantity;
 
-      double discountAmount = (totalBasicAmount * discountPercent) / 100;
+      double totalAmountWithTax = totalBasicAmount + taxAmount;
 
-      double netAmount = totalBasicAmount - discountAmount;
+      double discountAmount = (totalAmountWithTax * discountPercent) / 100;
+      double netAmount = totalAmountWithTax - discountAmount;
 
       _updateTableCell(i, 10, discountPercent.toStringAsFixed(2));
       _updateTableCell(i, 11, discountAmount.toStringAsFixed(2));
       _updateTableCell(i, 13, netAmount.toStringAsFixed(2));
+
+      values[i]['discPer'] = discountPercent.toStringAsFixed(2);
+      values[i]['discRs'] = discountAmount.toStringAsFixed(2);
+      values[i]['netAmount'] = netAmount.toStringAsFixed(2);
     }
+
     _calculateTotalAmount();
-    setState(() {
-      tables = tables;
-    });
+
+    setState(() {});
   }
 
   void _initializeAllData() async {
@@ -5044,7 +5056,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                                   }
                                                                                 }
                                                                               },
-                                                                              dropdownMenuEntries: customerList.where((customer) => customer.id != '67188c95ce238809ff47a745').map<DropdownMenuEntry<NewCustomerModel>>((NewCustomerModel value) {
+                                                                              dropdownMenuEntries: customerList.where((customer) => customer.id != '67188c95ce238809ff47a745' && customer.id != '671a134f7613ca30122d0c7c').map<DropdownMenuEntry<NewCustomerModel>>((NewCustomerModel value) {
                                                                                 return DropdownMenuEntry<NewCustomerModel>(
                                                                                   value: value,
                                                                                   label: value.fname,
@@ -5068,8 +5080,8 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                       width: 10,
                                                                     ),
                                                                     InkWell(
-                                                                      onTap: selectedCustomer ==
-                                                                              "67188c95ce238809ff47a745"
+                                                                      onTap: (selectedCustomer == "67188c95ce238809ff47a745" ||
+                                                                              selectedCustomer == "671a134f7613ca30122d0c7c")
                                                                           ? null
                                                                           : showCustomerHistory,
                                                                       child:

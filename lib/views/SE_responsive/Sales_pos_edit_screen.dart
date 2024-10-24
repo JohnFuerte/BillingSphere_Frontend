@@ -381,6 +381,12 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
   Future<void> setDataAfterAfterwards() async {
     final salesPosData = widget.salesPos;
 
+    if (salesPosData.customer == "671a134f7613ca30122d0c7c") {
+      _customerController.text = "Walk In";
+    } else if (salesPosData.customer == "67188c95ce238809ff47a745") {
+      _customerController.text = "Registerd Ledger";
+    }
+
     setState(() {
       _noController.text = salesPosData.no.toString();
       _controller = TextEditingController(text: salesPosData.date);
@@ -1853,9 +1859,10 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                                 },
                                                                 dropdownMenuEntries: customerList
                                                                     .where((customer) =>
-                                                                        customer
-                                                                            .id !=
-                                                                        '67188c95ce238809ff47a745')
+                                                                        customer.id !=
+                                                                            '67188c95ce238809ff47a745' &&
+                                                                        customer.id !=
+                                                                            '671a134f7613ca30122d0c7c')
                                                                     .map<
                                                                         DropdownMenuEntry<
                                                                             NewCustomerModel>>((NewCustomerModel
@@ -1893,8 +1900,10 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                         width: 10,
                                                       ),
                                                       InkWell(
-                                                        onTap: selectedCustomer ==
-                                                                "67188c95ce238809ff47a745"
+                                                        onTap: (selectedCustomer ==
+                                                                    "67188c95ce238809ff47a745" ||
+                                                                selectedCustomer ==
+                                                                    "671a134f7613ca30122d0c7c")
                                                             ? null
                                                             : showCustomerHistory,
                                                         child: Container(
@@ -4041,20 +4050,27 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
       String basicText = _getTextFromTableRow(tables[i], 9);
       double basicAmount = double.tryParse(basicText) ?? 0.0;
 
+      double taxAmount = double.tryParse(values[i]['tax'].toString()) ?? 0.0;
+
       double totalBasicAmount = basicAmount * quantity;
 
-      double discountAmount = (totalBasicAmount * discountPercent) / 100;
+      double totalAmountWithTax = totalBasicAmount + taxAmount;
 
-      double netAmount = totalBasicAmount - discountAmount;
+      double discountAmount = (totalAmountWithTax * discountPercent) / 100;
+      double netAmount = totalAmountWithTax - discountAmount;
 
       _updateTableCell(i, 10, discountPercent.toStringAsFixed(2));
       _updateTableCell(i, 11, discountAmount.toStringAsFixed(2));
       _updateTableCell(i, 13, netAmount.toStringAsFixed(2));
+
+      values[i]['discPer'] = discountPercent.toStringAsFixed(2);
+      values[i]['discRs'] = discountAmount.toStringAsFixed(2);
+      values[i]['netAmount'] = netAmount.toStringAsFixed(2);
     }
+
     _calculateTotalAmount();
-    setState(() {
-      tables = tables;
-    });
+
+    setState(() {});
   }
 
   void saveItems4FirstTime({
@@ -4246,9 +4262,14 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
 
   double calculateTotalBasicAmount() {
     double totalBasic = 0.0;
-    for (var item in rowItems) {
-      totalBasic += item.mrp;
+
+    for (var item in values) {
+      double qty = double.tryParse(item['qty'].toString()) ?? 1.0;
+      double basic = double.tryParse(item['basic'].toString()) ?? 0.0;
+
+      totalBasic += basic * qty;
     }
+
     return totalBasic;
   }
 
