@@ -3318,11 +3318,16 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
     if (rowItems.contains(item)) {
       rowIndex = rowItems.indexOf(item!);
     }
+
     if (rowIndex != null) {
+      print("row index is not null");
+
       selectedRowIndex = rowIndex;
       final selectedItem = values[rowIndex];
-      print(selectedItem);
+      print("selectedItem : ${selectedItem}");
+      print(selectedItemId);
 
+      selectedItemId = selectedItem['itemName'];
       selectedItemName = selectedItem['Item_Name'];
       _qtyController.text = selectedItem['qty'];
       _unitController.text = selectedItem['unit'];
@@ -3336,6 +3341,8 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
       _mrpController.text = selectedItem['mrp'];
       _amountController.text = selectedItem['amount'];
     } else {
+      print("row index is  null");
+
       final selectedItem = item;
 
       selectedItemName = selectedItem!.itemName;
@@ -4107,12 +4114,11 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
       'amount': _amountController.text,
       'netAmount': _netAmountController.text,
     };
+    print("new item : ${newItem}");
 
     if (selectedRowIndex != null) {
-      // Update the existing item in the list
       values[selectedRowIndex!] = newItem;
     } else {
-      // Check if the item already exists in the list
       bool itemExists = false;
       int existingIndex = -1;
       for (int i = 0; i < values.length; i++) {
