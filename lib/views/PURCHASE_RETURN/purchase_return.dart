@@ -1,3 +1,7 @@
+import 'dart:math';
+
+import 'package:billingsphere/data/models/purchaseReturn/purchase_return_model.dart';
+import 'package:billingsphere/data/repository/purchase_return_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
@@ -33,14 +37,14 @@ import '../SE_widgets/sundry_row.dart';
 import '../sumit_screen/voucher _entry.dart/voucher_list_widget.dart';
 import 'widget/purchase_return_textfield.dart';
 
-class PurchaseReturn extends StatefulWidget {
-  const PurchaseReturn({super.key});
+class PRDesktopBody extends StatefulWidget {
+  PRDesktopBody({super.key});
 
   @override
-  State<PurchaseReturn> createState() => _PurchaseReturnState();
+  State<PRDesktopBody> createState() => _PRDesktopBodyState();
 }
 
-class _PurchaseReturnState extends State<PurchaseReturn> {
+class _PRDesktopBodyState extends State<PRDesktopBody> {
   DateTime? _selectedDate;
   DateTime? _pickedDateData;
   List<String> status = ['Cash', 'Debit'];
@@ -51,7 +55,7 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
   final List<SundryRow> _newSundry = [];
   final List<Map<String, dynamic>> _allValues = [];
   final List<Map<String, dynamic>> _allValuesSundry = [];
-  List<Purchase> fetchedPurchase = [];
+  List<PurchaseReturn> fetchedPurchaseReturn = [];
   Purchase? selectedPurchase;
   List<PurchaseEntry> selectedEntries = [];
 
@@ -80,7 +84,7 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
   double Tdiscount = 0.00;
   double ledgerAmount = 0;
   double TfinalAmt = 0.00;
-  double TRoundOff = 0.00; // New variable to store the round-off amount
+  double TRoundOff = 0.00;
   late TextEditingController roundOffController;
   late FocusNode roundOffFocusNode;
   bool isManualRoundOffChange = false;
@@ -97,12 +101,11 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
   String? selectedLedgerName;
   LedgerService ledgerService = LedgerService();
   ItemsService itemsService = ItemsService();
+  PurchaseReturnService purchaseReturnService = PurchaseReturnService();
   PurchaseServices purchaseServices = PurchaseServices();
+
   MeasurementLimitService measurementService = MeasurementLimitService();
-
   TaxRateService taxRateService = TaxRateService();
-
-  // Controllers
   PurchaseFormController purchaseController = PurchaseFormController();
   SundryFormController sundryFormController = SundryFormController();
 
@@ -274,13 +277,17 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
   void initializeData() async {
     await Future.wait([
       setCompanyCode(),
-      // setPurchaseLength(),
-      // fetchPurchaseEntries(),
+      setPurchaseReturnLength(),
+      fetchPurchaseReturnEntries(),
       fetchLedgers2(),
       fetchItems(),
       fetchAndSetTaxRates(),
       fetchMeasurementLimit(),
     ]);
+    generateBillNumber();
+    purchaseController.typeController.text = selectedStatus;
+    purchaseController.date2Controller.text = formatter.format(DateTime.now());
+    purchaseController.dateController.text = formatter.format(DateTime.now());
 
     await setEntriesTables();
   }
@@ -302,6 +309,7 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // backgroundColor: Colors.red,
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -1787,10 +1795,10 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                                                                     for (int i =
                                                                             0;
                                                                         i <
-                                                                            fetchedPurchase
+                                                                            fetchedPurchaseReturn
                                                                                 .length;
                                                                         i++)
-                                                                      ...fetchedPurchase[
+                                                                      ...fetchedPurchaseReturn[
                                                                               i]
                                                                           .entries
                                                                           .where((entry) =>
@@ -1807,7 +1815,7 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                                                                               suggestionItems5.firstWhere(
                                                                             (ledger) =>
                                                                                 ledger.id ==
-                                                                                fetchedPurchase[i].ledger,
+                                                                                fetchedPurchaseReturn[i].ledger,
                                                                             orElse: () =>
                                                                                 Ledger(
                                                                               id: '',
@@ -1862,11 +1870,11 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
                                                                         return TableRow(
                                                                           children: [
                                                                             Text(
-                                                                              fetchedPurchase[i].date.toString(),
+                                                                              fetchedPurchaseReturn[i].date.toString(),
                                                                               textAlign: TextAlign.center,
                                                                             ),
                                                                             Text(
-                                                                              fetchedPurchase[i].billNumber.toString(),
+                                                                              fetchedPurchaseReturn[i].billNumber.toString(),
                                                                               textAlign: TextAlign.center,
                                                                             ),
                                                                             Text(
@@ -2562,12 +2570,14 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
   Future<void> fetchLedgers2() async {
     try {
       final List<Ledger> ledger = await ledgerService.fetchLedgers();
-      // Add empty data on the 0 index
-
+      // Filter ledgers by multiple ledgerGroup IDs and status
       suggestionItems5 = ledger
           .where((element) =>
               element.status == 'Yes' &&
-              element.ledgerGroup == '662f97d2a07ec73369c237b0')
+              (element.ledgerGroup == '662f97d2a07ec73369c237b0' ||
+                  element.ledgerGroup == '662f9832a07ec73369c237c2' ||
+                  element.ledgerGroup == '662f97caa07ec73369c237ae' ||
+                  element.ledgerGroup == '662f9863a07ec73369c237cc'))
           .toList();
 
       if (suggestionItems5.isNotEmpty) {
@@ -2575,6 +2585,20 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
       }
     } catch (error) {
       print('Failed to fetch ledger name: $error');
+    }
+  }
+
+  Future<void> fetchPurchaseReturnEntries() async {
+    try {
+      final List<PurchaseReturn> purchaseReturn =
+          await purchaseReturnService.fetchAllPurchaseReturns();
+      setState(() {
+        fetchedPurchaseReturn = purchaseReturn;
+      });
+
+      print('Fetched Purchase Return: $fetchedPurchaseReturn');
+    } catch (error) {
+      print('Failed to fetch purchase Return: $error');
     }
   }
 
@@ -2586,6 +2610,67 @@ class _PurchaseReturnState extends State<PurchaseReturn> {
   Future<void> setCompanyCode() async {
     List<String>? code = await getCompanyCode();
     companyCode = code;
+  }
+
+  Future<String?> getNumberOfPurchaseReturn() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    return prefs.getString('purchaseReturnLength');
+  }
+
+  Future<void> setPurchaseReturnLength() async {
+    String? length = await getNumberOfPurchaseReturn();
+    setState(() {
+      purchaseLength = length;
+      purchaseController.noController.text =
+          (int.parse(purchaseLength!) + 1).toString();
+    });
+  }
+
+  void generateBillNumber() {
+    // Generate a random number between 100 and 999
+    Random random = Random();
+    int randomNumber = random.nextInt(9000) + 1000;
+
+    // Get the current month abbreviation
+    String monthAbbreviation = _getMonthAbbreviation(DateTime.now().month);
+
+    // Construct the bill number
+    String billNumber = 'BIL$randomNumber$monthAbbreviation';
+
+    setState(() {
+      purchaseController.billNumberController.text = billNumber;
+    });
+  }
+
+  String _getMonthAbbreviation(int month) {
+    switch (month) {
+      case 1:
+        return 'JAN';
+      case 2:
+        return 'FEB';
+      case 3:
+        return 'MAR';
+      case 4:
+        return 'APR';
+      case 5:
+        return 'MAY';
+      case 6:
+        return 'JUN';
+      case 7:
+        return 'JUL';
+      case 8:
+        return 'AUG';
+      case 9:
+        return 'SEP';
+      case 10:
+        return 'OCT';
+      case 11:
+        return 'NOV';
+      case 12:
+        return 'DEC';
+      default:
+        return '';
+    }
   }
 
   void saveSelectedPurchaseEntries(

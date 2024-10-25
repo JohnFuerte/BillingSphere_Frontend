@@ -961,7 +961,7 @@ class CustomAppBarMenuAdmin {
           // Navigate to the RecentPage
           Navigator.of(context).push(MaterialPageRoute(
             builder: (context) {
-              return const PurchaseReturn();
+              return PRDesktopBody();
             },
           ));
         } else {}

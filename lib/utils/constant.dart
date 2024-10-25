@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:lottie/lottie.dart';
 
 class Constants {
@@ -8,9 +9,6 @@ class Constants {
   static String baseUrl = 'https://billing-sphere-backend.onrender.com/api';
 
   // static String baseUrl = 'http://192.168.0.107:4567/api';
-  // static String baseUrl = 'http://192.168.0.107:4567/api';
-  // static String baseUrl = 'http://192.168.0.107:4567/api';
-  // static String baseUrl = 'http://192.168.0.107:4567/api';
   // static String baseUrl = 'https://65.1.89.63/api';
 
   static Widget loadingIndicator = Lottie.asset(
@@ -18,6 +16,16 @@ class Constants {
     width: 120,
     height: 120,
     fit: BoxFit.cover,
+  );
+  static Widget loadingBar = SpinKitThreeBounce(
+    size: 35,
+    itemBuilder: (BuildContext context, int index) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+            color: index.isEven ? Colors.blue.shade500 : Colors.blue.shade600,
+            shape: BoxShape.circle),
+      );
+    },
   );
 }
 

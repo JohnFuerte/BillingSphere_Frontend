@@ -154,9 +154,6 @@ class _PEMyDesktopBodyState extends State<PEMyDesktopBody> {
     return prefs.getStringList('companies');
   }
 
-  
-  
-  
   Future<void> setCompanyCode() async {
     List<String>? code = await getCompanyCode();
     setState(() {
@@ -164,12 +161,6 @@ class _PEMyDesktopBodyState extends State<PEMyDesktopBody> {
     });
   }
 
- 
- 
- 
- 
- 
- 
   Future<String?> getNumberOfPurchase() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('purchaseLength');
@@ -596,10 +587,6 @@ class _PEMyDesktopBodyState extends State<PEMyDesktopBody> {
     }
   }
 
-  
-  
-  
-  
   Future<void> fetchPurchaseEntries() async {
     try {
       final List<Purchase> purchase = await purchaseServices.getPurchase();
@@ -792,13 +779,6 @@ class _PEMyDesktopBodyState extends State<PEMyDesktopBody> {
           );
         });
       }
-   
-   
-   
-   
-   
-   
-   
     } catch (e) {
       print(e);
     } finally {
@@ -807,15 +787,6 @@ class _PEMyDesktopBodyState extends State<PEMyDesktopBody> {
       });
     }
   }
-
-  // @override
-  // void didChangeDependencies() {
-  //   super.didChangeDependencies();
-
-  //   if (mounted) {
-  //     FocusScope.of(context).requestFocus(noFocusNode);
-  //   }
-  // }
 
   @override
   void dispose() {
