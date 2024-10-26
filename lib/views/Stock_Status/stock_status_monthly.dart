@@ -1,5 +1,6 @@
 import 'package:billingsphere/data/models/deliveryChallan/delivery_challan_model.dart';
 import 'package:billingsphere/data/repository/delivery_challan_repository.dart';
+import 'package:billingsphere/utils/constant.dart';
 import 'package:billingsphere/views/Stock_Status/stock_status_owner.dart';
 import 'package:billingsphere/views/Stock_Status/stock_status_report.dart';
 import 'package:billingsphere/views/sumit_screen/voucher%20_entry.dart/voucher_list_widget.dart';
@@ -523,6 +524,7 @@ class _OtherScreenState extends State<OtherScreen> {
   Map<String, Map<String, dynamic>> monthlySales = {};
   Map<String, Map<String, dynamic>> monthlyPurchase = {};
   Map<String, Map<String, dynamic>> mergedData = {};
+  bool isLoading = false;
 
   String? uid;
   Future<String?> getUID() async {
@@ -547,6 +549,10 @@ class _OtherScreenState extends State<OtherScreen> {
 
   Future<void> fetchSalesAndPurchases() async {
     try {
+      setState(() {
+        isLoading = true;
+      });
+
       final List<SalesEntry> sales = await salesService.fetchSalesEntries();
       final List<Purchase> purchases =
           await purchaseService.fetchPurchaseEntries();
@@ -576,7 +582,7 @@ class _OtherScreenState extends State<OtherScreen> {
         final month = int.parse(dateParts[1]);
         final year = int.parse(dateParts[2]);
         final formattedDate =
-            DateFormat('MMMM-yyyy').format(DateTime(year, month, day));
+            DateFormat('MMM-yy').format(DateTime(year, month, day));
 
         if (!mergedData.containsKey(formattedDate)) {
           mergedData[formattedDate] = {
@@ -604,7 +610,7 @@ class _OtherScreenState extends State<OtherScreen> {
         final month = int.parse(dateParts[1]);
         final year = int.parse(dateParts[2]);
         final formattedDate =
-            DateFormat('MMMM-yyyy').format(DateTime(year, month, day));
+            DateFormat('MMM-yy').format(DateTime(year, month, day));
 
         if (!mergedData.containsKey(formattedDate)) {
           mergedData[formattedDate] = {
@@ -632,7 +638,7 @@ class _OtherScreenState extends State<OtherScreen> {
         final month = int.parse(dateParts[1]);
         final year = int.parse(dateParts[2]);
         final formattedDate =
-            DateFormat('MMMM-yyyy').format(DateTime(year, month, day));
+            DateFormat('MMM-yy').format(DateTime(year, month, day));
 
         if (!mergedData.containsKey(formattedDate)) {
           mergedData[formattedDate] = {
@@ -653,7 +659,9 @@ class _OtherScreenState extends State<OtherScreen> {
         }
       }
 
-      setState(() {});
+      setState(() {
+        isLoading = false;
+      });
 
       print(mergedData);
     } catch (error) {
@@ -664,6 +672,10 @@ class _OtherScreenState extends State<OtherScreen> {
           backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -697,7 +709,7 @@ class _OtherScreenState extends State<OtherScreen> {
   }
 
   DateTime parseMonth(String month) {
-    return DateFormat('MMMM-yyyy').parse(month);
+    return DateFormat('MMM-yy').parse(month);
   }
 
   @override
@@ -720,12 +732,12 @@ class _OtherScreenState extends State<OtherScreen> {
     }
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text(
-          'Stock Item Periodic Summary',
+          "Stock Item Periodic Summary",
           style: TextStyle(color: Colors.white),
         ),
-        centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 33, 65, 243),
+        backgroundColor: const Color.fromRGBO(32, 91, 212, 1),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Row(
@@ -895,65 +907,88 @@ class _OtherScreenState extends State<OtherScreen> {
                           ),
 
                           // Data Item Row
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: sortedKeys.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                final month = sortedKeys[index];
-                                final data = mergedData[month]!;
+                          isLoading == true
+                              ? Expanded(
+                                  child: Center(
+                                  child: Constants.loadingBar,
+                                ))
+                              : Expanded(
+                                  child: sortedKeys.isEmpty
+                                      ? const Center(
+                                          child: Text("No Data Available"),
+                                        )
+                                      : ListView.builder(
+                                          itemCount: sortedKeys.length,
+                                          itemBuilder: (BuildContext context,
+                                              int index) {
+                                            final month = sortedKeys[index];
+                                            final data = mergedData[month]!;
 
-                                double opQty =
-                                    double.tryParse(OpeiningQty) ?? 0.0;
-                                double opAmt =
-                                    double.tryParse(OpeiningAtm) ?? 0.0;
+                                            // If this is the first entry, use the item’s initial opening balance.
+                                            double opQty = index == 0
+                                                ? double.parse(OpeiningQty)
+                                                : 0;
+                                            double opAmt = index == 0
+                                                ? double.parse(OpeiningAtm)
+                                                : 0;
 
-                                final prevMonth = sortedKeys[index];
-                                final prevData = mergedData[prevMonth]!;
+                                            if (index > 0) {
+                                              // Fetch the previous month data for opQty and opAmt
+                                              final prevMonth =
+                                                  sortedKeys[index - 1];
+                                              final prevData =
+                                                  mergedData[prevMonth]!;
+                                              opQty =
+                                                  prevData['closingQty'] ?? 0.0;
+                                              opAmt =
+                                                  prevData['closingVal'] ?? 0.0;
+                                            }
 
-                                opQty = prevData['closingQty'] ?? opQty;
-                                opAmt = prevData['closingVal'] ?? opAmt;
+                                            final inQty = data['totalQtyP'];
+                                            final inVal = data['totalValP'];
+                                            final outQty = data['totalQtyS'] +
+                                                data['totalQtyD'];
+                                            final outVal = data['totalValS'] +
+                                                data['totalValD'];
+                                            final clQty =
+                                                opQty + inQty - outQty;
+                                            final clVal =
+                                                opAmt + inVal - outVal;
 
-                                final inQty = data['totalQtyP'] ?? 0.0;
-                                final inVal = data['totalValP'] ?? 0.0;
-                                final outQty = (data['totalQtyS'] ?? 0.0) +
-                                    (data['totalQtyD'] ?? 0.0);
-                                final outVal = (data['totalValS'] ?? 0.0) +
-                                    (data['totalValD'] ?? 0.0);
+                                            // Update the mergedData with calculated closing balances for the month.
+                                            data['closingQty'] = clQty;
+                                            data['closingVal'] = clVal;
 
-                                final clQty = opQty + inQty - outQty;
-                                final clVal = opAmt + inVal - outVal;
-
-                                data['closingQty'] = clQty;
-                                data['closingVal'] = clVal;
-
-                                return DataItemRow(
-                                  particulartext: month,
-                                  opText1: opQty.toString(),
-                                  opText2: opAmt.toString(),
-                                  inText1: inQty.toString(),
-                                  inText2: inVal.toString(),
-                                  outText1: outQty.toString(),
-                                  outText2: outVal.toString(),
-                                  ciText1: clQty.toString(),
-                                  ciText2: clVal.toString(),
-                                  doubleTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) {
-                                          return StockStatusReport(
-                                            monthDate: month,
-                                            itemId: widget.itemId,
-                                            itemName: widget.itemName,
-                                            closingStock: opQty.toString(),
-                                          );
-                                        },
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            ),
-                          )
+                                            return DataItemRow(
+                                              particulartext: month,
+                                              opText1: opQty.toString(),
+                                              opText2: opAmt.toString(),
+                                              inText1: inQty.toString(),
+                                              inText2: inVal.toString(),
+                                              outText1: outQty.toString(),
+                                              outText2: outVal.toString(),
+                                              ciText1: clQty.toString(),
+                                              ciText2: clVal.toString(),
+                                              doubleTap: () {
+                                                Navigator.of(context).push(
+                                                  MaterialPageRoute(
+                                                    builder: (context) {
+                                                      return StockStatusReport(
+                                                        monthDate: month,
+                                                        itemId: widget.itemId,
+                                                        itemName:
+                                                            widget.itemName,
+                                                        closingStock:
+                                                            clQty.toString(),
+                                                      );
+                                                    },
+                                                  ),
+                                                );
+                                              },
+                                            );
+                                          },
+                                        ),
+                                ),
                         ],
                       ))
                     ],
@@ -979,28 +1014,28 @@ class _OtherScreenState extends State<OtherScreen> {
                     ),
                     HeaderCell(
                       flex: 2,
-                      text: "${totalInQty.toString()}.00",
+                      text: "${totalInQty.toString()}",
                       align: TextAlign.right,
                       textColor: const Color.fromARGB(255, 33, 65, 243),
                       fontWeight: FontWeight.w600,
                     ),
                     HeaderCell(
                       flex: 2,
-                      text: "${totalInVal.toString()}.00",
+                      text: "${totalInVal.toString()}",
                       align: TextAlign.right,
                       textColor: const Color.fromARGB(255, 33, 65, 243),
                       fontWeight: FontWeight.w600,
                     ),
                     HeaderCell(
                       flex: 2,
-                      text: "${totalOutQty.toString()}.00",
+                      text: "${totalOutQty.toString()}",
                       align: TextAlign.right,
                       textColor: const Color.fromARGB(255, 33, 65, 243),
                       fontWeight: FontWeight.w600,
                     ),
                     HeaderCell(
                       flex: 2,
-                      text: "${totalOutVal.toString()}.00",
+                      text: "${totalOutVal.toString()}",
                       align: TextAlign.right,
                       textColor: const Color.fromARGB(255, 33, 65, 243),
                       fontWeight: FontWeight.w600,

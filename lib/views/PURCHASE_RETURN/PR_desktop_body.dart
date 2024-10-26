@@ -1,7 +1,10 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:billingsphere/data/models/purchaseReturn/purchase_return_model.dart';
 import 'package:billingsphere/data/repository/purchase_return_repository.dart';
+import 'package:billingsphere/views/PEresponsive/PE_receipt_print.dart';
+import 'package:billingsphere/views/PM_responsive/payment_billwise.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
@@ -54,10 +57,14 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
   final List<PEntriesM> _newWidget2 = [];
   final List<SundryRow> _newSundry = [];
   final List<Map<String, dynamic>> _allValues = [];
+  final List<Map<String, dynamic>> _allValuesBillwise = [];
+  List<Billwise> billwise = [];
+
   final List<Map<String, dynamic>> _allValuesSundry = [];
   List<PurchaseReturn> fetchedPurchaseReturn = [];
   Purchase? selectedPurchase;
   List<PurchaseEntry> selectedEntries = [];
+  late Timer _timer;
 
   bool isLoading = false;
   bool isGettingDetails = false;
@@ -182,7 +189,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                   if (entryToRemove != null) {
                     _allValues.remove(entryToRemove);
                   }
-                  // calculateTotal();
+                  calculateTotal();
                 },
               );
             },
@@ -225,7 +232,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                   if (entryToRemove != null) {
                     _allValues.remove(entryToRemove);
                   }
-                  // calculateTotal();
+                  calculateTotal();
                 },
               );
             },
@@ -277,8 +284,8 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
   void initializeData() async {
     await Future.wait([
       setCompanyCode(),
-      setPurchaseReturnLength(),
       fetchPurchaseReturnEntries(),
+      setPurchaseReturnLength(),
       fetchLedgers2(),
       fetchItems(),
       fetchAndSetTaxRates(),
@@ -298,12 +305,13 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
     super.initState();
     roundOffController = TextEditingController();
     roundOffFocusNode = FocusNode();
-    roundOffController.text = '0.00';
+    roundOffController.text = TRoundOff.toStringAsFixed(2);
     roundOffFocusNode.addListener(() {
       if (roundOffFocusNode.hasFocus) {
         isManualRoundOffChange = true;
       }
     });
+    _startTimer();
   }
 
   @override
@@ -319,6 +327,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
               width1: 0.18,
               width2: 0.82,
               onPressed: () {
+                _timer.cancel();
                 Navigator.of(context).pop();
               },
             ),
@@ -545,16 +554,14 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                       padding: const EdgeInsets.all(2.0),
                                       child: DropdownButtonHideUnderline(
                                         child: DropdownMenu<Ledger>(
+                                          controller: purchaseController
+                                              .partyController,
                                           // focusNode: partyFocus,
                                           requestFocusOnTap: true,
                                           initialSelection:
-                                              selectedLedgerName == null ||
-                                                      suggestionItems5.isEmpty
-                                                  ? null
-                                                  : suggestionItems5.firstWhere(
-                                                      (element) =>
-                                                          element.id ==
-                                                          selectedLedgerName),
+                                              suggestionItems5.isNotEmpty
+                                                  ? suggestionItems5.first
+                                                  : null,
                                           enableSearch: true,
                                           trailingIcon: const SizedBox.shrink(),
                                           textStyle: GoogleFonts.poppins(
@@ -598,15 +605,16 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                           ),
                                           expandedInsets: EdgeInsets.zero,
                                           onSelected: (Ledger? value) {
-                                            // FocusScope.of(context)
-                                            //     .requestFocus(placeFocus);
+                                            // FocusScope.of(context).requestFocus(placeFocus);
                                             setState(() {
                                               if (selectedLedgerName != null) {
                                                 selectedLedgerName = value!.id;
                                                 purchaseController
                                                     .ledgerController
                                                     .text = selectedLedgerName!;
-
+                                                purchaseController
+                                                    .partyController
+                                                    .text = value.name;
                                                 final selectedLedger =
                                                     suggestionItems5.firstWhere(
                                                         (element) =>
@@ -2011,7 +2019,14 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                           MediaQuery.of(context).size.width * 0,
                                       child: ElevatedButton(
                                         onPressed: () {
-                                          // Create Purchase
+                                          openDialog1(
+                                            context,
+                                            selectedLedgerName!,
+                                            purchaseController
+                                                .partyController.text,
+                                            TfinalAmt,
+                                            createPurchaseReturn,
+                                          );
                                         },
                                         style: ButtonStyle(
                                           backgroundColor:
@@ -2288,12 +2303,12 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                           Skey: "F2",
                           name: "List",
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const PEMasterBody(),
-                              ),
-                            );
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) => const PEMasterBody(),
+                            //   ),
+                            // );
                           },
                         ),
                         CustomList(
@@ -2350,7 +2365,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                         if (entryToRemove != null) {
                                           _allValues.remove(entryToRemove);
                                         }
-                                        // calculateTotal();
+                                        calculateTotal();
                                       },
                                     );
                                   },
@@ -2533,11 +2548,326 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
     }
   }
 
-  saveValues(Map<String, dynamic> p1) {}
+  void _startTimer() {
+    const Duration duration = Duration(seconds: 2);
+    _timer = Timer.periodic(duration, (Timer timer) {
+      calculateTotal();
+      calculateSundry();
+    });
+  }
+
+  Future<void> createPurchaseReturn() async {
+    print("entering...");
+    if (selectedLedgerName == null || selectedLedgerName!.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(
+              'Error!',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            content: Text('Please select a ledger!',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                )),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+
+      return;
+    } else if (_allValues.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(
+              'Error!',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            content: Text('Please add an item!',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                )),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+
+      return;
+    }
+    print("entering not empty....");
+    print("_allValuesBillwise : ${_allValuesBillwise}");
+
+    for (var valueBillwise in _allValuesBillwise) {
+      double amount = double.tryParse(valueBillwise['amount']) ?? 0.0;
+
+      billwise.add(
+        Billwise(
+          date: valueBillwise['date'],
+          purchase: valueBillwise['selectedPurchase'],
+          amount: amount,
+          billNo: valueBillwise['billno'],
+        ),
+      );
+    }
+
+    final purchaseReturn = PurchaseReturn(
+      companyCode: companyCode!.first,
+      id: 'id',
+      no: purchaseController.noController.text,
+      date: purchaseController.dateController.text,
+      type: purchaseController.typeController.text,
+      ledger: selectedLedgerName!,
+      place: selectedState!,
+      billNumber: purchaseController.billNumberController.text,
+      remarks:
+          purchaseController.remarksController?.text ?? 'No remark available',
+      totalAmount: TfinalAmt.toStringAsFixed(2),
+      entries: _allValues.map((entry) {
+        return Entry(
+          itemName: entry['itemName'] ?? '',
+          qty: int.tryParse(entry['qty']) ?? 0,
+          rate: double.tryParse(entry['rate']) ?? 0,
+          unit: entry['unit'] ?? '',
+          amount: double.tryParse(entry['amount']) ?? 0,
+          tax: entry['tax'] ?? '',
+          sgst: double.tryParse(entry['sgst']) ?? 0,
+          cgst: double.tryParse(entry['cgst']) ?? 0,
+          igst: double.tryParse(entry['igst']) ?? 0,
+          netAmount: double.tryParse(entry['netAmount']) ?? 0,
+          sellingPrice: double.tryParse(entry['sellingPrice']) ?? 0,
+          discount: double.tryParse(entry['discount']) ?? 0,
+        );
+      }).toList(),
+      sundry: _allValuesSundry.map((sundry) {
+        return Sundry(
+          sundryName: sundry['sndryName'] ?? 'No name',
+          amount: double.tryParse(sundry['sundryAmount']) ?? 0,
+        );
+      }).toList(),
+      billwise: billwise,
+      cashAmount: purchaseController.cashAmountController.text.isEmpty
+          ? '0'
+          : purchaseController.cashAmountController.text,
+    );
+    await purchaseReturnService
+        .createPurchaseReturn(
+      purchaseReturn,
+    )
+        .then((value) async {
+      for (var valueBillwise in _allValuesBillwise) {
+        var purchaseId = valueBillwise['selectedPurchase'];
+        var adjustmentAmount = double.parse(valueBillwise['amount'].toString());
+
+        Purchase? purchase =
+            await purchaseServices.fetchPurchaseById(purchaseId);
+        if (purchase != null) {
+          double? dueAmount = double.tryParse(purchase.dueAmount ?? '');
+          if (dueAmount != null) {
+            dueAmount -= adjustmentAmount;
+            purchase.dueAmount = dueAmount.toString();
+            await purchaseServices.updatePurchase(
+              purchase,
+            );
+          } else {
+            print('Error: Unable to parse dueAmount.');
+          }
+        }
+      }
+
+      clearAll();
+      fetchPurchaseReturnEntries().then((_) {
+        final newPurchaseReturnEntry = fetchedPurchaseReturn.firstWhere(
+            (element) => element.no == purchaseReturn.no,
+            orElse: () => PurchaseReturn(
+                  id: '',
+                  companyCode: '',
+                  totalAmount: '',
+                  no: '',
+                  date: '',
+                  cashAmount: '',
+                  type: '',
+                  ledger: '',
+                  place: '',
+                  billNumber: '',
+                  remarks: '',
+                  entries: [],
+                  sundry: [],
+                  billwise: [],
+                ));
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text(
+                'PRINT RECEIPT',
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              content: Text(
+                'Do you want to print the receipt?',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black),
+              ),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    // Navigator.of(context).pushReplacement(
+                    //   MaterialPageRoute(
+                    //     builder: (context) => PurchasePrintBigReceipt(
+                    //       'Purchase Receipt',
+                    //       purchaseID: newPurchaseReturnEntry.id,
+                    //     ),
+                    //   ),
+                    // );
+                  },
+                  child: const Text(
+                    'YES',
+                    style: TextStyle(
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pushReplacement(MaterialPageRoute(
+                      builder: (context) {
+                        return const PEMasterBody();
+                      },
+                    ));
+                  },
+                  child: const Text(
+                    'NO',
+                    style: TextStyle(
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      });
+    }).catchError((error) {
+      Navigator.of(context).pop();
+      print('Failed to create purchase: $error');
+    });
+  }
+
+  void saveValues(Map<String, dynamic> values) {
+    final String uniqueKey = values['uniqueKey'];
+
+    // Check if an entry with the same uniqueKey exists
+    final existingEntryIndex =
+        _allValues.indexWhere((entry) => entry['uniqueKey'] == uniqueKey);
+
+    setState(() {
+      if (existingEntryIndex != -1) {
+        _allValues.removeAt(existingEntryIndex);
+      }
+
+      // Add the latest values
+      _allValues.add(values);
+    });
+  }
+
+  void calculateTotal() {
+    double qty = 0.00;
+    double amount = 0.00;
+    double sgst = 0.00;
+    double cgst = 0.00;
+    double igst = 0.00;
+    double netAmount = 0.00;
+    double discount = 0.00;
+
+    for (var values in _allValues) {
+      qty += double.tryParse(values['qty']) ?? 0;
+      amount += double.tryParse(values['amount']) ?? 0;
+      sgst += double.tryParse(values['sgst']) ?? 0;
+      cgst += double.tryParse(values['cgst']) ?? 0;
+      igst += double.tryParse(values['igst']) ?? 0;
+      netAmount += double.tryParse(values['netAmount']) ?? 0;
+      discount += double.tryParse(values['discount']) ?? 0;
+    }
+    double originalTotalAmount = netAmount + Ttotal;
+    double roundedTotalAmount =
+        (originalTotalAmount - originalTotalAmount.floor()) >= 0.50
+            ? originalTotalAmount.ceil().toDouble()
+            : originalTotalAmount.floor().toDouble();
+    double roundOffAmount = roundedTotalAmount - originalTotalAmount;
+
+    setState(() {
+      Tqty = qty;
+      Tamount = amount;
+      Tsgst = sgst;
+      Tcgst = cgst;
+      Tigst = igst;
+      TnetAmount = netAmount;
+      Tdiscount = discount;
+      if (!isManualRoundOffChange) {
+        TRoundOff = roundOffAmount;
+        TfinalAmt = TnetAmount + TRoundOff;
+        roundOffController.text = TRoundOff.toStringAsFixed(2);
+      } else {
+        TfinalAmt =
+            TnetAmount + (double.tryParse(roundOffController.text) ?? 0.00);
+      }
+    });
+  }
+
+  void calculateSundry() {
+    double total = 0.00;
+    for (var values in _allValuesSundry) {
+      total += double.tryParse(values['sundryAmount']) ?? 0;
+    }
+
+    setState(() {
+      Ttotal = total;
+    });
+  }
 
   Future<void> fetchItems() async {
     try {
-      final List<Item> items = await itemsService.fetchITEMS();
+      final List<Item> items = await itemsService.fetchItems();
 
       itemsList = items;
     } catch (error) {
@@ -2581,6 +2911,8 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
           .toList();
 
       if (suggestionItems5.isNotEmpty) {
+        selectedLedgerName =
+            suggestionItems5.isNotEmpty ? suggestionItems5.first.id : null;
         ledgerAmount = suggestionItems5.first.debitBalance;
       }
     } catch (error) {
@@ -3944,6 +4276,35 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
     );
   }
 
+  void openDialog1(BuildContext context, String ledgerID, String ledgerName,
+      double debitAmount, VoidCallback onSave) {
+    showDialog(
+      context: context,
+      builder: (context) => PaymentBillwise(
+        ledgerID: ledgerID,
+        ledgerName: ledgerName,
+        debitAmount: debitAmount,
+        allValuesCallback: (List<Map<String, dynamic>> newValues) {
+          setState(() {
+            // Merge newValues into _allValuesBillwise
+            for (var newValue in newValues) {
+              final existingIndex = _allValuesBillwise.indexWhere(
+                (entry) => entry['uniqueKey'] == newValue['uniqueKey'],
+              );
+              if (existingIndex != -1) {
+                _allValuesBillwise[existingIndex] = newValue;
+              } else {
+                _allValuesBillwise.add(newValue);
+              }
+            }
+            print('Updated _allValuesBillwise: $_allValuesBillwise');
+          });
+        },
+        onSave: onSave,
+      ),
+    );
+  }
+
   void _updateWidgetList(List<PurchaseEntry> selectedEntries) {
     setState(() {
       _newWidget.clear();
@@ -4018,6 +4379,34 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
           taxCategory: taxLists,
         ));
       }
+    });
+  }
+
+  void clearAll() {
+    setState(() {
+      _newWidget.clear();
+      _allValues.clear();
+      _allValuesSundry.clear();
+      Ttotal = 0.00;
+      Tqty = 0.00;
+      Tamount = 0.00;
+      Tdisc = 0.00;
+      Tsgst = 0.00;
+      Tcgst = 0.00;
+      Tigst = 0.00;
+      TnetAmount = 0.00;
+      purchaseController.noController.clear();
+      purchaseController.dateController.clear();
+      purchaseController.date2Controller.clear();
+      purchaseController.typeController.clear();
+      purchaseController.ledgerController.clear();
+      purchaseController.placeController.clear();
+      purchaseController.billNumberController.clear();
+      purchaseController.remarksController?.clear();
+      purchaseController.cashAmountController.clear();
+      purchaseController.dueAmountController.clear();
+
+      generateBillNumber();
     });
   }
 }

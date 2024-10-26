@@ -1,4 +1,6 @@
 import 'package:billingsphere/data/models/deliveryChallan/delivery_challan_model.dart';
+import 'package:billingsphere/utils/constant.dart';
+import 'package:billingsphere/views/DC_responsive/Delivery_Challan_Edit_Screen.dart';
 import 'package:billingsphere/views/Stock_Status/stock_status_common.dart';
 import 'package:billingsphere/views/sumit_screen/voucher%20_entry.dart/voucher_list_widget.dart';
 import 'package:flutter/material.dart';
@@ -869,6 +871,7 @@ class _StockStatusReportState extends State<StockStatusReport> {
   LedgerService ledgerService = LedgerService();
   PurchaseServices purchaseService = PurchaseServices();
   DeliveryChallanServices deliveryChallanService = DeliveryChallanServices();
+  bool isLoading = false;
 
   List<dynamic> mergedData = []; // To hold the merged sales and purchase data
   double closingStock = 0; // Current closing stock
@@ -980,6 +983,10 @@ class _StockStatusReportState extends State<StockStatusReport> {
 
   Future<void> fetchAndMergeData() async {
     try {
+      setState(() {
+        isLoading = true;
+      });
+
       final List<SalesEntry> salesEntries = await fetchSales();
       final List<Purchase> purchaseEntries = await fetchPurchase();
       final List<DeliveryChallan> deliveryChallanEntries =
@@ -1030,6 +1037,7 @@ class _StockStatusReportState extends State<StockStatusReport> {
       setState(() {
         mergedData = combinedEntries;
         calculateClosingStock();
+        isLoading = false;
       });
 
       print('Merged Data: $mergedData');
@@ -1040,6 +1048,10 @@ class _StockStatusReportState extends State<StockStatusReport> {
           backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
     }
   }
 
@@ -1094,12 +1106,12 @@ class _StockStatusReportState extends State<StockStatusReport> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: const Text(
-          'Stock Vouchers',
+          "Stock Vouchers",
           style: TextStyle(color: Colors.white),
         ),
-        centerTitle: true,
-        backgroundColor: const Color.fromARGB(255, 33, 65, 243),
+        backgroundColor: const Color.fromRGBO(32, 91, 212, 1),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Row(
@@ -1120,357 +1132,406 @@ class _StockStatusReportState extends State<StockStatusReport> {
                 ),
                 const SizedBox(height: 10),
                 Expanded(
-                    child: Container(
-                  decoration: BoxDecoration(
-                    border: Border.all(),
-                  ),
-                  child: Column(
-                    children: [
-                      // Header Row
-                      Row(
-                        children: [
-                          HeaderCell(
-                            flex: 2,
-                            text: "Date",
-                            fontWeight: FontWeight.bold,
-                            bordor: Border.all(),
-                            textColor: Colors.purple,
-                            align: TextAlign.center,
-                          ),
-                          HeaderCell(
-                            flex: 4,
-                            text: "Particulars",
-                            fontWeight: FontWeight.bold,
-                            bordor: Border.all(),
-                            textColor: Colors.purple,
-                          ),
-                          HeaderCell(
-                            flex: 2,
-                            text: "Type",
-                            fontWeight: FontWeight.bold,
-                            textColor: Colors.purple,
-                            align: TextAlign.center,
-                            bordor: Border.all(),
-                          ),
-                          HeaderCell(
-                            flex: 2,
-                            text: "No.",
-                            fontWeight: FontWeight.bold,
-                            textColor: Colors.purple,
-                            align: TextAlign.center,
-                            bordor: Border.all(),
-                          ),
-                          HeaderCell(
-                            flex: 2,
-                            text: "Qty",
-                            fontWeight: FontWeight.bold,
-                            textColor: Colors.purple,
-                            align: TextAlign.center,
-                            bordor: Border.all(),
-                          ),
-                          HeaderCell(
-                            flex: 2,
-                            text: "Rate",
-                            fontWeight: FontWeight.bold,
-                            textColor: Colors.purple,
-                            align: TextAlign.center,
-                            bordor: Border.all(),
-                          ),
-                          HeaderCell(
-                            flex: 2,
-                            text: "In(Qty)",
-                            fontWeight: FontWeight.bold,
-                            textColor: Colors.purple,
-                            align: TextAlign.right,
-                            bordor: Border.all(),
-                          ),
-                          HeaderCell(
-                            flex: 2,
-                            text: "Value",
-                            fontWeight: FontWeight.bold,
-                            textColor: Colors.purple,
-                            align: TextAlign.right,
-                            bordor: Border.all(),
-                          ),
-                          HeaderCell(
-                            flex: 2,
-                            text: "Out(Qty)",
-                            fontWeight: FontWeight.bold,
-                            textColor: Colors.purple,
-                            align: TextAlign.right,
-                            bordor: Border.all(),
-                          ),
-                          HeaderCell(
-                            flex: 2,
-                            text: "Value",
-                            fontWeight: FontWeight.bold,
-                            textColor: Colors.purple,
-                            align: TextAlign.right,
-                            bordor: Border.all(),
-                          ),
-                          HeaderCell(
-                            flex: 2,
-                            text: "Cl.Qty",
-                            fontWeight: FontWeight.bold,
-                            textColor: Colors.purple,
-                            align: TextAlign.right,
-                            bordor: Border.all(),
-                          ),
-                        ],
-                      ),
-
-                      Expanded(
-                          child: SingleChildScrollView(
-                        child: Column(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(),
+                    ),
+                    child: Column(
+                      children: [
+                        // Header Row
+                        Row(
                           children: [
-                            // Opening balance row - 1
-                            Row(
-                              children: [
-                                HeaderCell(
-                                  flex: 2,
-                                  text: "",
-                                  bordor: Border.all(),
-                                ),
-                                HeaderCell(
-                                  flex: 4,
-                                  text: "Opening Balance",
-                                  fontWeight: FontWeight.w600,
-                                  bordor: Border.all(),
-                                ),
-                                HeaderCell(
-                                  flex: 2,
-                                  text: "",
-                                  bordor: Border.all(),
-                                ),
-                                HeaderCell(
-                                  flex: 2,
-                                  text: "",
-                                  bordor: Border.all(),
-                                ),
-                                HeaderCell(
-                                  flex: 2,
-                                  text: "",
-                                  bordor: Border.all(),
-                                ),
-                                HeaderCell(
-                                  flex: 2,
-                                  text: "",
-                                  bordor: Border.all(),
-                                ),
-                                HeaderCell(
-                                  flex: 2,
-                                  text: "",
-                                  bordor: Border.all(),
-                                ),
-                                HeaderCell(
-                                  flex: 2,
-                                  text: "",
-                                  bordor: Border.all(),
-                                ),
-                                HeaderCell(
-                                  flex: 2,
-                                  text: "",
-                                  bordor: Border.all(),
-                                ),
-                                HeaderCell(
-                                  flex: 2,
-                                  text: "",
-                                  bordor: Border.all(),
-                                ),
-                                HeaderCell(
-                                  flex: 2,
-                                  text: widget.closingStock,
-                                  fontWeight: FontWeight.w600,
-                                  align: TextAlign.right,
-                                  bordor: Border.all(),
-                                ),
-                              ],
+                            HeaderCell(
+                              flex: 2,
+                              text: "Date",
+                              fontWeight: FontWeight.bold,
+                              bordor: Border.all(),
+                              textColor: Colors.purple,
+                              align: TextAlign.center,
                             ),
+                            HeaderCell(
+                              flex: 4,
+                              text: "Particulars",
+                              fontWeight: FontWeight.bold,
+                              bordor: Border.all(),
+                              textColor: Colors.purple,
+                            ),
+                            HeaderCell(
+                              flex: 2,
+                              text: "Type",
+                              fontWeight: FontWeight.bold,
+                              textColor: Colors.purple,
+                              align: TextAlign.center,
+                              bordor: Border.all(),
+                            ),
+                            HeaderCell(
+                              flex: 2,
+                              text: "No.",
+                              fontWeight: FontWeight.bold,
+                              textColor: Colors.purple,
+                              align: TextAlign.center,
+                              bordor: Border.all(),
+                            ),
+                            HeaderCell(
+                              flex: 2,
+                              text: "Qty",
+                              fontWeight: FontWeight.bold,
+                              textColor: Colors.purple,
+                              align: TextAlign.center,
+                              bordor: Border.all(),
+                            ),
+                            HeaderCell(
+                              flex: 2,
+                              text: "Rate",
+                              fontWeight: FontWeight.bold,
+                              textColor: Colors.purple,
+                              align: TextAlign.center,
+                              bordor: Border.all(),
+                            ),
+                            HeaderCell(
+                              flex: 2,
+                              text: "In(Qty)",
+                              fontWeight: FontWeight.bold,
+                              textColor: Colors.purple,
+                              align: TextAlign.right,
+                              bordor: Border.all(),
+                            ),
+                            HeaderCell(
+                              flex: 2,
+                              text: "Value",
+                              fontWeight: FontWeight.bold,
+                              textColor: Colors.purple,
+                              align: TextAlign.right,
+                              bordor: Border.all(),
+                            ),
+                            HeaderCell(
+                              flex: 2,
+                              text: "Out(Qty)",
+                              fontWeight: FontWeight.bold,
+                              textColor: Colors.purple,
+                              align: TextAlign.right,
+                              bordor: Border.all(),
+                            ),
+                            HeaderCell(
+                              flex: 2,
+                              text: "Value",
+                              fontWeight: FontWeight.bold,
+                              textColor: Colors.purple,
+                              align: TextAlign.right,
+                              bordor: Border.all(),
+                            ),
+                            HeaderCell(
+                              flex: 2,
+                              text: "Cl.Qty",
+                              fontWeight: FontWeight.bold,
+                              textColor: Colors.purple,
+                              align: TextAlign.right,
+                              bordor: Border.all(),
+                            ),
+                          ],
+                        ),
 
-                            // Data Item Row
+                        isLoading == true
+                            ? Expanded(
+                                child: Center(
+                                  child: Constants.loadingBar,
+                                ),
+                              )
+                            : Expanded(
+                                child: SingleChildScrollView(
+                                    child: Column(
+                                children: [
+                                  // Opening balance row - 1
+                                  Row(
+                                    children: [
+                                      HeaderCell(
+                                        flex: 2,
+                                        text: "",
+                                        bordor: Border.all(),
+                                      ),
+                                      HeaderCell(
+                                        flex: 4,
+                                        text: "Opening Balance",
+                                        fontWeight: FontWeight.w600,
+                                        bordor: Border.all(),
+                                      ),
+                                      HeaderCell(
+                                        flex: 2,
+                                        text: "",
+                                        bordor: Border.all(),
+                                      ),
+                                      HeaderCell(
+                                        flex: 2,
+                                        text: "",
+                                        bordor: Border.all(),
+                                      ),
+                                      HeaderCell(
+                                        flex: 2,
+                                        text: "",
+                                        bordor: Border.all(),
+                                      ),
+                                      HeaderCell(
+                                        flex: 2,
+                                        text: "",
+                                        bordor: Border.all(),
+                                      ),
+                                      HeaderCell(
+                                        flex: 2,
+                                        text: "",
+                                        bordor: Border.all(),
+                                      ),
+                                      HeaderCell(
+                                        flex: 2,
+                                        text: "",
+                                        bordor: Border.all(),
+                                      ),
+                                      HeaderCell(
+                                        flex: 2,
+                                        text: "",
+                                        bordor: Border.all(),
+                                      ),
+                                      HeaderCell(
+                                        flex: 2,
+                                        text: "",
+                                        bordor: Border.all(),
+                                      ),
+                                      HeaderCell(
+                                        flex: 2,
+                                        text: widget.closingStock,
+                                        fontWeight: FontWeight.w600,
+                                        align: TextAlign.right,
+                                        bordor: Border.all(),
+                                      ),
+                                    ],
+                                  ),
 
-                            ListView.builder(
-                              shrinkWrap: true,
-                              itemCount: mergedData.length,
-                              itemBuilder: (context, index) {
-                                final entry = mergedData[index];
-                                final isSales = entry['type'] == 'TI';
-                                final isPurchase = entry['type'] == 'RP';
-                                final isDeliveryChallan = entry['type'] == 'DC';
-                                final data = entry['data'];
-                                final closingStockForRow = closingStocks[index];
-                                return DataItemRowDate(
-                                    date: data.date,
-                                    particular: isDeliveryChallan
-                                        ? Text('')
-                                        : FutureBuilder<Ledger?>(
-                                            future: ledgerService
-                                                .fetchLedgerById(isSales
-                                                    ? data.party
-                                                    : data.ledger),
-                                            builder: (BuildContext context,
-                                                AsyncSnapshot<Ledger?>
-                                                    snapshot) {
-                                              if (snapshot.connectionState ==
-                                                  ConnectionState.waiting) {
-                                                // While data is being fetched
-                                                return const Text('');
-                                              } else if (snapshot.hasError) {
-                                                // If an error occurs
-                                                return Text(
-                                                    'Error: ${snapshot.error}');
-                                              } else {
-                                                // Data successfully fetched, display it
-                                                return SizedBox(
-                                                  child: Text(
-                                                    snapshot.data?.name ?? '',
-                                                    textAlign: TextAlign.left,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                    style: GoogleFonts.poppins(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                  ),
-                                                );
-                                              }
-                                            },
-                                          ),
-                                    type: isSales
-                                        ? 'TI'
-                                        : isDeliveryChallan
-                                            ? 'DC'
-                                            : '',
-                                    no: data.no.toString(),
-                                    qty: data.entries.isNotEmpty
-                                        ? ('${data.entries[0].qty.toString()}-${data.entries[0].unit.toString()}')
-                                        : 'N/A',
-                                    rate: data.entries.isNotEmpty
-                                        ? data.entries[0].rate.toString()
-                                        : '0',
-                                    qtyIn: isPurchase
-                                        ? (data.entries.isNotEmpty
-                                            ? data.entries[0].qty.toString()
-                                            : '0')
-                                        : '0',
-                                    valueIn: isPurchase
-                                        ? (data.entries.isNotEmpty
-                                            ? data.entries[0].netAmount
-                                                .toString()
-                                            : '0')
-                                        : '0',
-                                    qtyOut: isSales
-                                        ? (data.entries.isNotEmpty
-                                            ? data.entries[0].qty.toString()
-                                            : '0')
-                                        : isDeliveryChallan
+                                  // Data Item Row
+
+                                  ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount: mergedData.length,
+                                    itemBuilder: (context, index) {
+                                      final entry = mergedData[index];
+                                      final isSales = entry['type'] == 'TI';
+                                      final isPurchase = entry['type'] == 'RP';
+                                      final isDeliveryChallan =
+                                          entry['type'] == 'DC';
+                                      final data = entry['data'];
+                                      final closingStockForRow =
+                                          closingStocks[index];
+                                      return DataItemRowDate(
+                                        date: data.date,
+                                        particular: isDeliveryChallan
+                                            ? const Text('')
+                                            : FutureBuilder<Ledger?>(
+                                                future: ledgerService
+                                                    .fetchLedgerById(isSales
+                                                        ? data.party
+                                                        : data.ledger),
+                                                builder: (BuildContext context,
+                                                    AsyncSnapshot<Ledger?>
+                                                        snapshot) {
+                                                  if (snapshot
+                                                          .connectionState ==
+                                                      ConnectionState.waiting) {
+                                                    return const Text('');
+                                                  } else if (snapshot
+                                                      .hasError) {
+                                                    // If an error occurs
+                                                    return Text(
+                                                        'Error: ${snapshot.error}');
+                                                  } else {
+                                                    // Data successfully fetched, display it
+                                                    return SizedBox(
+                                                      child: Text(
+                                                        snapshot.data?.name ??
+                                                            '',
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                          fontWeight:
+                                                              FontWeight.w700,
+                                                        ),
+                                                      ),
+                                                    );
+                                                  }
+                                                },
+                                              ),
+                                        type: isSales
+                                            ? 'TI'
+                                            : isPurchase
+                                                ? 'TP'
+                                                : isDeliveryChallan
+                                                    ? 'DC'
+                                                    : '',
+                                        no: data.no.toString(),
+                                        qty: data.entries.isNotEmpty
+                                            ? ('${data.entries[0].qty.toString()}-${data.entries[0].unit.toString()}')
+                                            : 'N/A',
+                                        rate: data.entries.isNotEmpty
+                                            ? data.entries[0].rate.toString()
+                                            : '0',
+                                        qtyIn: isPurchase
                                             ? (data.entries.isNotEmpty
                                                 ? data.entries[0].qty.toString()
                                                 : '0')
                                             : '0',
-                                    valueOut: isSales
-                                        ? (data.entries.isNotEmpty
-                                            ? data.entries[0].netAmount
-                                                .toString()
-                                            : '0')
-                                        : '0',
-                                    qtyCl: isSales
-                                        ? (data.entries.isNotEmpty
-                                            ? data.entries[0].netAmount
-                                                .toString()
-                                            : '0')
-                                        : '0');
-                              },
-                            ),
+                                        valueIn: isPurchase
+                                            ? (data.entries.isNotEmpty
+                                                ? data.entries[0].netAmount
+                                                    .toString()
+                                                : '0')
+                                            : '0',
+                                        qtyOut: isSales
+                                            ? (data.entries.isNotEmpty
+                                                ? data.entries[0].qty.toString()
+                                                : '0')
+                                            : isDeliveryChallan
+                                                ? (data.entries.isNotEmpty
+                                                    ? data.entries[0].qty
+                                                        .toString()
+                                                    : '0')
+                                                : '0',
+                                        valueOut: isSales
+                                            ? (data.entries.isNotEmpty
+                                                ? data.entries[0].netAmount
+                                                    .toString()
+                                                : '0')
+                                            : '0',
+                                        qtyCl: closingStockForRow.toString(),
+                                        onTap: () {
+                                          if (isSales) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    SalesEditScreen(
+                                                  salesEntryId: data,
+                                                ),
+                                              ),
+                                            );
+                                          } else if (isPurchase) {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    PurchaseEditD(
+                                                  data: data.id,
+                                                ),
+                                              ),
+                                            );
+                                          } else if (isDeliveryChallan) {
+                                            Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        DeliveryChallanEditScreen(
+                                                          deliveryChallan: data,
+                                                          deliveryChallans: const [],
+                                                        )));
+                                          }
+                                        },
+                                      );
+                                    },
+                                  ),
 
-                            // Empty Row
-                            const CustomDataWidget(text1: "", text2: ""),
+                                  // Empty Row
+                                  const CustomDataWidget(text1: "", text2: ""),
 
-                            // Summary Row
-                            const CustomDataWidget(
-                                text1: "S  U  M  M  A  R  Y", text2: ""),
+                                  // Summary Row
+                                  const CustomDataWidget(
+                                      text1: "S  U  M  M  A  R  Y", text2: ""),
 
-                            // Opening Balance Row - 2
-                            CustomDataWidget(
-                                text1: "Opening Balance",
-                                text2: "${widget.closingStock}.00"),
+                                  // Opening Balance Row - 2
+                                  CustomDataWidget(
+                                      text1: "Opening Balance",
+                                      text2: widget.closingStock),
 
-                            //Total Inward Row
-                            CustomDataWidget(
-                                text1: "Total Inward",
-                                text2: "${totalInwardQty}.00"),
+                                  //Total Inward Row
+                                  CustomDataWidget(
+                                      text1: "Total Inward",
+                                      text2: "$totalInwardQty"),
 
-                            //Total Outward Row
-                            CustomDataWidget(
-                                text1: "Total Outward",
-                                text2: "${totalOutwardQty}.00"),
+                                  //Total Outward Row
+                                  CustomDataWidget(
+                                      text1: "Total Outward",
+                                      text2: "$totalOutwardQty"),
 
-                            //Closing Balnce Row
-                            CustomDataWidget(
-                                text1: "Closing Balance",
-                                text2: "${closingStock}.00"),
-                          ],
-                        ),
-                      ))
-                    ],
+                                  //Closing Balnce Row
+                                  CustomDataWidget(
+                                      text1: "Closing Balance",
+                                      text2: "$closingStock"),
+                                ],
+                              )))
+                      ],
+                    ),
                   ),
-                )),
+                ),
 
                 // Last Total Row
-                // Row(
-                //   children: [
-                //     HeaderCell(
-                //       align: TextAlign.left,
-                //       flex: 4,
-                //       text: "Total ",
-                //       fontWeight: FontWeight.w600,
-                //     ),
-                //     const HeaderCell(
-                //       flex: 2,
-                //       text: "",
-                //     ),
-                //     const HeaderCell(
-                //       flex: 2,
-                //       text: "",
-                //     ),
-                //     HeaderCell(
-                //       flex: 2,
-                //       text: ".00",
-                //       align: TextAlign.right,
-                //       textColor: const Color.fromARGB(255, 33, 65, 243),
-                //       fontWeight: FontWeight.w600,
-                //     ),
-                //     HeaderCell(
-                //       flex: 2,
-                //       text: ".00",
-                //       align: TextAlign.right,
-                //       textColor: const Color.fromARGB(255, 33, 65, 243),
-                //       fontWeight: FontWeight.w600,
-                //     ),
-                //     HeaderCell(
-                //       flex: 2,
-                //       text: ".00",
-                //       align: TextAlign.right,
-                //       textColor: const Color.fromARGB(255, 33, 65, 243),
-                //       fontWeight: FontWeight.w600,
-                //     ),
-                //     HeaderCell(
-                //       flex: 2,
-                //       text: ".00",
-                //       align: TextAlign.right,
-                //       textColor: const Color.fromARGB(255, 33, 65, 243),
-                //       fontWeight: FontWeight.w600,
-                //     ),
-                //     const HeaderCell(
-                //       flex: 2,
-                //       text: "",
-                //     ),
-                //     const HeaderCell(
-                //       flex: 2,
-                //       text: "",
-                //     ),
-                //   ],
-                // ),
+                Row(
+                  children: [
+                    const HeaderCell(
+                      flex: 1,
+                      text: "",
+                    ),
+                    HeaderCell(
+                      align: TextAlign.left,
+                      flex: 4,
+                      text: "Total (${mergedData.length})",
+                      fontWeight: FontWeight.w600,
+                    ),
+                    const HeaderCell(
+                      flex: 2,
+                      text: "",
+                    ),
+                    const HeaderCell(
+                      flex: 2,
+                      text: "",
+                    ),
+                    const HeaderCell(
+                      flex: 2,
+                      text: "",
+                    ),
+                    const HeaderCell(
+                      flex: 2,
+                      text: "",
+                    ),
+                    HeaderCell(
+                      flex: 2,
+                      text: "$totalInwardQty.00",
+                      align: TextAlign.right,
+                      textColor: const Color.fromARGB(255, 33, 65, 243),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    HeaderCell(
+                      flex: 2,
+                      text: "$totalInwardValue.00",
+                      align: TextAlign.right,
+                      textColor: const Color.fromARGB(255, 33, 65, 243),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    HeaderCell(
+                      flex: 2,
+                      text: "$totalOutwardQty.00",
+                      align: TextAlign.right,
+                      textColor: const Color.fromARGB(255, 33, 65, 243),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    HeaderCell(
+                      flex: 2,
+                      text: "$totalOutwardValue.00",
+                      align: TextAlign.right,
+                      textColor: const Color.fromARGB(255, 33, 65, 243),
+                      fontWeight: FontWeight.w600,
+                    ),
+                    const HeaderCell(
+                      flex: 2,
+                      text: "",
+                    ),
+                  ],
+                ),
               ],
             ),
           )),
@@ -1614,6 +1675,7 @@ class DataItemRowDate extends StatelessWidget {
   final String qtyOut;
   final String valueOut;
   final String qtyCl;
+  final VoidCallback onTap;
 
   const DataItemRowDate(
       {super.key,
@@ -1627,26 +1689,25 @@ class DataItemRowDate extends StatelessWidget {
       required this.valueIn,
       required this.qtyOut,
       required this.valueOut,
-      required this.qtyCl});
+      required this.qtyCl,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-        onDoubleTap: () {},
+        onTap: onTap,
         child: Row(
           children: [
             RowCell(
               flex: 2,
               text: date,
               align: TextAlign.center,
-              fontWeight: FontWeight.w500,
+              fontWeight: FontWeight.w600,
               // containercolor: isSelected ? const Color(0xFF4169E1) : null,
               // textColor: isSelected ? Colors.yellow : Colors.black,
             ),
             RowCell(
               flex: 4,
-              align: TextAlign.left,
-              fontWeight: FontWeight.w600,
               child: particular,
               // containercolor: isSelected ? const Color(0xFF4169E1) : null,
               // textColor: isSelected ? Colors.white : Colors.black,
@@ -1664,6 +1725,7 @@ class DataItemRowDate extends StatelessWidget {
               text: no,
               align: TextAlign.center,
               fontWeight: FontWeight.w500,
+
               // containercolor: isSelected ? const Color(0xFF4169E1) : null,
               // textColor: isSelected ? Colors.white : Colors.black,
             ),
@@ -1735,8 +1797,7 @@ class CustomDataWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return // Summary Row
-        Row(
+    return Row(
       children: [
         HeaderCell(
           flex: 2,

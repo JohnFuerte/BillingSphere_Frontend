@@ -567,13 +567,15 @@ class _PEMyDesktopBodyState extends State<PEMyDesktopBody> {
   Future<void> fetchLedgers2() async {
     try {
       final List<Ledger> ledger = await ledgerService.fetchLedgers();
-      // Add empty data on the 0 index
 
       setState(() {
         suggestionItems5 = ledger
             .where((element) =>
                 element.status == 'Yes' &&
-                element.ledgerGroup == '662f97d2a07ec73369c237b0')
+                (element.ledgerGroup == '662f97d2a07ec73369c237b0' ||
+                    element.ledgerGroup == '662f9832a07ec73369c237c2' ||
+                    element.ledgerGroup == '662f97caa07ec73369c237ae' ||
+                    element.ledgerGroup == '662f9863a07ec73369c237cc'))
             .toList();
 
         if (suggestionItems5.isNotEmpty) {
@@ -600,7 +602,6 @@ class _PEMyDesktopBodyState extends State<PEMyDesktopBody> {
     }
   }
 
-  // Clear all the fields and widgets
   void clearAll() {
     setState(() {
       _newWidget.clear();

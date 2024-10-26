@@ -9,7 +9,7 @@ import '../DC_homepage.dart';
 import '../Daily_cash_resposive/daily_cash_master.dart';
 import '../GST_Report/GST_report_desktop.dart';
 import '../IC_homepage.dart';
-import '../PURCHASE_RETURN/purchase_return.dart';
+import '../PURCHASE_RETURN/PR_desktop_body.dart';
 import '../UM_responsive/UM_desktop_body.dart';
 import '../export_excel.dart';
 import '../import_excel.dart';

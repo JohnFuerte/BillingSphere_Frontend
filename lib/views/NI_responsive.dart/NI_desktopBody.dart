@@ -216,7 +216,7 @@ class _BasicDetailsState extends State<NIMyDesktopBody> {
     setState(() {
       int seed = DateTime.now().millisecondsSinceEpoch;
       Random random = Random(seed);
-      _generatedNumber = random.nextInt(900) + 100;
+      _generatedNumber = random.nextInt(9000) + 100;
       controllers.codeNoController.text = _generatedNumber.toString();
     });
   }
