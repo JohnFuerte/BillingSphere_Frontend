@@ -1,5 +1,5 @@
 class PurchaseReturn {
-  final String id;
+  final String? id;
   final String no;
   final String companyCode;
   final String type;
@@ -15,7 +15,7 @@ class PurchaseReturn {
   final List<Sundry> sundry;
 
   PurchaseReturn({
-    required this.id,
+    this.id,
     required this.no,
     required this.companyCode,
     required this.type,
@@ -53,7 +53,6 @@ class PurchaseReturn {
 
   Map<String, dynamic> toJson() {
     return {
-      // '_id': id,
       'no': no,
       'companyCode': companyCode,
       'type': type,

@@ -2,6 +2,7 @@ import 'package:billingsphere/data/models/payment/payment_model.dart';
 import 'package:billingsphere/data/models/purchase/purchase_model.dart';
 import 'package:billingsphere/data/repository/payment_respository.dart';
 import 'package:billingsphere/data/repository/purchase_repository.dart';
+import 'package:billingsphere/data/repository/purchase_return_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -19,6 +20,7 @@ class PaymentBillwise extends StatefulWidget {
     required this.allValuesCallback,
     required this.onSave,
     this.paymentID,
+    this.isProductReturn = false,
   });
 
   final String ledgerID;
@@ -27,6 +29,7 @@ class PaymentBillwise extends StatefulWidget {
   final Function(List<Map<String, dynamic>>) allValuesCallback;
   final VoidCallback onSave;
   final String? paymentID;
+  final bool isProductReturn;
 
   @override
   State<PaymentBillwise> createState() => _ChequeReturnEntryState();
@@ -86,6 +89,7 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
   late LinkedScrollControllerGroup _horizontalControllersGroup;
 
   PurchaseServices purchaseServices = PurchaseServices();
+  PurchaseReturnService purchaseReturnService = PurchaseReturnService();
   PaymentService paymentService = PaymentService();
   LedgerService ledgerService = LedgerService();
 
@@ -121,11 +125,59 @@ class _ChequeReturnEntryState extends State<PaymentBillwise> {
     });
 
     if (widget.paymentID != null) {
-      fetchAndSetPayment();
+      if (widget.isProductReturn) {
+        fetchAndSetPurchasereturn();
+      } else {
+        fetchAndSetPayment();
+      }
     }
 
     print(
         'Filtered Purchase List: ${filteredPurchase.map((p) => p.id).toList()}');
+  }
+
+  Future<void> fetchAndSetPurchasereturn() async {
+    try {
+      if (widget.paymentID != null) {
+        final payment = await purchaseReturnService
+            .fetchPurchaseReturnById(widget.paymentID!);
+        rowDataList.clear();
+
+        if (payment != null) {
+          bool entryFound = false;
+
+          if (payment.ledger == widget.ledgerID) {
+            entryFound = true;
+            for (var bill in payment.billwise) {
+              RowData rowData = RowData(
+                selectedTypeOfRef: ' Against Ref.',
+                selectedPurchase: bill.purchase,
+                billno: bill.billNo,
+                date: bill.date,
+                amount: bill.amount.toString(),
+                dateController: TextEditingController(text: bill.date),
+                amountController:
+                    TextEditingController(text: bill.amount.toString()),
+              );
+
+              rowDataList.add(rowData);
+              saveValues(rowData.toMap());
+            }
+          }
+          totalAmount = widget.debitAmount;
+          if (!entryFound) {
+            addNewRow();
+          }
+          setState(() {});
+        }
+      } else {
+        print('No paymentID provided.');
+      }
+    } catch (error) {
+      print('Failed to fetch payment: $error');
+      addNewRow();
+      setState(() {});
+    }
   }
 
   Future<void> fetchAndSetPayment() async {

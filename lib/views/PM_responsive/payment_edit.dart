@@ -516,9 +516,13 @@ class _PMMyPaymentDesktopBodyState extends State<PMMyPaymentDesktopBodyE> {
     );
   }
 
-  void openDialog1(BuildContext context, String ledgerID, String ledgerName,
-      double debitAmount, VoidCallback onSave,
-      [String? paymentID]) {
+  void openDialog1(
+    BuildContext context,
+    String ledgerID,
+    String ledgerName,
+    double debitAmount,
+    VoidCallback onSave,
+  ) {
     showDialog(
       context: context,
       builder: (context) => PaymentBillwise(

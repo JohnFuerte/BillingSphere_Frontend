@@ -347,10 +347,14 @@ class _DCDesktopBodyState extends State<DCDesktopBody> {
     super.initState();
     setCompanyCode();
     _initializeEverything();
-
     _companyFuture = getCompany();
-
     _startTimer();
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
   }
 
   late Future<void> _companyFuture;

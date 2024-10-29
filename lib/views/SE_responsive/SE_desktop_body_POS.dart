@@ -1268,9 +1268,14 @@ class _SalesReturnState extends State<SalesReturn> {
   }
 
   void openDialog2({int? rowIndex, Item? item}) {
-    if (rowItems.contains(item)) {
-      rowIndex = rowItems.indexOf(item!);
+    var itemId = item?.id;
+
+    if (rowItems.any((existingItem) => existingItem.id == itemId)) {
+      print("Item Exists");
+      rowIndex =
+          rowItems.indexWhere((existingItem) => existingItem.id == itemId);
     }
+
     if (rowIndex != null) {
       selectedRowIndex = rowIndex;
       final selectedItem = values[rowIndex];
@@ -3648,28 +3653,14 @@ class _SalesReturnState extends State<SalesReturn> {
                           },
                           key: const Key('visible-detector-key'),
                           child: BarcodeKeyboardListener(
-                            bufferDuration: const Duration(milliseconds: 200),
-                            onBarcodeScanned: (barcode) {
+                            bufferDuration: const Duration(milliseconds: 1500),
+                            onBarcodeScanned: (barcode) async {
                               if (!visible) return;
-                              itemsService
+                              print("barcode: $barcode");
+                              await itemsService
                                   .searchItemsByBarcode(barcode)
                                   .then((value) => {
-                                        setState(() {
-                                          selectedItem = value.first;
-                                          selectedItemId = value.first.id;
-                                          selectedItemName =
-                                              value.first.itemName;
-                                          _qtyController.text = "1";
-                                          _rateController.text =
-                                              value.first.mrp.toString();
-                                          _discPerController.text = "0.00";
-                                          _discRsController.text = "0.00";
-                                          _basicController.text = "0.00";
-                                          _netAmountController.text =
-                                              (1 * value.first.mrp)
-                                                  .toStringAsFixed(2);
-                                        }),
-                                        openDialog2(),
+                                        openDialog2(item: value[0]),
                                       });
                             },
                             useKeyDownEvent: kIsWeb,

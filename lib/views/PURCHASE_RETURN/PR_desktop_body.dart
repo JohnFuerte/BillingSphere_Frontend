@@ -5,6 +5,7 @@ import 'package:billingsphere/data/models/purchaseReturn/purchase_return_model.d
 import 'package:billingsphere/data/repository/purchase_return_repository.dart';
 import 'package:billingsphere/views/PEresponsive/PE_receipt_print.dart';
 import 'package:billingsphere/views/PM_responsive/payment_billwise.dart';
+import 'package:billingsphere/views/PURCHASE_RETURN/purchase_return_List.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
@@ -315,6 +316,12 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
   }
 
   @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       // backgroundColor: Colors.red,
@@ -361,6 +368,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                       //   setState(() {});
                                       // },
                                       // focusNode: noFocusNode,
+
                                       onSaved: (newValue) {
                                         purchaseController.noController.text =
                                             newValue!;
@@ -2303,12 +2311,13 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                           Skey: "F2",
                           name: "List",
                           onTap: () {
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(
-                            //     builder: (context) => const PEMasterBody(),
-                            //   ),
-                            // );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const ListOfPurchaseReturn(),
+                              ),
+                            );
                           },
                         ),
                         CustomList(
@@ -2687,26 +2696,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
       purchaseReturn,
     )
         .then((value) async {
-      for (var valueBillwise in _allValuesBillwise) {
-        var purchaseId = valueBillwise['selectedPurchase'];
-        var adjustmentAmount = double.parse(valueBillwise['amount'].toString());
-
-        Purchase? purchase =
-            await purchaseServices.fetchPurchaseById(purchaseId);
-        if (purchase != null) {
-          double? dueAmount = double.tryParse(purchase.dueAmount ?? '');
-          if (dueAmount != null) {
-            dueAmount -= adjustmentAmount;
-            purchase.dueAmount = dueAmount.toString();
-            await purchaseServices.updatePurchase(
-              purchase,
-            );
-          } else {
-            print('Error: Unable to parse dueAmount.');
-          }
-        }
-      }
-
       clearAll();
       fetchPurchaseReturnEntries().then((_) {
         final newPurchaseReturnEntry = fetchedPurchaseReturn.firstWhere(
@@ -4286,7 +4275,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
         debitAmount: debitAmount,
         allValuesCallback: (List<Map<String, dynamic>> newValues) {
           setState(() {
-            // Merge newValues into _allValuesBillwise
             for (var newValue in newValues) {
               final existingIndex = _allValuesBillwise.indexWhere(
                 (entry) => entry['uniqueKey'] == newValue['uniqueKey'],
