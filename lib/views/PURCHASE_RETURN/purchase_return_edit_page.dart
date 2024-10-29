@@ -562,10 +562,8 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
         entries: _allValues.map((entry) {
           return Entry(
             itemName: entry['itemName'] ?? '',
-            qty: int.tryParse(entry['qty'].toString()) ??
-                0, // Ensure this is int
-            rate: double.tryParse(entry['rate'].toString()) ??
-                0, // Ensure this is double
+            qty: int.tryParse(entry['qty'].toString()) ?? 0,
+            rate: double.tryParse(entry['rate'].toString()) ?? 0,
             unit: entry['unit'] ?? '',
             amount: double.tryParse(entry['amount'].toString()) ?? 0,
             tax: entry['tax'] ?? '',
