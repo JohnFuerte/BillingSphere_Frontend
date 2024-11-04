@@ -286,7 +286,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
     await Future.wait([
       setCompanyCode(),
       fetchPurchaseReturnEntries(),
-      setPurchaseReturnLength(),
       fetchLedgers2(),
       fetchItems(),
       fetchAndSetTaxRates(),
@@ -2918,8 +2917,10 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
       });
 
       print('Fetched Purchase Return: $fetchedPurchaseReturn');
+      setPurchaseReturnLength();
     } catch (error) {
       print('Failed to fetch purchase Return: $error');
+      setPurchaseReturnLength();
     }
   }
 

@@ -1152,7 +1152,6 @@ class _PosMasterState extends State<PosMaster> {
                                   subtitle: 'P',
                                   onPressed: () {
                                     showImageDialog(context);
-                                    // I need to get the items from the sales screen
                                   },
                                 ),
                                 const BottomButtons(

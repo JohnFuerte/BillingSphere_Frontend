@@ -236,4 +236,60 @@ class PurchaseReturnService {
       );
     }
   }
+
+  Future<void> deletePurchaseReturn(String id) async {
+    String? token = await getToken();
+
+    try {
+      final response = await http.delete(
+        Uri.parse('${Constants.baseUrl}/purchase-return/delete-by-id/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': '$token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+        if (responseData['success'] == true) {
+          Fluttertoast.showToast(
+            msg: "Purchase Return deleted successfully!",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.green,
+            textColor: Colors.white,
+          );
+          print(
+              "Purchase Return deleted successfully: ${responseData['message']}");
+        } else {
+          Fluttertoast.showToast(
+            msg: "Failed to delete Purchase Return: ${responseData['message']}",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+          );
+          print("Failed to delete Purchase Return: ${responseData['message']}");
+        }
+      } else {
+        Fluttertoast.showToast(
+          msg: "Error: ${response.statusCode} - ${response.reasonPhrase}",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+        );
+        print("Error: ${response.statusCode} - ${response.reasonPhrase}");
+      }
+    } catch (e) {
+      print("Exception caught while deleting Purchase Return: $e");
+      Fluttertoast.showToast(
+        msg: "Exception: $e",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+    }
+  }
 }

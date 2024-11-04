@@ -5,6 +5,9 @@ import 'package:billingsphere/data/repository/item_repository.dart';
 import 'package:beep_player/beep_player.dart';
 import 'package:billingsphere/data/repository/ledger_repository.dart';
 import 'package:billingsphere/data/repository/sales_man_repository.dart';
+import 'package:billingsphere/views/SE_responsive/SE_pos_receipt.dart';
+import 'package:billingsphere/views/SE_responsive/SE_pos_receipt_halfPage.dart';
+import 'package:billingsphere/views/SE_responsive/SE_pos_receipt_notA4.dart';
 import 'package:billingsphere/views/SE_widgets/SE_desktop_appbar.dart';
 import 'package:collection/collection.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
@@ -441,9 +444,7 @@ class _SalesReturnState extends State<SalesReturn> {
 
   void previousRecord() {
     setState(() {
-      // Check if salesPosList is not empty and the currentIndex is within bounds
       if (salesPosList.isNotEmpty && currentIndex > 0) {
-        // Decrement the index for the previous record
         currentIndex--;
 
         // Set the text fields with values from the current index in the list
@@ -989,12 +990,16 @@ class _SalesReturnState extends State<SalesReturn> {
     };
 
     if (selectedRowIndex != null) {
-      // Update the existing item in the list
+      print("selectedRowIndex : $selectedRowIndex");
+      newItem['uniqueKey'] = values[selectedRowIndex!]['uniqueKey'];
       values[selectedRowIndex!] = newItem;
+      _printValues();
     } else {
-      // Check if the item already exists in the list
+      print("entering");
+
       bool itemExists = false;
       int existingIndex = -1;
+
       for (int i = 0; i < values.length; i++) {
         if (values[i]['itemName'] == selectedItemId) {
           itemExists = true;
@@ -1004,21 +1009,34 @@ class _SalesReturnState extends State<SalesReturn> {
       }
 
       if (itemExists) {
-        // Update quantity and calculate net amount
-        final qty = int.parse(values[existingIndex]['qty']) +
-            int.parse(newItem['qty']!);
-        final mrp = double.parse(values[existingIndex]['mrp']);
-        final netAmount = qty * mrp;
+        print("item exists");
+        // Retain the original uniqueKey and itemName
+        newItem['uniqueKey'] = values[existingIndex]['uniqueKey'];
+        newItem['itemName'] = values[existingIndex]['itemName'];
 
-        // Update values
-        values[existingIndex]['qty'] = qty.toString();
+        final existingQty = int.parse(values[existingIndex]['qty']);
+        print("existingQty : $existingQty");
+        final newQty = int.parse(newItem['qty']!);
+        print("newQty : ${newQty}");
+        final updatedQty = existingQty + newQty;
+        print("updatedQty : $updatedQty");
+
+        values[existingIndex]['qty'] = updatedQty.toString();
+
+        final rate = double.parse(values[existingIndex]['mrp']);
+        final netAmount = updatedQty * rate;
+
         values[existingIndex]['netAmount'] = netAmount.toStringAsFixed(2);
+        values[existingIndex]['discPer'] = newItem['discPer'];
+        values[existingIndex]['discRs'] = newItem['discRs'];
+        values[existingIndex]['amount'] =
+            (updatedQty * rate).toStringAsFixed(2);
       } else {
         if (newItem['itemName'] != null) {
-          // Add new item to the list
           values.add(newItem);
         }
       }
+      _printValues();
     }
   }
 
@@ -1115,7 +1133,6 @@ class _SalesReturnState extends State<SalesReturn> {
         updatedAt: DateTime.now().toString(),
       );
 
-      await salesPosRepository.createPosEntry(salesPos);
       if (selectedType == 'Credit') {
         Ledger? ledger = await ledgerService.fetchLedgerById(selectedAC!);
         ledger!.debitBalance += double.parse(_netTotalDiscController.text);
@@ -1129,6 +1146,63 @@ class _SalesReturnState extends State<SalesReturn> {
           ledger,
         );
       }
+
+      SalesPos createdPos = await salesPosRepository.createPosEntry(salesPos);
+
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text(
+              'PRINT RECEIPT',
+              style: GoogleFonts.poppins(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.black,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              'Do you want to print the receipt?',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black),
+            ),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  showImageDialog(context, createdPos);
+                },
+                child: const Text(
+                  'YES',
+                  style: TextStyle(
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pushReplacement(MaterialPageRoute(
+                    builder: (context) {
+                      return PosMaster(
+                        fetchedLedger: ledgerList,
+                      );
+                    },
+                  ));
+                },
+                child: const Text(
+                  'NO',
+                  style: TextStyle(
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      );
 
       Fluttertoast.showToast(
         msg: 'POS Entry created successfully!',
@@ -1147,6 +1221,158 @@ class _SalesReturnState extends State<SalesReturn> {
 
       clearScreen();
     }
+  }
+
+  void showImageDialog(BuildContext context, SalesPos salesPos) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          alignment: Alignment.center,
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12.0),
+          ),
+          child: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.8,
+            height: MediaQuery.of(context).size.height * 0.6,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'SELECT PRINTER TYPE',
+                  style: GoogleFonts.poppins(
+                    fontSize: 36,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SePosReceiptNota4(
+                                sales: salesPos,
+                              ),
+                            ),
+                          );
+                        },
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.25,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                'assets/images/pos.jpg',
+                                width: 200,
+                                height: 200,
+                                fit: BoxFit.cover,
+                              ),
+                              // Text
+                              Text(
+                                'POS',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SALESPOSReceipt(
+                                sales: salesPos,
+                                ledger: ledgerList.firstWhere(
+                                    (ledger) => ledger.id == salesPos.ac),
+                              ),
+                            ),
+                          );
+                        },
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.25,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                'assets/images/a4.jpg', // Right image
+                                width: 200,
+                                height: 200,
+                                fit: BoxFit.cover,
+                              ),
+                              Text(
+                                'A4',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                      InkWell(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SALESPOSReceiptHalfPage(
+                                sales: salesPos,
+                                ledger: ledgerList.firstWhere(
+                                    (ledger) => ledger.id == salesPos.ac),
+                              ),
+                            ),
+                          );
+                        },
+                        child: SizedBox(
+                          width: MediaQuery.of(context).size.width * 0.25,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Image.asset(
+                                'assets/images/a3.jpg',
+                                width: 200,
+                                height: 200,
+                                fit: BoxFit.cover,
+                              ),
+                              Text(
+                                'HALF PAGE',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   void clearScreen() {
@@ -1262,6 +1488,7 @@ class _SalesReturnState extends State<SalesReturn> {
     setState(() {
       values.removeAt(index);
       tables.removeAt(index);
+      rowItems.removeAt(index);
     });
 
     _calculateTotalAmount();
@@ -1271,7 +1498,6 @@ class _SalesReturnState extends State<SalesReturn> {
     var itemId = item?.id;
 
     if (rowItems.any((existingItem) => existingItem.id == itemId)) {
-      print("Item Exists");
       rowIndex =
           rowItems.indexWhere((existingItem) => existingItem.id == itemId);
     }
@@ -1279,6 +1505,7 @@ class _SalesReturnState extends State<SalesReturn> {
     if (rowIndex != null) {
       selectedRowIndex = rowIndex;
       final selectedItem = values[rowIndex];
+      selectedItemId = selectedItem['itemName'];
       selectedItemName = selectedItem['Item_Name'];
       _qtyController.text = selectedItem['qty'];
       _unitController.text = selectedItem['unit'];
@@ -1322,7 +1549,6 @@ class _SalesReturnState extends State<SalesReturn> {
         }
       }
 
-      // Calculate the Rate
       double ratepercent = (double.parse(_taxController.text) / 100);
 
       ratepercent += 1.00;
@@ -1342,13 +1568,10 @@ class _SalesReturnState extends State<SalesReturn> {
       _mrpController.text = selectedItem.mrp.toStringAsFixed(2);
       _baseController.text = selectedItem.mrp.toStringAsFixed(2);
 
-      final tax = selectedItem.mrp - rate;
+      // final tax = selectedItem.mrp - rate;
 
-      // Change to taxAmountController
+      // _taxController.text = tax.toStringAsFixed(2);
 
-      _taxController.text = tax.toStringAsFixed(2);
-
-      // For Net Amount, multiply qty with real rate
       double qty = double.parse(_qtyController.text);
       double rate2 = double.parse(selectedItem.mrp.toString());
 
@@ -1399,10 +1622,9 @@ class _SalesReturnState extends State<SalesReturn> {
                         if (!rowItems.contains(item)) {
                           rowItems.add(item!);
                         }
-
+                        addTableRow2();
                         _saveValues();
                         _calculateTotalAmount();
-                        addTableRow2();
                         dataText.clear();
 
                         setState(() {});
@@ -1540,7 +1762,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                   },
                                 ),
                                 CustomTextField(
-                                  name: "Tax",
+                                  name: "Tax%",
                                   // focusNode: taxFocus,
                                   isReadOnly: true,
                                   controller: _taxController,
@@ -1578,10 +1800,10 @@ class _SalesReturnState extends State<SalesReturn> {
                                   if (!rowItems.contains(item)) {
                                     rowItems.add(item!);
                                   }
+                                  addTableRow2();
 
                                   _saveValues();
                                   _calculateTotalAmount();
-                                  addTableRow2();
                                   dataText.clear();
                                 },
                                 name: "Save",
@@ -1595,10 +1817,16 @@ class _SalesReturnState extends State<SalesReturn> {
                                 name: "Cancel",
                               ),
                             ),
-                            const Padding(
+                            Padding(
                               padding: EdgeInsets.only(
                                   bottom: 10, left: 5, right: 5),
                               child: Buttons(
+                                onTap: rowIndex != null
+                                    ? () {
+                                        deleteTableRow(rowIndex!);
+                                        Navigator.pop(context);
+                                      }
+                                    : () {},
                                 name: "Delete",
                               ),
                             ),
@@ -1628,11 +1856,12 @@ class _SalesReturnState extends State<SalesReturn> {
     double netAmount = (qty * base);
     double amount = qty * rate;
 
-    double taxAmount = tax * qty;
+    double taxAmount = (tax / 100) * netAmount;
     netAmount += taxAmount;
 
     discRs = (discPer / 100) * netAmount;
     discPer = (discRs / netAmount) * 100;
+
     double discountedAmount = netAmount - discRs;
 
     double finalAmount = discountedAmount;
@@ -1642,7 +1871,6 @@ class _SalesReturnState extends State<SalesReturn> {
       setState(() {
         _amountController.text = amount.toStringAsFixed(2);
         _netAmountController.text = finalAmount.toStringAsFixed(2);
-        _taxController.text = taxAmount.toStringAsFixed(2);
         _discPerController.text = discPer.toStringAsFixed(2);
         _discRsController.text = discRs.toStringAsFixed(2);
       });
@@ -1661,7 +1889,8 @@ class _SalesReturnState extends State<SalesReturn> {
     double netAmount = (qty * base);
     double amount = qty * rate;
 
-    double taxAmount = tax * qty;
+    double taxAmount = (tax / 100) * netAmount;
+
     netAmount += taxAmount;
 
     discPer = (discRs / netAmount) * 100;
@@ -1676,7 +1905,6 @@ class _SalesReturnState extends State<SalesReturn> {
       setState(() {
         _amountController.text = amount.toStringAsFixed(2);
         _netAmountController.text = finalAmount.toStringAsFixed(2);
-        _taxController.text = taxAmount.toStringAsFixed(2);
         _discPerController.text = discPer.toStringAsFixed(2);
         _discRsController.text = discRs.toStringAsFixed(2);
       });
@@ -1990,11 +2218,12 @@ class _SalesReturnState extends State<SalesReturn> {
       String basicText = _getTextFromTableRow(tables[i], 9);
       double basicAmount = double.tryParse(basicText) ?? 0.0;
 
-      double taxAmount = double.tryParse(values[i]['tax'].toString()) ?? 0.0;
+      double taxPer = double.tryParse(values[i]['tax'].toString()) ?? 0.0;
 
       double totalBasicAmount = basicAmount * quantity;
 
-      double totalAmountWithTax = totalBasicAmount + taxAmount;
+      double totalAmountWithTax =
+          totalBasicAmount + (totalBasicAmount * (taxPer / 100));
 
       double discountAmount = (totalAmountWithTax * discountPercent) / 100;
       double netAmount = totalAmountWithTax - discountAmount;
@@ -2036,12 +2265,18 @@ class _SalesReturnState extends State<SalesReturn> {
   }
 
   void addTableRow2() {
-    int existingIndex = tables.indexWhere((row) {
-      final tableCell = _getTextFromTableRow(row, 1);
-      return tableCell == selectedItemName;
+    if (values.isEmpty) {
+      print("is empty");
+      _addNewRow();
+      return;
+    }
+
+    int existingIndex = values.indexWhere((item) {
+      return item['itemName'] == selectedItemId;
     });
 
     if (existingIndex != -1) {
+      print("yes this row exists");
       _updateExistingRow(existingIndex);
     } else {
       _addNewRow();
@@ -2074,6 +2309,9 @@ class _SalesReturnState extends State<SalesReturn> {
   }
 
   void _updateTableCell(int rowIndex, int cellIndex, String value) {
+    print("entering tablecell");
+    print("rowIndex:$rowIndex");
+    print("cellIndex:$cellIndex");
     tables[rowIndex].children[cellIndex] = TableCell(
       child: InkWell(
         child: SizedBox(
@@ -2294,6 +2532,7 @@ class _SalesReturnState extends State<SalesReturn> {
   }
 
   void showCustomerHistory() {
+    print("enter");
     final List<SalesPos> selectedCustomerData = salesPosList
         .where((element) => element.customer == selectedCustomer)
         .toList();
@@ -3608,7 +3847,6 @@ class _SalesReturnState extends State<SalesReturn> {
                         Navigator.pop(context);
                       },
                       onTapConfirm: () {
-                        // pop screen
                         Navigator.of(context).pop();
                         Navigator.of(context).push(MaterialPageRoute(
                           builder: (context) {
@@ -3643,7 +3881,6 @@ class _SalesReturnState extends State<SalesReturn> {
                     tablet: Container(),
                     desktop: GestureDetector(
                       onTap: () {
-                        //  Request Focus....
                         FocusScope.of(context).requestFocus(_focusNode);
                       },
                       child: SingleChildScrollView(
@@ -3656,12 +3893,173 @@ class _SalesReturnState extends State<SalesReturn> {
                             bufferDuration: const Duration(milliseconds: 1500),
                             onBarcodeScanned: (barcode) async {
                               if (!visible) return;
-                              print("barcode: $barcode");
-                              await itemsService
-                                  .searchItemsByBarcode(barcode)
-                                  .then((value) => {
-                                        openDialog2(item: value[0]),
-                                      });
+
+                              try {
+                                final value = await itemsService
+                                    .searchItemsByBarcode(barcode);
+
+                                if (value != null && value.isNotEmpty) {
+                                  if (value[0].maximumStock <= 0) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Maximum Stock of this Item is Zero',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
+
+                                  var itemId = value[0].id;
+
+                                  int? rowIndex;
+                                  if (rowItems.any((existingItem) =>
+                                      existingItem.id == itemId)) {
+                                    rowIndex = rowItems.indexWhere(
+                                        (existingItem) =>
+                                            existingItem.id == itemId);
+                                  }
+
+                                  if (rowIndex != null) {
+                                    selectedRowIndex = rowIndex;
+                                    print(
+                                        "selectedRowIndex....... :$selectedRowIndex");
+                                    final selectedItem = values[rowIndex];
+                                    selectedItemId = selectedItem['itemName'];
+                                    _qtyController.text = selectedItem['qty'];
+                                    _unitController.text = selectedItem['unit'];
+                                    _rateController.text = selectedItem['rate'];
+                                    _discPerController.text =
+                                        selectedItem['discPer'] ?? '';
+                                    _basicController.text =
+                                        selectedItem['basic'];
+                                    _discRsController.text =
+                                        selectedItem['discRs'] ?? '';
+                                    _taxController.text =
+                                        selectedItem['tax'] ?? '';
+                                    _netAmountController.text =
+                                        selectedItem['netAmount'];
+                                    _baseController.text = selectedItem['base'];
+                                    _mrpController.text = selectedItem['mrp'];
+                                    _amountController.text =
+                                        selectedItem['amount'];
+
+                                    int currentQty =
+                                        int.tryParse(selectedItem['qty']) ?? 0;
+                                    currentQty += 1;
+                                    if (currentQty > value[0].maximumStock) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Quantity cannot be greater than Maximum Stock',
+                                            style:
+                                                TextStyle(color: Colors.white),
+                                          ),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                      return; // Exit early without making changes
+                                    }
+                                    selectedItem['qty'] = currentQty.toString();
+
+                                    double rate =
+                                        double.tryParse(selectedItem['rate']) ??
+                                            0;
+                                    double tax =
+                                        double.tryParse(_taxController.text) ??
+                                            0;
+
+                                    double netAmount =
+                                        currentQty * rate * (1 + tax / 100);
+                                    selectedItem['netAmount'] =
+                                        netAmount.toStringAsFixed(2);
+
+                                    _qtyController.text = selectedItem['qty'];
+                                    _netAmountController.text =
+                                        selectedItem['netAmount'];
+                                  } else {
+                                    final selectedItem = value[0];
+                                    selectedItemName = selectedItem.itemName;
+                                    selectedItemId = selectedItem.id;
+
+                                    String taxCategoryId = '';
+                                    String measurementUnitId = '';
+
+                                    for (Item item in itemList) {
+                                      if (item.id == selectedItemId) {
+                                        taxCategoryId = item.taxCategory;
+                                        measurementUnitId =
+                                            item.measurementUnit;
+                                      }
+                                    }
+
+                                    for (TaxRate tax in taxLists) {
+                                      if (tax.id == taxCategoryId) {
+                                        _taxController.text = tax.rate;
+                                      }
+                                    }
+
+                                    for (MeasurementLimit meu in measurement) {
+                                      if (meu.id == measurementUnitId) {
+                                        _unitController.text =
+                                            meu.measurement.toString();
+                                      }
+                                    }
+
+                                    double ratePercent =
+                                        (double.tryParse(_taxController.text) ??
+                                                    0) /
+                                                100 +
+                                            1.00;
+                                    double mrp = selectedItem.mrp;
+                                    double rate = mrp / ratePercent;
+
+                                    // Set default values for the new item
+                                    _qtyController.text = "1";
+                                    _rateController.text =
+                                        rate.toStringAsFixed(2);
+                                    _discPerController.text = "0.00";
+                                    _discRsController.text = "0.00";
+                                    _basicController.text =
+                                        rate.toStringAsFixed(2);
+                                    _amountController.text =
+                                        rate.toStringAsFixed(2);
+                                    _mrpController.text =
+                                        selectedItem.mrp.toStringAsFixed(2);
+                                    _baseController.text =
+                                        selectedItem.mrp.toStringAsFixed(2);
+
+                                    double qty =
+                                        double.tryParse(_qtyController.text) ??
+                                            0;
+                                    double rate2 = double.tryParse(
+                                            selectedItem.mrp.toString()) ??
+                                        0;
+                                    double netAmount = qty * rate2;
+                                    _netAmountController.text =
+                                        netAmount.toStringAsFixed(2);
+
+                                    tableKey = UniqueKey();
+                                    selectedRowIndex = null;
+
+                                    if (!rowItems.contains(selectedItem)) {
+                                      rowItems.add(selectedItem);
+                                    }
+                                  }
+
+                                  addTableRow2();
+                                  _saveValues();
+                                  _calculateTotalAmount();
+                                  dataText.clear();
+                                } else {
+                                  print("No item found for barcode");
+                                }
+                              } catch (e) {
+                                print("Error during barcode scan: $e");
+                              }
                             },
                             useKeyDownEvent: kIsWeb,
                             child: Column(
@@ -4586,7 +4984,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                       Alignment
                                                                           .center,
                                                                   child: Text(
-                                                                    "Tax",
+                                                                    "Tax%",
                                                                     textAlign:
                                                                         TextAlign
                                                                             .center,
@@ -4935,6 +5333,15 @@ class _SalesReturnState extends State<SalesReturn> {
                                                                                 value,
                                                                             label:
                                                                                 value.name,
+                                                                            trailingIcon:
+                                                                                Text(
+                                                                              value.debitBalance.toStringAsFixed(2),
+                                                                              style: GoogleFonts.poppins(
+                                                                                fontSize: 16,
+                                                                                fontWeight: FontWeight.bold,
+                                                                                color: Colors.black,
+                                                                              ),
+                                                                            ),
                                                                             style:
                                                                                 ButtonStyle(
                                                                               textStyle: WidgetStateProperty.all(

@@ -5,14 +5,17 @@ import 'package:billingsphere/data/models/salesPos/sales_pos_model.dart';
 import 'package:billingsphere/utils/constant.dart';
 import 'package:billingsphere/views/SE_responsive/SE_Multimode_POS.dart';
 import 'package:collection/collection.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_barcode_listener/flutter_barcode_listener.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:velocity_x/velocity_x.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../data/models/customer/new_customer_model.dart';
 import '../../data/models/item/item_model.dart';
@@ -65,7 +68,7 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
   // Lists of data
   List<Item> itemList = [];
   List<Item> rowItems = [];
-
+  late bool visible;
   List<TaxRate> taxLists = [];
   late List<TableRow> tables = [];
   late List<TableRow> Ctables = [];
@@ -505,38 +508,444 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
             backgroundColor: Colors.white,
             body: SingleChildScrollView(
               scrollDirection: Axis.vertical,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(
-                    width: MediaQuery.of(context).size.width,
-                    child: SEDesktopAppbar(
-                      text1: 'Tax Invoice GST',
-                      text2: 'SALES ENTRY POS EDIT',
-                    ),
-                  ),
-                  Row(
+              child: VisibilityDetector(
+                onVisibilityChanged: (VisibilityInfo info) {
+                  visible = info.visibleFraction > 0;
+                },
+                key: const Key('visible-detector-key'),
+                child: BarcodeKeyboardListener(
+                  bufferDuration: const Duration(milliseconds: 1500),
+                  onBarcodeScanned: (barcode) async {
+                    if (!visible) return;
+
+                    try {
+                      final value =
+                          await itemsService.searchItemsByBarcode(barcode);
+
+                      if (value != null && value.isNotEmpty) {
+                        if (value[0].maximumStock <= 0) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Maximum Stock of this Item is Zero',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                          return;
+                        }
+
+                        var itemId = value[0].id;
+
+                        int? rowIndex;
+                        if (rowItems
+                            .any((existingItem) => existingItem.id == itemId)) {
+                          rowIndex = rowItems.indexWhere(
+                              (existingItem) => existingItem.id == itemId);
+                        }
+
+                        if (rowIndex != null) {
+                          selectedRowIndex = rowIndex;
+                          print("selectedRowIndex....... :$selectedRowIndex");
+                          final selectedItem = values[rowIndex];
+                          selectedItemId = selectedItem['itemName'];
+                          _qtyController.text = selectedItem['qty'];
+                          _unitController.text = selectedItem['unit'];
+                          _rateController.text = selectedItem['rate'];
+                          _discPerController.text =
+                              selectedItem['discPer'] ?? '';
+                          _basicController.text = selectedItem['basic'];
+                          _discRsController.text = selectedItem['discRs'] ?? '';
+                          _taxController.text = selectedItem['tax'] ?? '';
+                          _netAmountController.text = selectedItem['netAmount'];
+                          _baseController.text = selectedItem['base'];
+                          _mrpController.text = selectedItem['mrp'];
+                          _amountController.text = selectedItem['amount'];
+
+                          int currentQty =
+                              int.tryParse(selectedItem['qty']) ?? 0;
+                          currentQty += 1;
+                          if (currentQty > value[0].maximumStock) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Quantity cannot be greater than Maximum Stock',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                            return; // Exit early without making changes
+                          }
+                          selectedItem['qty'] = currentQty.toString();
+
+                          double rate =
+                              double.tryParse(selectedItem['rate']) ?? 0;
+                          double tax =
+                              double.tryParse(_taxController.text) ?? 0;
+
+                          double netAmount =
+                              currentQty * rate * (1 + tax / 100);
+                          selectedItem['netAmount'] =
+                              netAmount.toStringAsFixed(2);
+
+                          _qtyController.text = selectedItem['qty'];
+                          _netAmountController.text = selectedItem['netAmount'];
+                        } else {
+                          final selectedItem = value[0];
+                          selectedItemName = selectedItem.itemName;
+                          selectedItemId = selectedItem.id;
+
+                          String taxCategoryId = '';
+                          String measurementUnitId = '';
+
+                          for (Item item in itemList) {
+                            if (item.id == selectedItemId) {
+                              taxCategoryId = item.taxCategory;
+                              measurementUnitId = item.measurementUnit;
+                            }
+                          }
+
+                          for (TaxRate tax in taxLists) {
+                            if (tax.id == taxCategoryId) {
+                              _taxController.text = tax.rate;
+                            }
+                          }
+
+                          for (MeasurementLimit meu in measurement) {
+                            if (meu.id == measurementUnitId) {
+                              _unitController.text = meu.measurement.toString();
+                            }
+                          }
+
+                          double ratePercent =
+                              (double.tryParse(_taxController.text) ?? 0) /
+                                      100 +
+                                  1.00;
+                          double mrp = selectedItem.mrp;
+                          double rate = mrp / ratePercent;
+
+                          // Set default values for the new item
+                          _qtyController.text = "1";
+                          _rateController.text = rate.toStringAsFixed(2);
+                          _discPerController.text = "0.00";
+                          _discRsController.text = "0.00";
+                          _basicController.text = rate.toStringAsFixed(2);
+                          _amountController.text = rate.toStringAsFixed(2);
+                          _mrpController.text =
+                              selectedItem.mrp.toStringAsFixed(2);
+                          _baseController.text =
+                              selectedItem.mrp.toStringAsFixed(2);
+
+                          double qty =
+                              double.tryParse(_qtyController.text) ?? 0;
+                          double rate2 =
+                              double.tryParse(selectedItem.mrp.toString()) ?? 0;
+                          double netAmount = qty * rate2;
+                          _netAmountController.text =
+                              netAmount.toStringAsFixed(2);
+
+                          tableKey = UniqueKey();
+                          selectedRowIndex = null;
+
+                          if (!rowItems.contains(selectedItem)) {
+                            rowItems.add(selectedItem);
+                          }
+                        }
+
+                        addTableRow2();
+                        _saveValues();
+                        _calculateTotalAmount();
+                        dataText.clear();
+                      } else {
+                        print("No item found for barcode");
+                      }
+                    } catch (e) {
+                      print("Error during barcode scan: $e");
+                    }
+                  },
+                  useKeyDownEvent: kIsWeb,
+                  child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SizedBox(
-                        width: MediaQuery.of(context).size.width * 0.9,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // Rows....
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                  right: 8, left: 10, bottom: 8.0),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  SizedBox(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.85,
-                                    child: Column(
-                                      children: [
-                                        Row(
+                        width: MediaQuery.of(context).size.width,
+                        child: SEDesktopAppbar(
+                          text1: 'Tax Invoice GST',
+                          text2: 'SALES ENTRY POS EDIT',
+                        ),
+                      ),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width * 0.9,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Rows....
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      right: 8, left: 10, bottom: 8.0),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    children: [
+                                      SizedBox(
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.85,
+                                        child: Column(
+                                          children: [
+                                            Row(
+                                              children: [
+                                                SETopText(
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.05,
+                                                  height: 30,
+                                                  text: 'No',
+                                                  padding: EdgeInsets.only(
+                                                      top:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              0.00),
+                                                ),
+                                                SETopTextfield(
+                                                  controller: _noController,
+                                                  onSaved: (newValue) {},
+                                                  onTap: () {
+                                                    FocusScope.of(context)
+                                                        .requestFocus(noFocus);
+
+                                                    setState(() {});
+                                                  },
+                                                  // focusNode: noFocus,
+                                                  // onEditingComplete: () {
+                                                  //   FocusScope.of(context)
+                                                  //       .requestFocus(dateFocus);
+
+                                                  //   setState(() {});
+                                                  // },
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.07,
+                                                  height: 40,
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          left: 8.0,
+                                                          bottom: 16.0),
+                                                  hintText: '',
+                                                ),
+                                                Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          left: 8.0),
+                                                  child: SETopText(
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.04,
+                                                    height: 40,
+                                                    text: 'Date',
+                                                    padding: EdgeInsets.only(
+                                                        top: MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .width *
+                                                            0.00,
+                                                        left: MediaQuery.of(
+                                                                    context)
+                                                                .size
+                                                                .width *
+                                                            0.0005),
+                                                  ),
+                                                ),
+                                                SETopTextfield(
+                                                    onTap: () {
+                                                      FocusScope.of(context)
+                                                          .requestFocus(
+                                                              dateFocus);
+
+                                                      setState(() {});
+                                                    },
+                                                    controller: _controller,
+                                                    // focusNode: dateFocus,
+                                                    // onEditingComplete: () {
+                                                    //   FocusScope.of(context)
+                                                    //       .requestFocus(
+                                                    //           billedToFocus);
+
+                                                    //   setState(() {});
+                                                    // },
+                                                    onSaved: (newValue) {},
+                                                    width:
+                                                        MediaQuery.of(context)
+                                                                .size
+                                                                .width *
+                                                            0.09,
+                                                    height: 40,
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            left: 8.0,
+                                                            bottom: 16.0),
+                                                    hintText: '12/12/12'),
+                                                SizedBox(
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.03,
+                                                  child: IconButton(
+                                                      onPressed: () {},
+                                                      icon: const Icon(Icons
+                                                          .calendar_month)),
+                                                ),
+                                                SETopText(
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.04,
+                                                  height: 30,
+                                                  text: ' Place',
+                                                  padding: EdgeInsets.only(
+                                                      left:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              0.0005,
+                                                      top:
+                                                          MediaQuery.of(context)
+                                                                  .size
+                                                                  .width *
+                                                              0.00),
+                                                ),
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                      border: Border.all()),
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.1,
+                                                  height: 40,
+                                                  padding:
+                                                      const EdgeInsets.all(2.0),
+                                                  child:
+                                                      DropdownButtonHideUnderline(
+                                                    child: DropdownMenu<String>(
+                                                      requestFocusOnTap: true,
+                                                      initialSelection:
+                                                          selectedState
+                                                                  .isNotEmpty
+                                                              ? selectedState
+                                                              : null,
+                                                      enableSearch: true,
+                                                      // enableFilter: true,
+                                                      // leadingIcon: const SizedBox.shrink(),
+                                                      trailingIcon:
+                                                          const SizedBox
+                                                              .shrink(),
+                                                      textStyle:
+                                                          GoogleFonts.poppins(
+                                                        fontSize: 16,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: Colors.black,
+                                                        decoration:
+                                                            TextDecoration.none,
+                                                      ),
+                                                      selectedTrailingIcon:
+                                                          const SizedBox
+                                                              .shrink(),
+
+                                                      inputDecorationTheme:
+                                                          InputDecorationTheme(
+                                                        border:
+                                                            InputBorder.none,
+                                                        contentPadding:
+                                                            const EdgeInsets
+                                                                .symmetric(
+                                                                horizontal: 8,
+                                                                vertical: 16),
+                                                        isDense: true,
+                                                        activeIndicatorBorder:
+                                                            const BorderSide(
+                                                          color: Colors
+                                                              .transparent,
+                                                        ),
+                                                        counterStyle:
+                                                            GoogleFonts.poppins(
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Colors.black,
+                                                        ),
+                                                      ),
+                                                      expandedInsets:
+                                                          EdgeInsets.zero,
+                                                      onSelected:
+                                                          (String? value) {
+                                                        setState(() {
+                                                          selectedState =
+                                                              value!;
+                                                        });
+                                                      },
+                                                      dropdownMenuEntries:
+                                                          <String>[
+                                                        'Gujarat',
+                                                        'Maharashtra',
+                                                        'Karnataka',
+                                                        'Tamil Nadu'
+                                                      ].map<
+                                                              DropdownMenuEntry<
+                                                                  String>>((String
+                                                              value) {
+                                                        return DropdownMenuEntry<
+                                                                String>(
+                                                            value: value,
+                                                            label: value,
+                                                            style: ButtonStyle(
+                                                              textStyle:
+                                                                  WidgetStateProperty
+                                                                      .all(
+                                                                GoogleFonts
+                                                                    .poppins(
+                                                                  fontSize: 16,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: Colors
+                                                                      .black,
+                                                                ),
+                                                              ),
+                                                            ));
+                                                      }).toList(),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                ),
+
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 8.0, top: 2.0, bottom: 8.0),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Row(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             SETopText(
                                               width: MediaQuery.of(context)
@@ -544,106 +953,12 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                       .width *
                                                   0.05,
                                               height: 30,
-                                              text: 'No',
+                                              text: 'Item[F8]',
                                               padding: EdgeInsets.only(
-                                                  top: MediaQuery.of(context)
+                                                  right: MediaQuery.of(context)
                                                           .size
                                                           .width *
-                                                      0.00),
-                                            ),
-                                            SETopTextfield(
-                                              controller: _noController,
-                                              onSaved: (newValue) {},
-                                              onTap: () {
-                                                FocusScope.of(context)
-                                                    .requestFocus(noFocus);
-
-                                                setState(() {});
-                                              },
-                                              // focusNode: noFocus,
-                                              // onEditingComplete: () {
-                                              //   FocusScope.of(context)
-                                              //       .requestFocus(dateFocus);
-
-                                              //   setState(() {});
-                                              // },
-                                              width: MediaQuery.of(context)
-                                                      .size
-                                                      .width *
-                                                  0.07,
-                                              height: 40,
-                                              padding: const EdgeInsets.only(
-                                                  left: 8.0, bottom: 16.0),
-                                              hintText: '',
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                  left: 8.0),
-                                              child: SETopText(
-                                                width: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.04,
-                                                height: 40,
-                                                text: 'Date',
-                                                padding: EdgeInsets.only(
-                                                    top: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.00,
-                                                    left: MediaQuery.of(context)
-                                                            .size
-                                                            .width *
-                                                        0.0005),
-                                              ),
-                                            ),
-                                            SETopTextfield(
-                                                onTap: () {
-                                                  FocusScope.of(context)
-                                                      .requestFocus(dateFocus);
-
-                                                  setState(() {});
-                                                },
-                                                controller: _controller,
-                                                // focusNode: dateFocus,
-                                                // onEditingComplete: () {
-                                                //   FocusScope.of(context)
-                                                //       .requestFocus(
-                                                //           billedToFocus);
-
-                                                //   setState(() {});
-                                                // },
-                                                onSaved: (newValue) {},
-                                                width: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.09,
-                                                height: 40,
-                                                padding: const EdgeInsets.only(
-                                                    left: 8.0, bottom: 16.0),
-                                                hintText: '12/12/12'),
-                                            SizedBox(
-                                              width: MediaQuery.of(context)
-                                                      .size
-                                                      .width *
-                                                  0.03,
-                                              child: IconButton(
-                                                  onPressed: () {},
-                                                  icon: const Icon(
-                                                      Icons.calendar_month)),
-                                            ),
-                                            SETopText(
-                                              width: MediaQuery.of(context)
-                                                      .size
-                                                      .width *
-                                                  0.04,
-                                              height: 30,
-                                              text: ' Place',
-                                              padding: EdgeInsets.only(
-                                                  left: MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.0005,
+                                                      0.00,
                                                   top: MediaQuery.of(context)
                                                           .size
                                                           .width *
@@ -655,452 +970,292 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                               width: MediaQuery.of(context)
                                                       .size
                                                       .width *
-                                                  0.1,
+                                                  0.377,
                                               height: 40,
-                                              padding:
-                                                  const EdgeInsets.all(2.0),
                                               child:
                                                   DropdownButtonHideUnderline(
-                                                child: DropdownMenu<String>(
+                                                child: DropdownMenu<Item>(
+                                                  controller: dataText,
                                                   requestFocusOnTap: true,
-                                                  initialSelection:
-                                                      selectedState.isNotEmpty
-                                                          ? selectedState
-                                                          : null,
+                                                  focusNode: itemFocus,
+                                                  initialSelection: null,
                                                   enableSearch: true,
-                                                  // enableFilter: true,
-                                                  // leadingIcon: const SizedBox.shrink(),
                                                   trailingIcon:
                                                       const SizedBox.shrink(),
                                                   textStyle:
                                                       GoogleFonts.poppins(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.bold,
-                                                    color: Colors.black,
+                                                    color:
+                                                        const Color(0xff000000),
                                                     decoration:
                                                         TextDecoration.none,
                                                   ),
+                                                  menuHeight: 300,
+                                                  width: MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.19,
                                                   selectedTrailingIcon:
                                                       const SizedBox.shrink(),
-
                                                   inputDecorationTheme:
-                                                      InputDecorationTheme(
+                                                      const InputDecorationTheme(
                                                     border: InputBorder.none,
                                                     contentPadding:
-                                                        const EdgeInsets
-                                                            .symmetric(
+                                                        EdgeInsets.symmetric(
                                                             horizontal: 8,
                                                             vertical: 16),
                                                     isDense: true,
                                                     activeIndicatorBorder:
-                                                        const BorderSide(
+                                                        BorderSide(
                                                       color: Colors.transparent,
-                                                    ),
-                                                    counterStyle:
-                                                        GoogleFonts.poppins(
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Colors.black,
                                                     ),
                                                   ),
                                                   expandedInsets:
                                                       EdgeInsets.zero,
-                                                  onSelected: (String? value) {
+                                                  enableFilter: true,
+                                                  filterCallback: (List<
+                                                              DropdownMenuEntry<
+                                                                  Item>>
+                                                          entries,
+                                                      String filter) {
+                                                    final String trimmedFilter =
+                                                        filter
+                                                            .trim()
+                                                            .toLowerCase();
+
+                                                    if (trimmedFilter.isEmpty) {
+                                                      return entries;
+                                                    }
+
+                                                    // Filter the entries based on the query
+                                                    return entries
+                                                        .where((entry) {
+                                                      return entry
+                                                          .value.itemName
+                                                          .toLowerCase()
+                                                          .contains(
+                                                              trimmedFilter);
+                                                    }).toList();
+                                                  },
+                                                  onSelected: (Item? value) {
+                                                    _playBeep();
                                                     setState(() {
-                                                      selectedState = value!;
+                                                      final selectedItem =
+                                                          value;
+
+                                                      selectedItemName =
+                                                          selectedItem!
+                                                              .itemName;
+
+                                                      selectedItemId =
+                                                          selectedItem.id;
+
+                                                      String newId = '';
+                                                      String newId2 = '';
+
+                                                      for (Item item
+                                                          in itemList) {
+                                                        if (item.id ==
+                                                            selectedItemId) {
+                                                          newId =
+                                                              item.taxCategory;
+                                                          newId2 = item
+                                                              .measurementUnit;
+                                                        }
+                                                      }
+
+                                                      for (TaxRate tax
+                                                          in taxLists) {
+                                                        if (tax.id == newId) {
+                                                          setState(() {
+                                                            _taxController
+                                                                    .text =
+                                                                tax.rate;
+                                                          });
+                                                        }
+                                                      }
+                                                      for (MeasurementLimit meu
+                                                          in measurement) {
+                                                        if (meu.id == newId2) {
+                                                          setState(() {
+                                                            _unitController
+                                                                    .text =
+                                                                meu.measurement
+                                                                    .toString();
+                                                          });
+                                                        }
+                                                      }
+
+                                                      // Calculate the Rate
+                                                      double ratepercent =
+                                                          (double.parse(
+                                                                  _taxController
+                                                                      .text) /
+                                                              100);
+
+                                                      ratepercent += 1.00;
+
+                                                      print(ratepercent);
+
+                                                      double mpr =
+                                                          selectedItem.mrp;
+
+                                                      double rate =
+                                                          mpr / ratepercent;
+
+                                                      _qtyController.text = "1";
+                                                      _rateController.text =
+                                                          rate.toStringAsFixed(
+                                                              2);
+                                                      _discPerController.text =
+                                                          "0.00";
+                                                      _discRsController.text =
+                                                          "0.00";
+                                                      _basicController.text =
+                                                          rate.toStringAsFixed(
+                                                              2);
+
+                                                      _amountController.text =
+                                                          rate.toStringAsFixed(
+                                                              2);
+
+                                                      _mrpController.text =
+                                                          selectedItem.mrp
+                                                              .toStringAsFixed(
+                                                                  2);
+                                                      _baseController.text =
+                                                          selectedItem.mrp
+                                                              .toStringAsFixed(
+                                                                  2);
+
+                                                      final tax =
+                                                          selectedItem.mrp -
+                                                              rate;
+
+                                                      // Change to taxAmountController
+
+                                                      _taxController.text = tax
+                                                          .toStringAsFixed(2);
+
+                                                      // For Net Amount, multiply qty with real rate
+                                                      double qty = double.parse(
+                                                          _qtyController.text);
+                                                      double rate2 =
+                                                          double.parse(
+                                                              selectedItem.mrp
+                                                                  .toString());
+
+                                                      double netAmount =
+                                                          qty * rate2;
+
+                                                      _netAmountController
+                                                              .text =
+                                                          netAmount
+                                                              .toStringAsFixed(
+                                                                  2)
+                                                              .toString();
+
+                                                      openDialog2(item: value!);
                                                     });
                                                   },
-                                                  dropdownMenuEntries: <String>[
-                                                    'Gujarat',
-                                                    'Maharashtra',
-                                                    'Karnataka',
-                                                    'Tamil Nadu'
-                                                  ].map<
-                                                          DropdownMenuEntry<
-                                                              String>>(
-                                                      (String value) {
+                                                  dropdownMenuEntries: itemList
+                                                      .map<
+                                                              DropdownMenuEntry<
+                                                                  Item>>(
+                                                          (Item value) {
                                                     return DropdownMenuEntry<
-                                                            String>(
-                                                        value: value,
-                                                        label: value,
-                                                        style: ButtonStyle(
-                                                          textStyle:
-                                                              WidgetStateProperty
-                                                                  .all(
+                                                        Item>(
+                                                      value: value,
+                                                      label: value.itemName,
+                                                      trailingIcon: Text(
+                                                        'Qty: ${value.maximumStock}',
+                                                        style:
                                                             GoogleFonts.poppins(
-                                                              fontSize: 16,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color:
-                                                                  Colors.black,
-                                                            ),
+                                                          fontSize: 16,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: Colors.black,
+                                                        ),
+                                                      ),
+                                                      style: ButtonStyle(
+                                                        textStyle:
+                                                            WidgetStateProperty
+                                                                .all(
+                                                          GoogleFonts.poppins(
+                                                            fontSize: 16,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: Colors.black,
                                                           ),
-                                                        ));
+                                                        ),
+                                                      ),
+                                                    );
                                                   }).toList(),
                                                 ),
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ],
-                                    ),
-                                  )
-                                ],
-                              ),
-                            ),
-
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                  left: 8.0, top: 2.0, bottom: 8.0),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        SETopText(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.05,
-                                          height: 30,
-                                          text: 'Item[F8]',
-                                          padding: EdgeInsets.only(
-                                              right: MediaQuery.of(context)
-                                                      .size
-                                                      .width *
-                                                  0.00,
-                                              top: MediaQuery.of(context)
-                                                      .size
-                                                      .width *
-                                                  0.00),
-                                        ),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                              border: Border.all()),
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.377,
-                                          height: 40,
-                                          child: DropdownButtonHideUnderline(
-                                            child: DropdownMenu<Item>(
-                                              controller: dataText,
-                                              requestFocusOnTap: true,
-                                              focusNode: itemFocus,
-                                              initialSelection: null,
-                                              enableSearch: true,
-                                              trailingIcon:
-                                                  const SizedBox.shrink(),
-                                              textStyle: GoogleFonts.poppins(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
-                                                color: const Color(0xff000000),
-                                                decoration: TextDecoration.none,
-                                              ),
-                                              menuHeight: 300,
-                                              width: MediaQuery.of(context)
-                                                      .size
-                                                      .width *
-                                                  0.19,
-                                              selectedTrailingIcon:
-                                                  const SizedBox.shrink(),
-                                              inputDecorationTheme:
-                                                  const InputDecorationTheme(
-                                                border: InputBorder.none,
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                        horizontal: 8,
-                                                        vertical: 16),
-                                                isDense: true,
-                                                activeIndicatorBorder:
-                                                    BorderSide(
-                                                  color: Colors.transparent,
-                                                ),
-                                              ),
-                                              expandedInsets: EdgeInsets.zero,
-                                              enableFilter: true,
-                                              filterCallback:
-                                                  (List<DropdownMenuEntry<Item>>
-                                                          entries,
-                                                      String filter) {
-                                                final String trimmedFilter =
-                                                    filter.trim().toLowerCase();
-
-                                                if (trimmedFilter.isEmpty) {
-                                                  return entries;
-                                                }
-
-                                                // Filter the entries based on the query
-                                                return entries.where((entry) {
-                                                  return entry.value.itemName
-                                                      .toLowerCase()
-                                                      .contains(trimmedFilter);
-                                                }).toList();
-                                              },
-                                              onSelected: (Item? value) {
-                                                _playBeep();
-                                                setState(() {
-                                                  final selectedItem = value;
-
-                                                  selectedItemName =
-                                                      selectedItem!.itemName;
-
-                                                  selectedItemId =
-                                                      selectedItem.id;
-
-                                                  String newId = '';
-                                                  String newId2 = '';
-
-                                                  for (Item item in itemList) {
-                                                    if (item.id ==
-                                                        selectedItemId) {
-                                                      newId = item.taxCategory;
-                                                      newId2 =
-                                                          item.measurementUnit;
-                                                    }
-                                                  }
-
-                                                  for (TaxRate tax
-                                                      in taxLists) {
-                                                    if (tax.id == newId) {
-                                                      setState(() {
-                                                        _taxController.text =
-                                                            tax.rate;
-                                                      });
-                                                    }
-                                                  }
-                                                  for (MeasurementLimit meu
-                                                      in measurement) {
-                                                    if (meu.id == newId2) {
-                                                      setState(() {
-                                                        _unitController.text =
-                                                            meu.measurement
-                                                                .toString();
-                                                      });
-                                                    }
-                                                  }
-
-                                                  // Calculate the Rate
-                                                  double ratepercent =
-                                                      (double.parse(
-                                                              _taxController
-                                                                  .text) /
-                                                          100);
-
-                                                  ratepercent += 1.00;
-
-                                                  print(ratepercent);
-
-                                                  double mpr = selectedItem.mrp;
-
-                                                  double rate =
-                                                      mpr / ratepercent;
-
-                                                  _qtyController.text = "1";
-                                                  _rateController.text =
-                                                      rate.toStringAsFixed(2);
-                                                  _discPerController.text =
-                                                      "0.00";
-                                                  _discRsController.text =
-                                                      "0.00";
-                                                  _basicController.text =
-                                                      rate.toStringAsFixed(2);
-
-                                                  _amountController.text =
-                                                      rate.toStringAsFixed(2);
-
-                                                  _mrpController.text =
-                                                      selectedItem.mrp
-                                                          .toStringAsFixed(2);
-                                                  _baseController.text =
-                                                      selectedItem.mrp
-                                                          .toStringAsFixed(2);
-
-                                                  final tax =
-                                                      selectedItem.mrp - rate;
-
-                                                  // Change to taxAmountController
-
-                                                  _taxController.text =
-                                                      tax.toStringAsFixed(2);
-
-                                                  // For Net Amount, multiply qty with real rate
-                                                  double qty = double.parse(
-                                                      _qtyController.text);
-                                                  double rate2 = double.parse(
-                                                      selectedItem.mrp
-                                                          .toString());
-
-                                                  double netAmount =
-                                                      qty * rate2;
-
-                                                  _netAmountController.text =
-                                                      netAmount
-                                                          .toStringAsFixed(2)
-                                                          .toString();
-
-                                                  openDialog2(item: value!);
-                                                });
-                                              },
-                                              dropdownMenuEntries: itemList
-                                                  .map<DropdownMenuEntry<Item>>(
-                                                      (Item value) {
-                                                return DropdownMenuEntry<Item>(
-                                                  value: value,
-                                                  label: value.itemName,
-                                                  trailingIcon: Text(
-                                                    'Qty: ${value.maximumStock}',
-                                                    style: GoogleFonts.poppins(
-                                                      fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: Colors.black,
-                                                    ),
-                                                  ),
-                                                  style: ButtonStyle(
-                                                    textStyle:
-                                                        WidgetStateProperty.all(
-                                                      GoogleFonts.poppins(
-                                                        fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: Colors.black,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                );
-                                              }).toList(),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-
-                            Padding(
-                              padding:
-                                  const EdgeInsets.only(right: 10, left: 10),
-                              child: Container(
-                                height: 350,
-                                width: MediaQuery.of(context).size.width,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  border: Border.all(
-                                      color:
-                                          Colors.purple[900] ?? Colors.purple,
-                                      width: 1),
                                 ),
-                                child: Padding(
-                                  padding: const EdgeInsets.only(right: 10),
-                                  child: SingleChildScrollView(
-                                    scrollDirection: Axis.vertical,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Table(
-                                          border: TableBorder.all(
-                                              width: 1, color: Colors.black),
-                                          columnWidths: const {
-                                            0: FlexColumnWidth(1),
-                                            1: FlexColumnWidth(5),
-                                            2: FlexColumnWidth(3),
-                                            3: FlexColumnWidth(3),
-                                            4: FlexColumnWidth(3),
-                                            5: FlexColumnWidth(3),
-                                            6: FlexColumnWidth(3),
-                                            7: FlexColumnWidth(3),
-                                            8: FlexColumnWidth(3),
-                                            9: FlexColumnWidth(3),
-                                            10: FlexColumnWidth(3),
-                                            11: FlexColumnWidth(3),
-                                            12: FlexColumnWidth(3),
-                                            13: FlexColumnWidth(3),
-                                            14: FlexColumnWidth(3),
-                                          },
+
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      right: 10, left: 10),
+                                  child: Container(
+                                    height: 350,
+                                    width: MediaQuery.of(context).size.width,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(
+                                          color: Colors.purple[900] ??
+                                              Colors.purple,
+                                          width: 1),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(right: 10),
+                                      child: SingleChildScrollView(
+                                        scrollDirection: Axis.vertical,
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
-                                            TableRow(children: [
-                                              TableCell(
-                                                  child: SizedBox(
-                                                height: 40,
-                                                child: Align(
-                                                  alignment: Alignment.center,
-                                                  child: Text(
-                                                    "Sr",
-                                                    textAlign: TextAlign.center,
-                                                    style: GoogleFonts.poppins(
-                                                      fontSize: 15,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: const Color(
-                                                          0xff4B0082),
-                                                    ),
-                                                  ),
-                                                ),
-                                              )),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Item Name(^F8)",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Points",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment:
-                                                        Alignment.centerLeft,
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              4.0),
+                                            Table(
+                                              border: TableBorder.all(
+                                                  width: 1,
+                                                  color: Colors.black),
+                                              columnWidths: const {
+                                                0: FlexColumnWidth(1),
+                                                1: FlexColumnWidth(5),
+                                                2: FlexColumnWidth(3),
+                                                3: FlexColumnWidth(3),
+                                                4: FlexColumnWidth(3),
+                                                5: FlexColumnWidth(3),
+                                                6: FlexColumnWidth(3),
+                                                7: FlexColumnWidth(3),
+                                                8: FlexColumnWidth(3),
+                                                9: FlexColumnWidth(3),
+                                                10: FlexColumnWidth(3),
+                                                11: FlexColumnWidth(3),
+                                                12: FlexColumnWidth(3),
+                                                13: FlexColumnWidth(3),
+                                                14: FlexColumnWidth(3),
+                                              },
+                                              children: [
+                                                TableRow(children: [
+                                                  TableCell(
+                                                      child: SizedBox(
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.center,
                                                       child: Text(
-                                                        "Batch No",
+                                                        "Sr",
                                                         textAlign:
-                                                            TextAlign.left,
+                                                            TextAlign.center,
                                                         style:
                                                             GoogleFonts.poppins(
                                                           fontSize: 15,
@@ -1111,962 +1266,544 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                         ),
                                                       ),
                                                     ),
-                                                  ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Qty",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
+                                                  )),
+                                                  TableCell(
+                                                    child: SizedBox(
+                                                      height: 40,
+                                                      child: Align(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Text(
+                                                          "Item Name(^F8)",
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Unit",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
+                                                  TableCell(
+                                                    child: SizedBox(
+                                                      height: 40,
+                                                      child: Align(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Text(
+                                                          "Points",
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Base",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
+                                                  TableCell(
+                                                    child: SizedBox(
+                                                      height: 40,
+                                                      child: Align(
+                                                        alignment: Alignment
+                                                            .centerLeft,
+                                                        child: Padding(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(4.0),
+                                                          child: Text(
+                                                            "Batch No",
+                                                            textAlign:
+                                                                TextAlign.left,
+                                                            style: GoogleFonts
+                                                                .poppins(
+                                                              fontSize: 15,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color: const Color(
+                                                                  0xff4B0082),
+                                                            ),
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Rate",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
+                                                  TableCell(
+                                                    child: SizedBox(
+                                                      height: 40,
+                                                      child: Align(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Text(
+                                                          "Qty",
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "MRP",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
+                                                  TableCell(
+                                                    child: SizedBox(
+                                                      height: 40,
+                                                      child: Align(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Text(
+                                                          "Unit",
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Basic",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
+                                                  TableCell(
+                                                    child: SizedBox(
+                                                      height: 40,
+                                                      child: Align(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Text(
+                                                          "Base",
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Dis%",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
+                                                  TableCell(
+                                                    child: SizedBox(
+                                                      height: 40,
+                                                      child: Align(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Text(
+                                                          "Rate",
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Disc",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
+                                                  TableCell(
+                                                    child: SizedBox(
+                                                      height: 40,
+                                                      child: Align(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Text(
+                                                          "MRP",
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Tax",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
+                                                  TableCell(
+                                                    child: SizedBox(
+                                                      height: 40,
+                                                      child: Align(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Text(
+                                                          "Basic",
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Net.Amt",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
+                                                  TableCell(
+                                                    child: SizedBox(
+                                                      height: 40,
+                                                      child: Align(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Text(
+                                                          "Dis%",
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
                                                       ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
-                                            ]),
-                                            ...tables,
+                                                  TableCell(
+                                                    child: SizedBox(
+                                                      height: 40,
+                                                      child: Align(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Text(
+                                                          "Disc",
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  TableCell(
+                                                    child: SizedBox(
+                                                      height: 40,
+                                                      child: Align(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Text(
+                                                          "Tax",
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  TableCell(
+                                                    child: SizedBox(
+                                                      height: 40,
+                                                      child: Align(
+                                                        alignment:
+                                                            Alignment.center,
+                                                        child: Text(
+                                                          "Net.Amt",
+                                                          textAlign:
+                                                              TextAlign.center,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ]),
+                                                ...tables,
+                                              ],
+                                            ),
                                           ],
                                         ),
-                                      ],
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            ),
-                            const SizedBox(
-                              height: 20,
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.only(right: 10, left: 10),
-                              child: Container(
-                                // height: 280,
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 10),
-                                width: MediaQuery.of(context).size.width,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  border: Border.all(
-                                      color:
-                                          Colors.purple[900] ?? Colors.purple,
-                                      width: 1),
+                                const SizedBox(
+                                  height: 20,
                                 ),
-                                child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      right: 10, left: 10),
+                                  child: Container(
+                                    // height: 280,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 10),
+                                    width: MediaQuery.of(context).size.width,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      border: Border.all(
+                                          color: Colors.purple[900] ??
+                                              Colors.purple,
+                                          width: 1),
+                                    ),
+                                    child: Column(
                                         mainAxisAlignment:
                                             MainAxisAlignment.start,
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          const SizedBox(height: 10),
-                                          SizedBox(
-                                            width: w * 0.32,
-                                            // height: 190,
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Padding(
-                                                  padding: const EdgeInsets
-                                                      .symmetric(vertical: 2),
-                                                  child: Row(
-                                                    children: [
-                                                      Expanded(
-                                                        child: Row(
-                                                          children: [
-                                                            SizedBox(
-                                                              width: MediaQuery.of(
-                                                                          context)
-                                                                      .size
-                                                                      .width *
-                                                                  0.08,
-                                                              child: Text(
-                                                                "Set Discount",
-                                                                style:
-                                                                    GoogleFonts
-                                                                        .poppins(
-                                                                  fontSize: 15,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color: Colors
-                                                                      .deepPurple,
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            Container(
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                      border: Border
-                                                                          .all()),
-                                                              width: MediaQuery.of(
-                                                                          context)
-                                                                      .size
-                                                                      .width *
-                                                                  0.05,
-                                                              height: 40,
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(2.0),
-                                                              child:
-                                                                  DropdownButtonHideUnderline(
-                                                                child:
-                                                                    DropdownButton<
-                                                                        String>(
-                                                                  value:
-                                                                      selecteSetDiscount,
-                                                                  underline:
-                                                                      Container(),
-                                                                  icon: const SizedBox
-                                                                      .shrink(),
-                                                                  onChanged:
-                                                                      (String?
-                                                                          newValue) {
-                                                                    setState(
-                                                                        () {
-                                                                      selecteSetDiscount =
-                                                                          newValue!;
-                                                                      if (selecteSetDiscount ==
-                                                                              "Yes" &&
-                                                                          double.parse(_netTotalDiscController.text) >
-                                                                              0) {
-                                                                        _showAlert(
-                                                                            context);
-                                                                      }
-                                                                    });
-                                                                  },
-                                                                  items: [
-                                                                    "No",
-                                                                    "Yes",
-                                                                  ].map<
-                                                                      DropdownMenuItem<
-                                                                          String>>((String
-                                                                      value) {
-                                                                    return DropdownMenuItem<
-                                                                        String>(
-                                                                      value:
-                                                                          value,
-                                                                      child:
-                                                                          Padding(
-                                                                        padding: const EdgeInsets
-                                                                            .only(
-                                                                            bottom:
-                                                                                0,
-                                                                            left:
-                                                                                5),
-                                                                        child:
-                                                                            Text(
-                                                                          value,
-                                                                          style:
-                                                                              GoogleFonts.poppins(
-                                                                            color:
-                                                                                Colors.black,
-                                                                            fontSize:
-                                                                                15,
-                                                                            fontWeight:
-                                                                                FontWeight.bold,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    );
-                                                                  }).toList(),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      Expanded(
-                                                        child: Row(
-                                                          children: [
-                                                            SizedBox(
-                                                              width: MediaQuery.of(
-                                                                          context)
-                                                                      .size
-                                                                      .width *
-                                                                  0.04,
-                                                              child: Text(
-                                                                "Type",
-                                                                style:
-                                                                    GoogleFonts
-                                                                        .poppins(
-                                                                  fontSize: 15,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color: Colors
-                                                                      .deepPurple,
-                                                                ),
-                                                              ),
-                                                            ),
-                                                            Container(
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                      border: Border
-                                                                          .all()),
-                                                              width: MediaQuery.of(
-                                                                          context)
-                                                                      .size
-                                                                      .width *
-                                                                  0.1,
-                                                              height: 40,
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(2.0),
-                                                              child:
-                                                                  DropdownButtonHideUnderline(
-                                                                child:
-                                                                    DropdownButton<
-                                                                        String>(
-                                                                  value:
-                                                                      selectedType,
-                                                                  underline:
-                                                                      Container(),
-                                                                  icon: const SizedBox
-                                                                      .shrink(),
-                                                                  onChanged:
-                                                                      (String?
-                                                                          newValue) {
-                                                                    setState(
-                                                                        () {
-                                                                      selectedType =
-                                                                          newValue!;
-                                                                    });
-                                                                  },
-                                                                  items: [
-                                                                    "Cash",
-                                                                    "Credit",
-                                                                    "Multimode",
-                                                                  ].map<
-                                                                      DropdownMenuItem<
-                                                                          String>>((String
-                                                                      value) {
-                                                                    return DropdownMenuItem<
-                                                                        String>(
-                                                                      value:
-                                                                          value,
-                                                                      child:
-                                                                          Padding(
-                                                                        padding: const EdgeInsets
-                                                                            .only(
-                                                                            bottom:
-                                                                                0,
-                                                                            left:
-                                                                                5),
-                                                                        child:
-                                                                            Text(
-                                                                          value,
-                                                                          style:
-                                                                              GoogleFonts.poppins(
-                                                                            color:
-                                                                                Colors.black,
-                                                                            fontSize:
-                                                                                15,
-                                                                            fontWeight:
-                                                                                FontWeight.bold,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                    );
-                                                                  }).toList(),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 10.0),
-                                                Row(
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              const SizedBox(height: 10),
+                                              SizedBox(
+                                                width: w * 0.32,
+                                                // height: 190,
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
                                                   children: [
-                                                    SizedBox(
-                                                      width:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .width *
-                                                              0.08,
-                                                      child: Text(
-                                                        "A/c",
-                                                        style:
-                                                            GoogleFonts.poppins(
-                                                          fontSize: 15,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color:
-                                                              Colors.deepPurple,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Container(
-                                                      decoration: BoxDecoration(
-                                                          border: Border.all()),
-                                                      width:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .width *
-                                                              0.2,
-                                                      height: 40,
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              2.0),
-                                                      child:
-                                                          DropdownButtonHideUnderline(
-                                                        child: DropdownMenu<
-                                                            Ledger>(
-                                                          controller:
-                                                              _acController,
-                                                          width: 400,
-                                                          requestFocusOnTap:
-                                                              true,
-                                                          initialSelection: selectedAC !=
-                                                                  null
-                                                              ? ledgerList.firstWhere(
-                                                                  (ledger) =>
-                                                                      ledger
-                                                                          .id ==
-                                                                      selectedAC)
-                                                              : null,
-                                                          enableSearch: true,
-                                                          trailingIcon:
-                                                              const SizedBox
-                                                                  .shrink(),
-                                                          textStyle: GoogleFonts
-                                                              .poppins(
-                                                            fontSize: 16,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: Colors.black,
-                                                            decoration:
-                                                                TextDecoration
-                                                                    .none,
-                                                          ),
-                                                          menuHeight: 300,
-                                                          selectedTrailingIcon:
-                                                              const SizedBox
-                                                                  .shrink(),
-                                                          inputDecorationTheme:
-                                                              const InputDecorationTheme(
-                                                            border: InputBorder
-                                                                .none,
-                                                            contentPadding:
-                                                                EdgeInsets
-                                                                    .symmetric(
-                                                                        horizontal:
-                                                                            8,
-                                                                        vertical:
-                                                                            0),
-                                                            isDense: true,
-                                                            activeIndicatorBorder:
-                                                                BorderSide(
-                                                              color: Colors
-                                                                  .transparent,
-                                                            ),
-                                                          ),
-                                                          expandedInsets:
-                                                              EdgeInsets.zero,
-                                                          onSelected:
-                                                              (Ledger? value) {
-                                                            if (value != null) {
-                                                              setState(() {
-                                                                selectedAC =
-                                                                    value.id;
-                                                                selectedCustomer =
-                                                                    "67188c95ce238809ff47a745";
-                                                                _billedToController
-                                                                        .text =
-                                                                    value.name;
-                                                                _customerController
-                                                                        .text =
-                                                                    "Registered Ledger";
-                                                              });
-                                                            }
-                                                          },
-                                                          dropdownMenuEntries:
-                                                              ledgerList.map<
-                                                                  DropdownMenuEntry<
-                                                                      Ledger>>((Ledger
-                                                                  value) {
-                                                            return DropdownMenuEntry<
-                                                                Ledger>(
-                                                              value: value,
-                                                              label: value.name,
-                                                              style:
-                                                                  ButtonStyle(
-                                                                textStyle:
-                                                                    WidgetStateProperty
-                                                                        .all(
-                                                                  GoogleFonts
-                                                                      .poppins(
-                                                                    fontSize:
-                                                                        16,
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold,
-                                                                    color: Colors
-                                                                        .black,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            );
-                                                          }).toList(),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          top: 5),
-                                                  child: Row(
-                                                    children: [
-                                                      SizedBox(
-                                                        width: MediaQuery.of(
-                                                                    context)
-                                                                .size
-                                                                .width *
-                                                            0.08,
-                                                        child: Text(
-                                                          "Customer/Mob.",
-                                                          style: GoogleFonts
-                                                              .poppins(
-                                                            fontSize: 15,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: Colors
-                                                                .deepPurple,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      Container(
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          border: Border.all(),
-                                                        ),
-                                                        width: MediaQuery.of(
-                                                                    context)
-                                                                .size
-                                                                .width *
-                                                            0.18,
-                                                        height: 40,
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .all(2.0),
-                                                        child:
-                                                            DropdownButtonHideUnderline(
-                                                          child: IgnorePointer(
-                                                            ignoring:
-                                                                selectedType !=
-                                                                    'Cash',
-                                                            child: Opacity(
-                                                              opacity:
-                                                                  selectedType ==
-                                                                          'Cash'
-                                                                      ? 1.0
-                                                                      : 1.0,
-                                                              child: DropdownMenu<
-                                                                  NewCustomerModel>(
-                                                                controller:
-                                                                    _customerController,
-                                                                width: 400,
-                                                                requestFocusOnTap:
-                                                                    true,
-                                                                initialSelection:
-                                                                    selectedCustomer !=
-                                                                            null
-                                                                        ? customerList
-                                                                            .firstWhere(
-                                                                            (customer) =>
-                                                                                customer.id ==
-                                                                                selectedCustomer,
-                                                                          )
-                                                                        : null,
-                                                                enableSearch:
-                                                                    true,
-                                                                trailingIcon:
-                                                                    const SizedBox
-                                                                        .shrink(),
-                                                                textStyle:
-                                                                    GoogleFonts
+                                                    Padding(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          vertical: 2),
+                                                      child: Row(
+                                                        children: [
+                                                          Expanded(
+                                                            child: Row(
+                                                              children: [
+                                                                SizedBox(
+                                                                  width: MediaQuery.of(
+                                                                              context)
+                                                                          .size
+                                                                          .width *
+                                                                      0.08,
+                                                                  child: Text(
+                                                                    "Set Discount",
+                                                                    style: GoogleFonts
                                                                         .poppins(
-                                                                  fontSize: 16,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color: Colors
-                                                                      .black,
-                                                                  decoration:
-                                                                      TextDecoration
-                                                                          .none,
-                                                                ),
-                                                                menuHeight: 300,
-                                                                selectedTrailingIcon:
-                                                                    const SizedBox
-                                                                        .shrink(),
-                                                                inputDecorationTheme:
-                                                                    const InputDecorationTheme(
-                                                                  border:
-                                                                      InputBorder
-                                                                          .none,
-                                                                  contentPadding:
-                                                                      EdgeInsets.symmetric(
-                                                                          horizontal:
-                                                                              8,
-                                                                          vertical:
-                                                                              0),
-                                                                  isDense: true,
-                                                                  activeIndicatorBorder:
-                                                                      BorderSide(
-                                                                    color: Colors
-                                                                        .transparent,
+                                                                      fontSize:
+                                                                          15,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                      color: Colors
+                                                                          .deepPurple,
+                                                                    ),
                                                                   ),
                                                                 ),
-                                                                expandedInsets:
-                                                                    EdgeInsets
-                                                                        .zero,
-                                                                onSelected:
-                                                                    (NewCustomerModel?
-                                                                        value) {
-                                                                  if (value !=
-                                                                      null) {
-                                                                    setState(
-                                                                        () {
-                                                                      selectedCustomer =
-                                                                          value
-                                                                              .id;
-                                                                      selectedAC =
-                                                                          "6676b4f41383f35fe6ba9abc";
-                                                                    });
-
-                                                                    for (NewCustomerModel customer
-                                                                        in customerList) {
-                                                                      if (customer
-                                                                              .id ==
-                                                                          value
-                                                                              .id) {
-                                                                        _billedToController.text =
-                                                                            '${customer.fname} M.(${customer.mobile})';
-                                                                      }
-                                                                    }
-                                                                  }
-                                                                },
-                                                                dropdownMenuEntries: customerList
-                                                                    .where((customer) =>
-                                                                        customer.id !=
-                                                                            '67188c95ce238809ff47a745' &&
-                                                                        customer.id !=
-                                                                            '671a134f7613ca30122d0c7c')
-                                                                    .map<
-                                                                        DropdownMenuEntry<
-                                                                            NewCustomerModel>>((NewCustomerModel
-                                                                        value) {
-                                                                  return DropdownMenuEntry<
-                                                                      NewCustomerModel>(
-                                                                    value:
-                                                                        value,
-                                                                    label: value
-                                                                        .fname,
-                                                                    style:
-                                                                        ButtonStyle(
-                                                                      textStyle:
-                                                                          WidgetStateProperty
-                                                                              .all(
-                                                                        GoogleFonts
-                                                                            .poppins(
-                                                                          fontSize:
-                                                                              16,
-                                                                          fontWeight:
-                                                                              FontWeight.bold,
-                                                                          color:
-                                                                              Colors.black,
-                                                                        ),
-                                                                      ),
+                                                                Container(
+                                                                  decoration:
+                                                                      BoxDecoration(
+                                                                          border:
+                                                                              Border.all()),
+                                                                  width: MediaQuery.of(
+                                                                              context)
+                                                                          .size
+                                                                          .width *
+                                                                      0.05,
+                                                                  height: 40,
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .all(
+                                                                          2.0),
+                                                                  child:
+                                                                      DropdownButtonHideUnderline(
+                                                                    child: DropdownButton<
+                                                                        String>(
+                                                                      value:
+                                                                          selecteSetDiscount,
+                                                                      underline:
+                                                                          Container(),
+                                                                      icon: const SizedBox
+                                                                          .shrink(),
+                                                                      onChanged:
+                                                                          (String?
+                                                                              newValue) {
+                                                                        setState(
+                                                                            () {
+                                                                          selecteSetDiscount =
+                                                                              newValue!;
+                                                                          if (selecteSetDiscount == "Yes" &&
+                                                                              double.parse(_netTotalDiscController.text) > 0) {
+                                                                            _showAlert(context);
+                                                                          }
+                                                                        });
+                                                                      },
+                                                                      items: [
+                                                                        "No",
+                                                                        "Yes",
+                                                                      ].map<
+                                                                          DropdownMenuItem<
+                                                                              String>>((String
+                                                                          value) {
+                                                                        return DropdownMenuItem<
+                                                                            String>(
+                                                                          value:
+                                                                              value,
+                                                                          child:
+                                                                              Padding(
+                                                                            padding:
+                                                                                const EdgeInsets.only(bottom: 0, left: 5),
+                                                                            child:
+                                                                                Text(
+                                                                              value,
+                                                                              style: GoogleFonts.poppins(
+                                                                                color: Colors.black,
+                                                                                fontSize: 15,
+                                                                                fontWeight: FontWeight.bold,
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      }).toList(),
                                                                     ),
-                                                                  );
-                                                                }).toList(),
-                                                              ),
+                                                                  ),
+                                                                ),
+                                                              ],
                                                             ),
                                                           ),
-                                                        ),
-                                                      ),
-                                                      const SizedBox(
-                                                        width: 10,
-                                                      ),
-                                                      InkWell(
-                                                        onTap: (selectedCustomer ==
-                                                                    "67188c95ce238809ff47a745" ||
-                                                                selectedCustomer ==
-                                                                    "671a134f7613ca30122d0c7c")
-                                                            ? null
-                                                            : showCustomerHistory,
-                                                        child: Container(
-                                                          width: 60,
-                                                          height: 40,
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            border: Border.all(
-                                                              color:
-                                                                  Colors.black,
+                                                          Expanded(
+                                                            child: Row(
+                                                              children: [
+                                                                SizedBox(
+                                                                  width: MediaQuery.of(
+                                                                              context)
+                                                                          .size
+                                                                          .width *
+                                                                      0.04,
+                                                                  child: Text(
+                                                                    "Type",
+                                                                    style: GoogleFonts
+                                                                        .poppins(
+                                                                      fontSize:
+                                                                          15,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                      color: Colors
+                                                                          .deepPurple,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                                Container(
+                                                                  decoration:
+                                                                      BoxDecoration(
+                                                                          border:
+                                                                              Border.all()),
+                                                                  width: MediaQuery.of(
+                                                                              context)
+                                                                          .size
+                                                                          .width *
+                                                                      0.1,
+                                                                  height: 40,
+                                                                  padding:
+                                                                      const EdgeInsets
+                                                                          .all(
+                                                                          2.0),
+                                                                  child:
+                                                                      DropdownButtonHideUnderline(
+                                                                    child: DropdownButton<
+                                                                        String>(
+                                                                      value:
+                                                                          selectedType,
+                                                                      underline:
+                                                                          Container(),
+                                                                      icon: const SizedBox
+                                                                          .shrink(),
+                                                                      onChanged:
+                                                                          (String?
+                                                                              newValue) {
+                                                                        setState(
+                                                                            () {
+                                                                          selectedType =
+                                                                              newValue!;
+                                                                        });
+                                                                      },
+                                                                      items: [
+                                                                        "Cash",
+                                                                        "Credit",
+                                                                        "Multimode",
+                                                                      ].map<
+                                                                          DropdownMenuItem<
+                                                                              String>>((String
+                                                                          value) {
+                                                                        return DropdownMenuItem<
+                                                                            String>(
+                                                                          value:
+                                                                              value,
+                                                                          child:
+                                                                              Padding(
+                                                                            padding:
+                                                                                const EdgeInsets.only(bottom: 0, left: 5),
+                                                                            child:
+                                                                                Text(
+                                                                              value,
+                                                                              style: GoogleFonts.poppins(
+                                                                                color: Colors.black,
+                                                                                fontSize: 15,
+                                                                                fontWeight: FontWeight.bold,
+                                                                              ),
+                                                                            ),
+                                                                          ),
+                                                                        );
+                                                                      }).toList(),
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ],
                                                             ),
                                                           ),
-                                                          child: const Center(
-                                                            child: Icon(
-                                                              Icons.more_horiz,
-                                                              size: 40.0,
-                                                              color:
-                                                                  Colors.black,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          top: 5),
-                                                  child: Row(
-                                                    children: [
-                                                      SizedBox(
-                                                        width: MediaQuery.of(
-                                                                    context)
-                                                                .size
-                                                                .width *
-                                                            0.08,
-                                                        child: Text(
-                                                          "Billed to",
-                                                          style: GoogleFonts
-                                                              .poppins(
-                                                            fontSize: 15,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: Colors
-                                                                .deepPurple,
-                                                          ),
-                                                        ),
+                                                        ],
                                                       ),
-
-                                                      // Billed To
-                                                      SETopTextfield(
-                                                        onTap: () {
-                                                          FocusScope.of(context)
-                                                              .requestFocus(
-                                                                  billedToFocus);
-                                                          setState(() {});
-                                                        },
-                                                        // focusNode:
-                                                        //     billedToFocus,
-                                                        // onEditingComplete: () {
-                                                        //   FocusScope.of(context)
-                                                        //       .requestFocus(
-                                                        //           remarkFocus);
-                                                        //   setState(() {});
-                                                        // },
-                                                        controller:
-                                                            _billedToController,
-                                                        onSaved: (newValue) {},
-                                                        width: MediaQuery.of(
-                                                                    context)
-                                                                .size
-                                                                .width *
-                                                            0.3,
-                                                        height: 40,
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(
-                                                                left: 8.0,
-                                                                bottom: 16.0),
-                                                        hintText: '',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                Padding(
-                                                  padding:
-                                                      const EdgeInsets.only(
-                                                          top: 5),
-                                                  child: Row(
-                                                    children: [
-                                                      SizedBox(
-                                                        width: MediaQuery.of(
-                                                                    context)
-                                                                .size
-                                                                .width *
-                                                            0.08,
-                                                        child: Text(
-                                                          "Remarks",
-                                                          style: GoogleFonts
-                                                              .poppins(
-                                                            fontSize: 15,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: Colors
-                                                                .deepPurple,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                      SETopTextfield(
-                                                        onTap: () {
-                                                          FocusScope.of(context)
-                                                              .requestFocus(
-                                                                  remarkFocus);
-                                                          setState(() {});
-                                                        },
-                                                        controller:
-                                                            _remarkController,
-                                                        // focusNode: remarkFocus,
-                                                        // onEditingComplete: () {
-                                                        //   FocusScope.of(context)
-                                                        //       .requestFocus(
-                                                        //           advanceFocus);
-                                                        //   setState(() {});
-                                                        // },
-                                                        onSaved: (newValue) {},
-                                                        width: MediaQuery.of(
-                                                                    context)
-                                                                .size
-                                                                .width *
-                                                            0.3,
-                                                        height: 40,
-                                                        padding:
-                                                            const EdgeInsets
-                                                                .only(
-                                                                left: 8.0,
-                                                                bottom: 16.0),
-                                                        hintText: '',
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            width: w * 0.35,
-                                            // height: 170,
-                                            child: Padding(
-                                              padding: const EdgeInsets.only(
-                                                  left: 50),
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment.start,
-                                                children: [
-                                                  const SizedBox(
-                                                    height: 5,
-                                                  ),
-                                                  SizedBox(
-                                                    width: w * 0.30,
-                                                    child: Row(
+                                                    ),
+                                                    const SizedBox(
+                                                        height: 10.0),
+                                                    Row(
                                                       children: [
                                                         SizedBox(
                                                           width: MediaQuery.of(
@@ -2075,7 +1812,7 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                                   .width *
                                                               0.08,
                                                           child: Text(
-                                                            "S. Man",
+                                                            "A/c",
                                                             style: GoogleFonts
                                                                 .poppins(
                                                               fontSize: 15,
@@ -2087,7 +1824,6 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                             ),
                                                           ),
                                                         ),
-
                                                         Container(
                                                           decoration:
                                                               BoxDecoration(
@@ -2097,7 +1833,7 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                                       context)
                                                                   .size
                                                                   .width *
-                                                              0.1,
+                                                              0.2,
                                                           height: 40,
                                                           padding:
                                                               const EdgeInsets
@@ -2105,16 +1841,20 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                           child:
                                                               DropdownButtonHideUnderline(
                                                             child: DropdownMenu<
-                                                                SalesMan>(
+                                                                Ledger>(
+                                                              controller:
+                                                                  _acController,
                                                               width: 400,
                                                               requestFocusOnTap:
                                                                   true,
-                                                              initialSelection:
-                                                                  salesManList
-                                                                          .isNotEmpty
-                                                                      ? salesManList
-                                                                          .first
-                                                                      : null,
+                                                              initialSelection: selectedAC !=
+                                                                      null
+                                                                  ? ledgerList.firstWhere(
+                                                                      (ledger) =>
+                                                                          ledger
+                                                                              .id ==
+                                                                          selectedAC)
+                                                                  : null,
                                                               enableSearch:
                                                                   true,
                                                               trailingIcon:
@@ -2159,27 +1899,33 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                                   EdgeInsets
                                                                       .zero,
                                                               onSelected:
-                                                                  (SalesMan?
+                                                                  (Ledger?
                                                                       value) {
-                                                                setState(() {
-                                                                  FocusScope.of(
-                                                                          context)
-                                                                      .requestFocus(
-                                                                          _salesManFocusMode);
+                                                                if (value !=
+                                                                    null) {
                                                                   setState(() {
-                                                                    selectedSalesMan =
-                                                                        value!
+                                                                    selectedAC =
+                                                                        value
                                                                             .id;
+                                                                    selectedCustomer =
+                                                                        "67188c95ce238809ff47a745";
+                                                                    _billedToController
+                                                                            .text =
+                                                                        value
+                                                                            .name;
+                                                                    _customerController
+                                                                            .text =
+                                                                        "Registered Ledger";
                                                                   });
-                                                                });
+                                                                }
                                                               },
                                                               dropdownMenuEntries:
-                                                                  salesManList.map<
+                                                                  ledgerList.map<
                                                                       DropdownMenuEntry<
-                                                                          SalesMan>>((SalesMan
+                                                                          Ledger>>((Ledger
                                                                       value) {
                                                                 return DropdownMenuEntry<
-                                                                    SalesMan>(
+                                                                    Ledger>(
                                                                   value: value,
                                                                   label: value
                                                                       .name,
@@ -2204,893 +1950,1421 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                             ),
                                                           ),
                                                         ),
+                                                      ],
+                                                    ),
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 5),
+                                                      child: Row(
+                                                        children: [
+                                                          SizedBox(
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.08,
+                                                            child: Text(
+                                                              "Customer/Mob.",
+                                                              style: GoogleFonts
+                                                                  .poppins(
+                                                                fontSize: 15,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color: Colors
+                                                                    .deepPurple,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          Container(
+                                                            decoration:
+                                                                BoxDecoration(
+                                                              border:
+                                                                  Border.all(),
+                                                            ),
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.18,
+                                                            height: 40,
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .all(2.0),
+                                                            child:
+                                                                DropdownButtonHideUnderline(
+                                                              child:
+                                                                  IgnorePointer(
+                                                                ignoring:
+                                                                    selectedType !=
+                                                                        'Cash',
+                                                                child: Opacity(
+                                                                  opacity:
+                                                                      selectedType ==
+                                                                              'Cash'
+                                                                          ? 1.0
+                                                                          : 1.0,
+                                                                  child: DropdownMenu<
+                                                                      NewCustomerModel>(
+                                                                    controller:
+                                                                        _customerController,
+                                                                    width: 400,
+                                                                    requestFocusOnTap:
+                                                                        true,
+                                                                    initialSelection: selectedCustomer !=
+                                                                            null
+                                                                        ? customerList
+                                                                            .firstWhere(
+                                                                            (customer) =>
+                                                                                customer.id ==
+                                                                                selectedCustomer,
+                                                                          )
+                                                                        : null,
+                                                                    enableSearch:
+                                                                        true,
+                                                                    trailingIcon:
+                                                                        const SizedBox
+                                                                            .shrink(),
+                                                                    textStyle:
+                                                                        GoogleFonts
+                                                                            .poppins(
+                                                                      fontSize:
+                                                                          16,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                      color: Colors
+                                                                          .black,
+                                                                      decoration:
+                                                                          TextDecoration
+                                                                              .none,
+                                                                    ),
+                                                                    menuHeight:
+                                                                        300,
+                                                                    selectedTrailingIcon:
+                                                                        const SizedBox
+                                                                            .shrink(),
+                                                                    inputDecorationTheme:
+                                                                        const InputDecorationTheme(
+                                                                      border: InputBorder
+                                                                          .none,
+                                                                      contentPadding: EdgeInsets.symmetric(
+                                                                          horizontal:
+                                                                              8,
+                                                                          vertical:
+                                                                              0),
+                                                                      isDense:
+                                                                          true,
+                                                                      activeIndicatorBorder:
+                                                                          BorderSide(
+                                                                        color: Colors
+                                                                            .transparent,
+                                                                      ),
+                                                                    ),
+                                                                    expandedInsets:
+                                                                        EdgeInsets
+                                                                            .zero,
+                                                                    onSelected:
+                                                                        (NewCustomerModel?
+                                                                            value) {
+                                                                      if (value !=
+                                                                          null) {
+                                                                        setState(
+                                                                            () {
+                                                                          selectedCustomer =
+                                                                              value.id;
+                                                                          selectedAC =
+                                                                              "6676b4f41383f35fe6ba9abc";
+                                                                        });
 
-                                                        // SETopTextfield(
-                                                        //   controller:
-                                                        //       _salesManController,
-                                                        //   onSaved:
-                                                        //       (newValue) {},
-                                                        //   width: MediaQuery.of(
-                                                        //               context)
-                                                        //           .size
-                                                        //           .width *
-                                                        //       0.1,
-                                                        //   height: 40,
-                                                        //   padding: const EdgeInsets
-                                                        //       .only(
-                                                        //       left: 8.0,
-                                                        //       bottom:
-                                                        //           16.0),
-                                                        //   hintText: '',
-                                                        //   alignment:
-                                                        //       TextAlign
-                                                        //           .end,
-                                                        // ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 10,
-                                                  ),
-                                                  SizedBox(
-                                                    width: w * 0.25,
-                                                    child: Row(
-                                                      children: [
-                                                        SizedBox(
-                                                          width: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .width *
-                                                              0.08,
-                                                          child: Text(
-                                                            "Advance",
-                                                            style: GoogleFonts
-                                                                .poppins(
-                                                              fontSize: 15,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color: Colors
-                                                                  .deepPurple,
+                                                                        for (NewCustomerModel customer
+                                                                            in customerList) {
+                                                                          if (customer.id ==
+                                                                              value.id) {
+                                                                            _billedToController.text =
+                                                                                '${customer.fname} M.(${customer.mobile})';
+                                                                          }
+                                                                        }
+                                                                      }
+                                                                    },
+                                                                    dropdownMenuEntries: customerList
+                                                                        .where((customer) =>
+                                                                            customer.id !=
+                                                                                '67188c95ce238809ff47a745' &&
+                                                                            customer.id !=
+                                                                                '671a134f7613ca30122d0c7c')
+                                                                        .map<
+                                                                            DropdownMenuEntry<
+                                                                                NewCustomerModel>>((NewCustomerModel
+                                                                            value) {
+                                                                      return DropdownMenuEntry<
+                                                                          NewCustomerModel>(
+                                                                        value:
+                                                                            value,
+                                                                        label: value
+                                                                            .fname,
+                                                                        style:
+                                                                            ButtonStyle(
+                                                                          textStyle:
+                                                                              WidgetStateProperty.all(
+                                                                            GoogleFonts.poppins(
+                                                                              fontSize: 16,
+                                                                              fontWeight: FontWeight.bold,
+                                                                              color: Colors.black,
+                                                                            ),
+                                                                          ),
+                                                                        ),
+                                                                      );
+                                                                    }).toList(),
+                                                                  ),
+                                                                ),
+                                                              ),
                                                             ),
                                                           ),
-                                                        ),
-                                                        SETopTextfield(
-                                                          onTap: () {
-                                                            FocusScope.of(
-                                                                    context)
-                                                                .requestFocus(
-                                                                    advanceFocus);
-                                                            setState(() {});
-                                                          },
-                                                          // focusNode:
-                                                          //     advanceFocus,
-                                                          // onEditingComplete:
-                                                          //     () {
-                                                          //   FocusScope.of(
-                                                          //           context)
-                                                          //       .requestFocus(
-                                                          //           pointBalance);
+                                                          const SizedBox(
+                                                            width: 10,
+                                                          ),
+                                                          InkWell(
+                                                            onTap: (selectedCustomer ==
+                                                                        "67188c95ce238809ff47a745" ||
+                                                                    selectedCustomer ==
+                                                                        "671a134f7613ca30122d0c7c")
+                                                                ? null
+                                                                : showCustomerHistory,
+                                                            child: Container(
+                                                              width: 60,
+                                                              height: 40,
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                border:
+                                                                    Border.all(
+                                                                  color: Colors
+                                                                      .black,
+                                                                ),
+                                                              ),
+                                                              child:
+                                                                  const Center(
+                                                                child: Icon(
+                                                                  Icons
+                                                                      .more_horiz,
+                                                                  size: 40.0,
+                                                                  color: Colors
+                                                                      .black,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          )
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 5),
+                                                      child: Row(
+                                                        children: [
+                                                          SizedBox(
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.08,
+                                                            child: Text(
+                                                              "Billed to",
+                                                              style: GoogleFonts
+                                                                  .poppins(
+                                                                fontSize: 15,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color: Colors
+                                                                    .deepPurple,
+                                                              ),
+                                                            ),
+                                                          ),
 
-                                                          //   setState(() {});
-                                                          // },
-                                                          alignment:
-                                                              TextAlign.end,
-                                                          controller:
-                                                              _advanceController,
-                                                          onSaved:
-                                                              (newValue) {},
-                                                          width: MediaQuery.of(
+                                                          // Billed To
+                                                          SETopTextfield(
+                                                            onTap: () {
+                                                              FocusScope.of(
                                                                       context)
-                                                                  .size
-                                                                  .width *
-                                                              0.1,
-                                                          height: 40,
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  left: 8.0,
-                                                                  bottom: 16.0),
-                                                          hintText: '',
-                                                        ),
-                                                      ],
+                                                                  .requestFocus(
+                                                                      billedToFocus);
+                                                              setState(() {});
+                                                            },
+                                                            // focusNode:
+                                                            //     billedToFocus,
+                                                            // onEditingComplete: () {
+                                                            //   FocusScope.of(context)
+                                                            //       .requestFocus(
+                                                            //           remarkFocus);
+                                                            //   setState(() {});
+                                                            // },
+                                                            controller:
+                                                                _billedToController,
+                                                            onSaved:
+                                                                (newValue) {},
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.3,
+                                                            height: 40,
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                                    left: 8.0,
+                                                                    bottom:
+                                                                        16.0),
+                                                            hintText: '',
+                                                          ),
+                                                        ],
+                                                      ),
                                                     ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 10,
-                                                  ),
-                                                  SizedBox(
-                                                    width: w * 0.30,
-                                                    child: Row(
-                                                      children: [
-                                                        SizedBox(
-                                                          width: MediaQuery.of(
+                                                    Padding(
+                                                      padding:
+                                                          const EdgeInsets.only(
+                                                              top: 5),
+                                                      child: Row(
+                                                        children: [
+                                                          SizedBox(
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.08,
+                                                            child: Text(
+                                                              "Remarks",
+                                                              style: GoogleFonts
+                                                                  .poppins(
+                                                                fontSize: 15,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .bold,
+                                                                color: Colors
+                                                                    .deepPurple,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                          SETopTextfield(
+                                                            onTap: () {
+                                                              FocusScope.of(
                                                                       context)
-                                                                  .size
-                                                                  .width *
-                                                              0.08,
+                                                                  .requestFocus(
+                                                                      remarkFocus);
+                                                              setState(() {});
+                                                            },
+                                                            controller:
+                                                                _remarkController,
+                                                            // focusNode: remarkFocus,
+                                                            // onEditingComplete: () {
+                                                            //   FocusScope.of(context)
+                                                            //       .requestFocus(
+                                                            //           advanceFocus);
+                                                            //   setState(() {});
+                                                            // },
+                                                            onSaved:
+                                                                (newValue) {},
+                                                            width: MediaQuery.of(
+                                                                        context)
+                                                                    .size
+                                                                    .width *
+                                                                0.3,
+                                                            height: 40,
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .only(
+                                                                    left: 8.0,
+                                                                    bottom:
+                                                                        16.0),
+                                                            hintText: '',
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                width: w * 0.35,
+                                                // height: 170,
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.only(
+                                                          left: 50),
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.start,
+                                                    children: [
+                                                      const SizedBox(
+                                                        height: 5,
+                                                      ),
+                                                      SizedBox(
+                                                        width: w * 0.30,
+                                                        child: Row(
+                                                          children: [
+                                                            SizedBox(
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.08,
+                                                              child: Text(
+                                                                "S. Man",
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: Colors
+                                                                      .deepPurple,
+                                                                ),
+                                                              ),
+                                                            ),
+
+                                                            Container(
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                      border: Border
+                                                                          .all()),
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.1,
+                                                              height: 40,
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(2.0),
+                                                              child:
+                                                                  DropdownButtonHideUnderline(
+                                                                child:
+                                                                    DropdownMenu<
+                                                                        SalesMan>(
+                                                                  width: 400,
+                                                                  requestFocusOnTap:
+                                                                      true,
+                                                                  initialSelection: salesManList
+                                                                          .isNotEmpty
+                                                                      ? salesManList
+                                                                          .first
+                                                                      : null,
+                                                                  enableSearch:
+                                                                      true,
+                                                                  trailingIcon:
+                                                                      const SizedBox
+                                                                          .shrink(),
+                                                                  textStyle:
+                                                                      GoogleFonts
+                                                                          .poppins(
+                                                                    fontSize:
+                                                                        16,
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    color: Colors
+                                                                        .black,
+                                                                    decoration:
+                                                                        TextDecoration
+                                                                            .none,
+                                                                  ),
+                                                                  menuHeight:
+                                                                      300,
+                                                                  selectedTrailingIcon:
+                                                                      const SizedBox
+                                                                          .shrink(),
+                                                                  inputDecorationTheme:
+                                                                      const InputDecorationTheme(
+                                                                    border:
+                                                                        InputBorder
+                                                                            .none,
+                                                                    contentPadding: EdgeInsets.symmetric(
+                                                                        horizontal:
+                                                                            8,
+                                                                        vertical:
+                                                                            0),
+                                                                    isDense:
+                                                                        true,
+                                                                    activeIndicatorBorder:
+                                                                        BorderSide(
+                                                                      color: Colors
+                                                                          .transparent,
+                                                                    ),
+                                                                  ),
+                                                                  expandedInsets:
+                                                                      EdgeInsets
+                                                                          .zero,
+                                                                  onSelected:
+                                                                      (SalesMan?
+                                                                          value) {
+                                                                    setState(
+                                                                        () {
+                                                                      FocusScope.of(
+                                                                              context)
+                                                                          .requestFocus(
+                                                                              _salesManFocusMode);
+                                                                      setState(
+                                                                          () {
+                                                                        selectedSalesMan =
+                                                                            value!.id;
+                                                                      });
+                                                                    });
+                                                                  },
+                                                                  dropdownMenuEntries:
+                                                                      salesManList.map<
+                                                                          DropdownMenuEntry<
+                                                                              SalesMan>>((SalesMan
+                                                                          value) {
+                                                                    return DropdownMenuEntry<
+                                                                        SalesMan>(
+                                                                      value:
+                                                                          value,
+                                                                      label: value
+                                                                          .name,
+                                                                      style:
+                                                                          ButtonStyle(
+                                                                        textStyle:
+                                                                            WidgetStateProperty.all(
+                                                                          GoogleFonts
+                                                                              .poppins(
+                                                                            fontSize:
+                                                                                16,
+                                                                            fontWeight:
+                                                                                FontWeight.bold,
+                                                                            color:
+                                                                                Colors.black,
+                                                                          ),
+                                                                        ),
+                                                                      ),
+                                                                    );
+                                                                  }).toList(),
+                                                                ),
+                                                              ),
+                                                            ),
+
+                                                            // SETopTextfield(
+                                                            //   controller:
+                                                            //       _salesManController,
+                                                            //   onSaved:
+                                                            //       (newValue) {},
+                                                            //   width: MediaQuery.of(
+                                                            //               context)
+                                                            //           .size
+                                                            //           .width *
+                                                            //       0.1,
+                                                            //   height: 40,
+                                                            //   padding: const EdgeInsets
+                                                            //       .only(
+                                                            //       left: 8.0,
+                                                            //       bottom:
+                                                            //           16.0),
+                                                            //   hintText: '',
+                                                            //   alignment:
+                                                            //       TextAlign
+                                                            //           .end,
+                                                            // ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 10,
+                                                      ),
+                                                      SizedBox(
+                                                        width: w * 0.25,
+                                                        child: Row(
+                                                          children: [
+                                                            SizedBox(
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.08,
+                                                              child: Text(
+                                                                "Advance",
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: Colors
+                                                                      .deepPurple,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            SETopTextfield(
+                                                              onTap: () {
+                                                                FocusScope.of(
+                                                                        context)
+                                                                    .requestFocus(
+                                                                        advanceFocus);
+                                                                setState(() {});
+                                                              },
+                                                              // focusNode:
+                                                              //     advanceFocus,
+                                                              // onEditingComplete:
+                                                              //     () {
+                                                              //   FocusScope.of(
+                                                              //           context)
+                                                              //       .requestFocus(
+                                                              //           pointBalance);
+
+                                                              //   setState(() {});
+                                                              // },
+                                                              alignment:
+                                                                  TextAlign.end,
+                                                              controller:
+                                                                  _advanceController,
+                                                              onSaved:
+                                                                  (newValue) {},
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.1,
+                                                              height: 40,
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .only(
+                                                                      left: 8.0,
+                                                                      bottom:
+                                                                          16.0),
+                                                              hintText: '',
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 10,
+                                                      ),
+                                                      SizedBox(
+                                                        width: w * 0.30,
+                                                        child: Row(
+                                                          children: [
+                                                            SizedBox(
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.08,
+                                                              child: Text(
+                                                                "Point Balance",
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: Colors
+                                                                      .deepPurple,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            SETopTextfield(
+                                                              onTap: () {
+                                                                FocusScope.of(
+                                                                        context)
+                                                                    .requestFocus(
+                                                                        pointBalance);
+                                                                setState(() {});
+                                                              },
+                                                              // focusNode:
+                                                              //     pointBalance,
+                                                              // onEditingComplete:
+                                                              //     () {
+                                                              //   FocusScope.of(
+                                                              //           context)
+                                                              //       .requestFocus(
+                                                              //           redeemPoints);
+                                                              //   setState(() {});
+                                                              // },
+                                                              alignment:
+                                                                  TextAlign.end,
+                                                              controller:
+                                                                  _pointBalanceController,
+                                                              onSaved:
+                                                                  (newValue) {},
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.1,
+                                                              height: 40,
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .only(
+                                                                      left: 8.0,
+                                                                      bottom:
+                                                                          16.0),
+                                                              hintText: '',
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 10,
+                                                      ),
+                                                      SizedBox(
+                                                        width: w * 0.30,
+                                                        child: Row(
+                                                          children: [
+                                                            SizedBox(
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.08,
+                                                              child: Text(
+                                                                "Redeem Points",
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: Colors
+                                                                      .deepPurple,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            SETopTextfield(
+                                                              onTap: () {
+                                                                FocusScope.of(
+                                                                        context)
+                                                                    .requestFocus(
+                                                                        redeemPoints);
+                                                                setState(() {});
+                                                              },
+                                                              // focusNode:
+                                                              //     redeemPoints,
+                                                              // onEditingComplete:
+                                                              //     () {
+                                                              //   FocusScope.of(
+                                                              //           context)
+                                                              //       .requestFocus(
+                                                              //           additionFocus);
+                                                              //   setState(() {});
+                                                              // },
+                                                              controller:
+                                                                  _redeemPointController,
+                                                              alignment:
+                                                                  TextAlign.end,
+                                                              onSaved:
+                                                                  (newValue) {},
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.1,
+                                                              height: 40,
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .only(
+                                                                      left: 8.0,
+                                                                      bottom:
+                                                                          16.0),
+                                                              hintText: '',
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      const SizedBox(
+                                                        height: 100,
+                                                        child: Align(
+                                                          alignment: Alignment
+                                                              .bottomRight,
                                                           child: Text(
-                                                            "Point Balance",
-                                                            style: GoogleFonts
-                                                                .poppins(
-                                                              fontSize: 15,
+                                                            'Profit Check',
+                                                            style: TextStyle(
                                                               fontWeight:
                                                                   FontWeight
                                                                       .bold,
-                                                              color: Colors
-                                                                  .deepPurple,
+                                                              color:
+                                                                  Colors.blue,
+                                                              decoration:
+                                                                  TextDecoration
+                                                                      .underline,
+                                                              decorationColor:
+                                                                  Colors
+                                                                      .blue, // Change underline color
+                                                              decorationThickness:
+                                                                  2.0, // Change underline thickness
+                                                              decorationStyle:
+                                                                  TextDecorationStyle
+                                                                      .solid, // Change underline style
                                                             ),
                                                           ),
                                                         ),
-                                                        SETopTextfield(
-                                                          onTap: () {
-                                                            FocusScope.of(
-                                                                    context)
-                                                                .requestFocus(
-                                                                    pointBalance);
-                                                            setState(() {});
-                                                          },
-                                                          // focusNode:
-                                                          //     pointBalance,
-                                                          // onEditingComplete:
-                                                          //     () {
-                                                          //   FocusScope.of(
-                                                          //           context)
-                                                          //       .requestFocus(
-                                                          //           redeemPoints);
-                                                          //   setState(() {});
-                                                          // },
-                                                          alignment:
-                                                              TextAlign.end,
-                                                          controller:
-                                                              _pointBalanceController,
-                                                          onSaved:
-                                                              (newValue) {},
-                                                          width: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .width *
-                                                              0.1,
-                                                          height: 40,
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  left: 8.0,
-                                                                  bottom: 16.0),
-                                                          hintText: '',
-                                                        ),
-                                                      ],
-                                                    ),
+                                                      )
+                                                    ],
                                                   ),
-                                                  const SizedBox(
-                                                    height: 10,
-                                                  ),
-                                                  SizedBox(
-                                                    width: w * 0.30,
-                                                    child: Row(
-                                                      children: [
-                                                        SizedBox(
-                                                          width: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .width *
-                                                              0.08,
-                                                          child: Text(
-                                                            "Redeem Points",
-                                                            style: GoogleFonts
-                                                                .poppins(
-                                                              fontSize: 15,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color: Colors
-                                                                  .deepPurple,
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    left: 0),
+                                                child: Column(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.start,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    SizedBox(
+                                                      width: w * 0.2,
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .only(top: 5),
+                                                        child: Row(
+                                                          children: [
+                                                            SizedBox(
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.08,
+                                                              child: Text(
+                                                                "Addition(F6)",
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: Colors
+                                                                      .deepPurple,
+                                                                ),
+                                                              ),
                                                             ),
-                                                          ),
-                                                        ),
-                                                        SETopTextfield(
-                                                          onTap: () {
-                                                            FocusScope.of(
-                                                                    context)
-                                                                .requestFocus(
-                                                                    redeemPoints);
-                                                            setState(() {});
-                                                          },
-                                                          // focusNode:
-                                                          //     redeemPoints,
-                                                          // onEditingComplete:
-                                                          //     () {
-                                                          //   FocusScope.of(
-                                                          //           context)
-                                                          //       .requestFocus(
-                                                          //           additionFocus);
-                                                          //   setState(() {});
-                                                          // },
-                                                          controller:
-                                                              _redeemPointController,
-                                                          alignment:
-                                                              TextAlign.end,
-                                                          onSaved:
-                                                              (newValue) {},
-                                                          width: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .width *
-                                                              0.1,
-                                                          height: 40,
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  left: 8.0,
-                                                                  bottom: 16.0),
-                                                          hintText: '',
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  const SizedBox(
-                                                    height: 100,
-                                                    child: Align(
-                                                      alignment:
-                                                          Alignment.bottomRight,
-                                                      child: Text(
-                                                        'Profit Check',
-                                                        style: TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: Colors.blue,
-                                                          decoration:
-                                                              TextDecoration
-                                                                  .underline,
-                                                          decorationColor: Colors
-                                                              .blue, // Change underline color
-                                                          decorationThickness:
-                                                              2.0, // Change underline thickness
-                                                          decorationStyle:
-                                                              TextDecorationStyle
-                                                                  .solid, // Change underline style
+                                                            SETopTextfield(
+                                                              onTap: () {
+                                                                FocusScope.of(
+                                                                        context)
+                                                                    .requestFocus(
+                                                                        additionFocus);
+                                                                setState(() {});
+                                                              },
+                                                              // focusNode:
+                                                              //     additionFocus,
+                                                              // onEditingComplete:
+                                                              //     () {
+                                                              //   FocusScope.of(
+                                                              //           context)
+                                                              //       .requestFocus(
+                                                              //           lessFocus);
+                                                              //   setState(() {});
+                                                              // },
+                                                              alignment:
+                                                                  TextAlign.end,
+                                                              controller:
+                                                                  _additionController,
+                                                              onSaved:
+                                                                  (newValue) {},
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.15,
+                                                              height: 40,
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .only(
+                                                                      left: 8.0,
+                                                                      bottom:
+                                                                          16.0),
+                                                              hintText: '',
+                                                            ),
+                                                          ],
                                                         ),
                                                       ),
                                                     ),
-                                                  )
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Padding(
-                                            padding:
-                                                const EdgeInsets.only(left: 0),
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.start,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                SizedBox(
-                                                  width: w * 0.2,
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            top: 5),
-                                                    child: Row(
-                                                      children: [
-                                                        SizedBox(
-                                                          width: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .width *
-                                                              0.08,
-                                                          child: Text(
-                                                            "Addition(F6)",
-                                                            style: GoogleFonts
-                                                                .poppins(
-                                                              fontSize: 15,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color: Colors
-                                                                  .deepPurple,
+                                                    SizedBox(
+                                                      width: w * 0.2,
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .only(top: 5),
+                                                        child: Row(
+                                                          children: [
+                                                            SizedBox(
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.08,
+                                                              child: Text(
+                                                                "Less(F7)",
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: Colors
+                                                                      .deepPurple,
+                                                                ),
+                                                              ),
                                                             ),
-                                                          ),
-                                                        ),
-                                                        SETopTextfield(
-                                                          onTap: () {
-                                                            FocusScope.of(
-                                                                    context)
-                                                                .requestFocus(
-                                                                    additionFocus);
-                                                            setState(() {});
-                                                          },
-                                                          // focusNode:
-                                                          //     additionFocus,
-                                                          // onEditingComplete:
-                                                          //     () {
-                                                          //   FocusScope.of(
-                                                          //           context)
-                                                          //       .requestFocus(
-                                                          //           lessFocus);
-                                                          //   setState(() {});
-                                                          // },
-                                                          alignment:
-                                                              TextAlign.end,
-                                                          controller:
-                                                              _additionController,
-                                                          onSaved:
-                                                              (newValue) {},
-                                                          width: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .width *
-                                                              0.15,
-                                                          height: 40,
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  left: 8.0,
-                                                                  bottom: 16.0),
-                                                          hintText: '',
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                SizedBox(
-                                                  width: w * 0.2,
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            top: 5),
-                                                    child: Row(
-                                                      children: [
-                                                        SizedBox(
-                                                          width: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .width *
-                                                              0.08,
-                                                          child: Text(
-                                                            "Less(F7)",
-                                                            style: GoogleFonts
-                                                                .poppins(
-                                                              fontSize: 15,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color: Colors
-                                                                  .deepPurple,
+                                                            SETopTextfield(
+                                                              onTap: () {
+                                                                FocusScope.of(
+                                                                        context)
+                                                                    .requestFocus(
+                                                                        lessFocus);
+                                                                setState(() {});
+                                                              },
+                                                              // focusNode: lessFocus,
+                                                              // onEditingComplete:
+                                                              //     () {
+                                                              //   FocusScope.of(
+                                                              //           context)
+                                                              //       .requestFocus(
+                                                              //           roundOffFocus);
+                                                              //   setState(() {});
+                                                              // },
+                                                              alignment:
+                                                                  TextAlign.end,
+                                                              controller:
+                                                                  _lessController,
+                                                              onSaved:
+                                                                  (newValue) {},
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.15,
+                                                              height: 40,
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .only(
+                                                                      left: 8.0,
+                                                                      bottom:
+                                                                          16.0),
+                                                              hintText: '',
                                                             ),
-                                                          ),
+                                                          ],
                                                         ),
-                                                        SETopTextfield(
-                                                          onTap: () {
-                                                            FocusScope.of(
-                                                                    context)
-                                                                .requestFocus(
-                                                                    lessFocus);
-                                                            setState(() {});
-                                                          },
-                                                          // focusNode: lessFocus,
-                                                          // onEditingComplete:
-                                                          //     () {
-                                                          //   FocusScope.of(
-                                                          //           context)
-                                                          //       .requestFocus(
-                                                          //           roundOffFocus);
-                                                          //   setState(() {});
-                                                          // },
-                                                          alignment:
-                                                              TextAlign.end,
-                                                          controller:
-                                                              _lessController,
-                                                          onSaved:
-                                                              (newValue) {},
-                                                          width: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .width *
-                                                              0.15,
-                                                          height: 40,
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  left: 8.0,
-                                                                  bottom: 16.0),
-                                                          hintText: '',
-                                                        ),
-                                                      ],
+                                                      ),
                                                     ),
-                                                  ),
-                                                ),
-                                                SizedBox(
-                                                  width: w * 0.2,
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            top: 5),
-                                                    child: Row(
-                                                      children: [
-                                                        SizedBox(
-                                                          width: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .width *
-                                                              0.08,
-                                                          child: Text(
-                                                            "Round off",
-                                                            style: GoogleFonts
-                                                                .poppins(
-                                                              fontSize: 15,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color: Colors
-                                                                  .deepPurple,
+                                                    SizedBox(
+                                                      width: w * 0.2,
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .only(top: 5),
+                                                        child: Row(
+                                                          children: [
+                                                            SizedBox(
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.08,
+                                                              child: Text(
+                                                                "Round off",
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: Colors
+                                                                      .deepPurple,
+                                                                ),
+                                                              ),
                                                             ),
-                                                          ),
-                                                        ),
-                                                        SETopTextfield(
-                                                          onTap: () {
-                                                            FocusScope.of(
-                                                                    context)
-                                                                .requestFocus(
-                                                                    roundOffFocus);
-                                                            setState(() {});
-                                                          },
-                                                          // focusNode:
-                                                          //     roundOffFocus,
-                                                          // onEditingComplete:
-                                                          //     () {
-                                                          //   FocusScope.of(
-                                                          //           context)
-                                                          //       .requestFocus(
-                                                          //           netTotalFocus);
-                                                          //   setState(() {});
-                                                          // },
-                                                          alignment:
-                                                              TextAlign.end,
-                                                          controller:
-                                                              _roundOffController,
-                                                          onSaved:
-                                                              (newValue) {},
-                                                          width: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .width *
-                                                              0.15,
-                                                          height: 40,
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  left: 8.0,
-                                                                  bottom: 16.0),
-                                                          hintText: '',
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                                SizedBox(
-                                                  width: w * 0.2,
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            top: 5),
-                                                    child: Row(
-                                                      children: [
-                                                        SizedBox(
-                                                          width: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .width *
-                                                              0.08,
-                                                          child: Text(
-                                                            "Net Total",
-                                                            style: GoogleFonts
-                                                                .poppins(
-                                                              fontSize: 15,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color: Colors
-                                                                  .deepPurple,
+                                                            SETopTextfield(
+                                                              onTap: () {
+                                                                FocusScope.of(
+                                                                        context)
+                                                                    .requestFocus(
+                                                                        roundOffFocus);
+                                                                setState(() {});
+                                                              },
+                                                              // focusNode:
+                                                              //     roundOffFocus,
+                                                              // onEditingComplete:
+                                                              //     () {
+                                                              //   FocusScope.of(
+                                                              //           context)
+                                                              //       .requestFocus(
+                                                              //           netTotalFocus);
+                                                              //   setState(() {});
+                                                              // },
+                                                              alignment:
+                                                                  TextAlign.end,
+                                                              controller:
+                                                                  _roundOffController,
+                                                              onSaved:
+                                                                  (newValue) {},
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.15,
+                                                              height: 40,
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .only(
+                                                                      left: 8.0,
+                                                                      bottom:
+                                                                          16.0),
+                                                              hintText: '',
                                                             ),
-                                                          ),
+                                                          ],
                                                         ),
-                                                        SETopTextfield(
-                                                          onTap: () {
-                                                            FocusScope.of(
-                                                                    context)
-                                                                .requestFocus(
-                                                                    netTotalFocus);
-                                                            setState(() {});
-                                                          },
-                                                          // focusNode:
-                                                          //     netTotalFocus,
-                                                          // onEditingComplete:
-                                                          //     () {
-                                                          //   FocusScope.of(
-                                                          //           context)
-                                                          //       .requestFocus(
-                                                          //           noFocus);
-                                                          //   setState(() {});
-                                                          // },
-                                                          alignment:
-                                                              TextAlign.end,
-                                                          controller:
-                                                              _netTotalDiscController,
-                                                          onSaved:
-                                                              (newValue) {},
-                                                          width: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .width *
-                                                              0.15,
-                                                          height: 40,
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  left: 8.0,
-                                                                  bottom: 16.0),
-                                                          hintText: '',
-                                                        ),
-                                                      ],
+                                                      ),
                                                     ),
-                                                  ),
+                                                    SizedBox(
+                                                      width: w * 0.2,
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .only(top: 5),
+                                                        child: Row(
+                                                          children: [
+                                                            SizedBox(
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.08,
+                                                              child: Text(
+                                                                "Net Total",
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: Colors
+                                                                      .deepPurple,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                            SETopTextfield(
+                                                              onTap: () {
+                                                                FocusScope.of(
+                                                                        context)
+                                                                    .requestFocus(
+                                                                        netTotalFocus);
+                                                                setState(() {});
+                                                              },
+                                                              // focusNode:
+                                                              //     netTotalFocus,
+                                                              // onEditingComplete:
+                                                              //     () {
+                                                              //   FocusScope.of(
+                                                              //           context)
+                                                              //       .requestFocus(
+                                                              //           noFocus);
+                                                              //   setState(() {});
+                                                              // },
+                                                              alignment:
+                                                                  TextAlign.end,
+                                                              controller:
+                                                                  _netTotalDiscController,
+                                                              onSaved:
+                                                                  (newValue) {},
+                                                              width: MediaQuery.of(
+                                                                          context)
+                                                                      .size
+                                                                      .width *
+                                                                  0.15,
+                                                              height: 40,
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .only(
+                                                                      left: 8.0,
+                                                                      bottom:
+                                                                          16.0),
+                                                              hintText: '',
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    // const SizedBox(
+                                                    //   height: 35,
+                                                    // ),
+                                                  ],
                                                 ),
-                                                // const SizedBox(
-                                                //   height: 35,
-                                                // ),
-                                              ],
-                                            ),
+                                              )
+                                            ],
                                           )
-                                        ],
-                                      )
-                                    ]),
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(
-                                  right: 10, left: 10, top: 10),
-                              child: Row(
-                                children: [
-                                  const Button(
-                                    name: "Hold",
+                                        ]),
                                   ),
-                                  const Button(
-                                    name: "Hold List",
-                                  ),
-                                  const Spacer(),
-                                  Button(
-                                    name: "Save",
-                                    Skey: "[F4]",
-                                    onTap: () {
-                                      if (selectedType == 'Multimode') {
-                                        openMultiModeDialog();
-                                      } else {
-                                        updatePOSEntry();
-                                      }
-                                    },
-                                  ),
-                                  const Button(
-                                    name: "Cancel",
-                                  ),
-                                  Button(
-                                    name: "Delete",
-                                    onTap: () async {
-                                      restorePreviousState();
-
-                                      await salesPosRepository
-                                          .deletePosEntry(widget.salesPos.id);
-                                      Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) => PosMaster(
-                                              fetchedLedger: ledgerList,
-                                            ),
-                                          ));
-                                    },
-                                  ),
-                                  const Spacer(),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Shortcuts(
-                        shortcuts: {
-                          LogicalKeySet(LogicalKeyboardKey.f3):
-                              const ActivateIntent(),
-                          LogicalKeySet(LogicalKeyboardKey.f4):
-                              const ActivateIntent(),
-                        },
-                        child: Focus(
-                          autofocus: true,
-                          focusNode: _focusNode,
-                          onKey: (node, event) {
-                            if (event is RawKeyDownEvent &&
-                                event.logicalKey == LogicalKeyboardKey.f3) {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                    builder: (context) => const NewCustomer()),
-                              );
-                              return KeyEventResult.handled;
-                            } else if (event is RawKeyDownEvent &&
-                                event.logicalKey == LogicalKeyboardKey.f6) {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const SalesManDesktopbody(),
                                 ),
-                              );
-                              return KeyEventResult.handled;
-                            } else if (event is RawKeyDownEvent &&
-                                event.logicalKey == LogicalKeyboardKey.escape) {
-                              Navigator.of(context).pop();
-                              return KeyEventResult.handled;
-                            } else if (event is RawKeyDownEvent &&
-                                event.logicalKey == LogicalKeyboardKey.f2) {
-                              PanaraConfirmDialog.showAnimatedGrow(
-                                context,
-                                title: "BillingSphere",
-                                message:
-                                    "Are you sure you want to cancel this entry?",
-                                confirmButtonText: "Confirm",
-                                cancelButtonText: "Cancel",
-                                onTapCancel: () {
-                                  Navigator.pop(context);
-                                },
-                                onTapConfirm: () {
-                                  // pop screen
-                                  Navigator.of(context).pop();
-                                  Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (context) {
-                                      return PosMaster(
-                                        fetchedLedger: ledgerList,
-                                      );
-                                    },
-                                  ));
-                                },
-                                panaraDialogType: PanaraDialogType.warning,
-                              );
-
-                              return KeyEventResult.handled;
-                            } else if (event is RawKeyDownEvent &&
-                                event.logicalKey == LogicalKeyboardKey.keyN) {
-                              PanaraConfirmDialog.showAnimatedGrow(
-                                context,
-                                title: "BillingSphere",
-                                message:
-                                    "Are you sure you want to create a new entry?",
-                                confirmButtonText: "Confirm",
-                                cancelButtonText: "Cancel",
-                                onTapCancel: () {
-                                  Navigator.pop(context);
-                                },
-                                onTapConfirm: () {
-                                  // pop screen
-                                  Navigator.of(context).pop();
-                                  Navigator.of(context)
-                                      .pushReplacement(MaterialPageRoute(
-                                    builder: (context) {
-                                      return const SalesReturn();
-                                    },
-                                  ));
-                                },
-                                panaraDialogType: PanaraDialogType.warning,
-                              );
-                              return KeyEventResult.handled;
-                            } else if (event is RawKeyDownEvent &&
-                                event.logicalKey == LogicalKeyboardKey.pageUp) {
-                              return KeyEventResult.handled;
-                            } else if (event is RawKeyDownEvent &&
-                                event.logicalKey ==
-                                    LogicalKeyboardKey.pageDown) {
-                              return KeyEventResult.handled;
-                            } else if (event is RawKeyDownEvent &&
-                                event.logicalKey == LogicalKeyboardKey.f4) {
-                              return KeyEventResult.handled;
-                            }
-                            return KeyEventResult.ignored;
-                          },
-                          child: Container(
-                            height: 700,
-                            width: w * 0.1,
-                            decoration: BoxDecoration(
-                              border: Border(
-                                top: BorderSide(
-                                    width: 1,
-                                    color: Colors.purple[900] ?? Colors.purple),
-                                right: BorderSide(
-                                    width: 1,
-                                    color: Colors.purple[900] ?? Colors.purple),
-                                bottom: BorderSide(
-                                    width: 1,
-                                    color: Colors.purple[900] ?? Colors.purple),
-                                left: BorderSide(
-                                    width: 1,
-                                    color: Colors.purple[900] ?? Colors.purple),
-                              ),
-                            ),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.vertical,
-                              child: Column(
-                                children: [
-                                  List2(
-                                    Skey: "F2",
-                                    name: "List",
-                                    onTap: () {
-                                      PanaraConfirmDialog.showAnimatedGrow(
-                                        context,
-                                        title: "BillingSphere",
-                                        message:
-                                            "Are you sure you want to cancel this entry?",
-                                        confirmButtonText: "Confirm",
-                                        cancelButtonText: "Cancel",
-                                        onTapCancel: () {
-                                          Navigator.pop(context);
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      right: 10, left: 10, top: 10),
+                                  child: Row(
+                                    children: [
+                                      const Button(
+                                        name: "Hold",
+                                      ),
+                                      const Button(
+                                        name: "Hold List",
+                                      ),
+                                      const Spacer(),
+                                      Button(
+                                        name: "Save",
+                                        Skey: "[F4]",
+                                        onTap: () {
+                                          if (selectedType == 'Multimode') {
+                                            openMultiModeDialog();
+                                          } else {
+                                            updatePOSEntry();
+                                          }
                                         },
-                                        onTapConfirm: () {
-                                          // pop screen
-                                          Navigator.of(context).pop();
-                                          Navigator.of(context)
-                                              .push(MaterialPageRoute(
-                                            builder: (context) {
-                                              return PosMaster(
-                                                fetchedLedger: ledgerList,
-                                              );
-                                            },
-                                          ));
-                                        },
-                                        panaraDialogType:
-                                            PanaraDialogType.warning,
-                                      );
-                                    },
-                                  ),
-                                  List2(
-                                    Skey: "F3",
-                                    name: "New Customer",
-                                    onTap: () {
-                                      final result = Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const NewCustomer(),
-                                        ),
-                                      );
+                                      ),
+                                      const Button(
+                                        name: "Cancel",
+                                      ),
+                                      Button(
+                                        name: "Delete",
+                                        onTap: () async {
+                                          restorePreviousState();
 
-                                      result.then((value) {
-                                        if (value != null) {
-                                          setState(() {
-                                            customerList.add(value);
-                                          });
-                                        }
-                                      });
-
-                                      print('Result: $result');
-                                    },
-                                  ),
-                                  List2(
-                                    Skey: "F6",
-                                    name: "New S. Man",
-                                    onTap: () {
-                                      Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              const SalesManDesktopbody(),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                  List2(
-                                    Skey: "N",
-                                    name: "New",
-                                    onTap: () {
-                                      PanaraConfirmDialog.showAnimatedGrow(
-                                        context,
-                                        title: "BillingSphere",
-                                        message:
-                                            "Are you sure you want to create a new entry?",
-                                        confirmButtonText: "Confirm",
-                                        cancelButtonText: "Cancel",
-                                        onTapCancel: () {
-                                          Navigator.pop(context);
-                                        },
-                                        onTapConfirm: () {
-                                          // pop screen
-                                          Navigator.of(context).pop();
-                                          Navigator.of(context).pushReplacement(
+                                          await salesPosRepository
+                                              .deletePosEntry(
+                                                  widget.salesPos.id);
+                                          Navigator.pushReplacement(
+                                              context,
                                               MaterialPageRoute(
-                                            builder: (context) {
-                                              return const SalesReturn();
-                                            },
-                                          ));
+                                                builder: (context) => PosMaster(
+                                                  fetchedLedger: ledgerList,
+                                                ),
+                                              ));
                                         },
-                                        panaraDialogType:
-                                            PanaraDialogType.warning,
-                                      );
+                                      ),
+                                      const Spacer(),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Shortcuts(
+                            shortcuts: {
+                              LogicalKeySet(LogicalKeyboardKey.f3):
+                                  const ActivateIntent(),
+                              LogicalKeySet(LogicalKeyboardKey.f4):
+                                  const ActivateIntent(),
+                            },
+                            child: Focus(
+                              autofocus: true,
+                              focusNode: _focusNode,
+                              onKey: (node, event) {
+                                if (event is RawKeyDownEvent &&
+                                    event.logicalKey == LogicalKeyboardKey.f3) {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            const NewCustomer()),
+                                  );
+                                  return KeyEventResult.handled;
+                                } else if (event is RawKeyDownEvent &&
+                                    event.logicalKey == LogicalKeyboardKey.f6) {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const SalesManDesktopbody(),
+                                    ),
+                                  );
+                                  return KeyEventResult.handled;
+                                } else if (event is RawKeyDownEvent &&
+                                    event.logicalKey ==
+                                        LogicalKeyboardKey.escape) {
+                                  Navigator.of(context).pop();
+                                  return KeyEventResult.handled;
+                                } else if (event is RawKeyDownEvent &&
+                                    event.logicalKey == LogicalKeyboardKey.f2) {
+                                  PanaraConfirmDialog.showAnimatedGrow(
+                                    context,
+                                    title: "BillingSphere",
+                                    message:
+                                        "Are you sure you want to cancel this entry?",
+                                    confirmButtonText: "Confirm",
+                                    cancelButtonText: "Cancel",
+                                    onTapCancel: () {
+                                      Navigator.pop(context);
                                     },
+                                    onTapConfirm: () {
+                                      // pop screen
+                                      Navigator.of(context).pop();
+                                      Navigator.of(context)
+                                          .push(MaterialPageRoute(
+                                        builder: (context) {
+                                          return PosMaster(
+                                            fetchedLedger: ledgerList,
+                                          );
+                                        },
+                                      ));
+                                    },
+                                    panaraDialogType: PanaraDialogType.warning,
+                                  );
+
+                                  return KeyEventResult.handled;
+                                } else if (event is RawKeyDownEvent &&
+                                    event.logicalKey ==
+                                        LogicalKeyboardKey.keyN) {
+                                  PanaraConfirmDialog.showAnimatedGrow(
+                                    context,
+                                    title: "BillingSphere",
+                                    message:
+                                        "Are you sure you want to create a new entry?",
+                                    confirmButtonText: "Confirm",
+                                    cancelButtonText: "Cancel",
+                                    onTapCancel: () {
+                                      Navigator.pop(context);
+                                    },
+                                    onTapConfirm: () {
+                                      // pop screen
+                                      Navigator.of(context).pop();
+                                      Navigator.of(context)
+                                          .pushReplacement(MaterialPageRoute(
+                                        builder: (context) {
+                                          return const SalesReturn();
+                                        },
+                                      ));
+                                    },
+                                    panaraDialogType: PanaraDialogType.warning,
+                                  );
+                                  return KeyEventResult.handled;
+                                } else if (event is RawKeyDownEvent &&
+                                    event.logicalKey ==
+                                        LogicalKeyboardKey.pageUp) {
+                                  return KeyEventResult.handled;
+                                } else if (event is RawKeyDownEvent &&
+                                    event.logicalKey ==
+                                        LogicalKeyboardKey.pageDown) {
+                                  return KeyEventResult.handled;
+                                } else if (event is RawKeyDownEvent &&
+                                    event.logicalKey == LogicalKeyboardKey.f4) {
+                                  return KeyEventResult.handled;
+                                }
+                                return KeyEventResult.ignored;
+                              },
+                              child: Container(
+                                height: 700,
+                                width: w * 0.1,
+                                decoration: BoxDecoration(
+                                  border: Border(
+                                    top: BorderSide(
+                                        width: 1,
+                                        color: Colors.purple[900] ??
+                                            Colors.purple),
+                                    right: BorderSide(
+                                        width: 1,
+                                        color: Colors.purple[900] ??
+                                            Colors.purple),
+                                    bottom: BorderSide(
+                                        width: 1,
+                                        color: Colors.purple[900] ??
+                                            Colors.purple),
+                                    left: BorderSide(
+                                        width: 1,
+                                        color: Colors.purple[900] ??
+                                            Colors.purple),
                                   ),
-                                  // const List2(
-                                  //   Skey: "P",
-                                  //   name: "Print",
-                                  // ),
-                                  // const List2(
-                                  //   Skey: "A",
-                                  //   name: "Alt Print",
-                                  // ),
-                                  // const List2(
-                                  //   Skey: "F5",
-                                  //   name: "Change Type",
-                                  // ),
-                                  // const List2(),
-                                  // const List2(
-                                  //   Skey: "B",
-                                  //   name: "Prn Barcode",
-                                  // ),
-                                  // const List2(),
-                                  // const List2(
-                                  //   Skey: "N",
-                                  //   name: "Search No",
-                                  // ),
-                                  // const List2(
-                                  //   Skey: "M",
-                                  //   name: "Search Item",
-                                  // ),
-                                  // const List2(),
-                                  // const List2(
-                                  //   name: "Discount",
-                                  //   Skey: "F12",
-                                  // ),
-                                  // const List2(
-                                  //   Skey: "F12",
-                                  //   name: "Audit Trail",
-                                  // ),
-                                  List2(
-                                    Skey: "Pg Up",
-                                    name: "Previous",
-                                    onTap: () {},
+                                ),
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.vertical,
+                                  child: Column(
+                                    children: [
+                                      List2(
+                                        Skey: "F2",
+                                        name: "List",
+                                        onTap: () {
+                                          PanaraConfirmDialog.showAnimatedGrow(
+                                            context,
+                                            title: "BillingSphere",
+                                            message:
+                                                "Are you sure you want to cancel this entry?",
+                                            confirmButtonText: "Confirm",
+                                            cancelButtonText: "Cancel",
+                                            onTapCancel: () {
+                                              Navigator.pop(context);
+                                            },
+                                            onTapConfirm: () {
+                                              // pop screen
+                                              Navigator.of(context).pop();
+                                              Navigator.of(context)
+                                                  .push(MaterialPageRoute(
+                                                builder: (context) {
+                                                  return PosMaster(
+                                                    fetchedLedger: ledgerList,
+                                                  );
+                                                },
+                                              ));
+                                            },
+                                            panaraDialogType:
+                                                PanaraDialogType.warning,
+                                          );
+                                        },
+                                      ),
+                                      List2(
+                                        Skey: "F3",
+                                        name: "New Customer",
+                                        onTap: () {
+                                          final result =
+                                              Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const NewCustomer(),
+                                            ),
+                                          );
+
+                                          result.then((value) {
+                                            if (value != null) {
+                                              setState(() {
+                                                customerList.add(value);
+                                              });
+                                            }
+                                          });
+
+                                          print('Result: $result');
+                                        },
+                                      ),
+                                      List2(
+                                        Skey: "F6",
+                                        name: "New S. Man",
+                                        onTap: () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  const SalesManDesktopbody(),
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                      List2(
+                                        Skey: "N",
+                                        name: "New",
+                                        onTap: () {
+                                          PanaraConfirmDialog.showAnimatedGrow(
+                                            context,
+                                            title: "BillingSphere",
+                                            message:
+                                                "Are you sure you want to create a new entry?",
+                                            confirmButtonText: "Confirm",
+                                            cancelButtonText: "Cancel",
+                                            onTapCancel: () {
+                                              Navigator.pop(context);
+                                            },
+                                            onTapConfirm: () {
+                                              // pop screen
+                                              Navigator.of(context).pop();
+                                              Navigator.of(context)
+                                                  .pushReplacement(
+                                                      MaterialPageRoute(
+                                                builder: (context) {
+                                                  return const SalesReturn();
+                                                },
+                                              ));
+                                            },
+                                            panaraDialogType:
+                                                PanaraDialogType.warning,
+                                          );
+                                        },
+                                      ),
+                                      // const List2(
+                                      //   Skey: "P",
+                                      //   name: "Print",
+                                      // ),
+                                      // const List2(
+                                      //   Skey: "A",
+                                      //   name: "Alt Print",
+                                      // ),
+                                      // const List2(
+                                      //   Skey: "F5",
+                                      //   name: "Change Type",
+                                      // ),
+                                      // const List2(),
+                                      // const List2(
+                                      //   Skey: "B",
+                                      //   name: "Prn Barcode",
+                                      // ),
+                                      // const List2(),
+                                      // const List2(
+                                      //   Skey: "N",
+                                      //   name: "Search No",
+                                      // ),
+                                      // const List2(
+                                      //   Skey: "M",
+                                      //   name: "Search Item",
+                                      // ),
+                                      // const List2(),
+                                      // const List2(
+                                      //   name: "Discount",
+                                      //   Skey: "F12",
+                                      // ),
+                                      // const List2(
+                                      //   Skey: "F12",
+                                      //   name: "Audit Trail",
+                                      // ),
+                                      List2(
+                                        Skey: "Pg Up",
+                                        name: "Previous",
+                                        onTap: () {},
+                                      ),
+                                      List2(
+                                        Skey: "Pg Dn",
+                                        name: "Next",
+                                        onTap: () {},
+                                      ),
+                                      const List2(),
+                                      const List2(),
+                                      const List2(),
+                                      const List2(),
+                                      const List2(),
+                                      const List2(),
+                                      const List2(),
+                                      const List2(),
+                                      const List2(),
+                                      const List2(),
+                                      const List2(),
+                                      const List2(),
+                                      const List2(),
+                                      // const List2(
+                                      //   Skey: "G",
+                                      //   name: "Attach. Img",
+                                      // ),
+                                      // const List2(),
+                                      // const List2(
+                                      //   Skey: "G",
+                                      //   name: "Vch Setup",
+                                      // ),
+                                      // const List2(
+                                      //   Skey: "T",
+                                      //   name: "Print Setup",
+                                      // ),
+                                      // const List2(),
+                                    ],
                                   ),
-                                  List2(
-                                    Skey: "Pg Dn",
-                                    name: "Next",
-                                    onTap: () {},
-                                  ),
-                                  const List2(),
-                                  const List2(),
-                                  const List2(),
-                                  const List2(),
-                                  const List2(),
-                                  const List2(),
-                                  const List2(),
-                                  const List2(),
-                                  const List2(),
-                                  const List2(),
-                                  const List2(),
-                                  const List2(),
-                                  const List2(),
-                                  // const List2(
-                                  //   Skey: "G",
-                                  //   name: "Attach. Img",
-                                  // ),
-                                  // const List2(),
-                                  // const List2(
-                                  //   Skey: "G",
-                                  //   name: "Vch Setup",
-                                  // ),
-                                  // const List2(
-                                  //   Skey: "T",
-                                  //   name: "Print Setup",
-                                  // ),
-                                  // const List2(),
-                                ],
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ),
+                        ],
+                      )
                     ],
-                  )
-                ],
+                  ),
+                ),
               ),
             ),
           );
@@ -3211,13 +3485,18 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
   }
 
   void addTableRow2() {
-    print("selectedItemName : $selectedItemName");
-    int existingIndex = tables.indexWhere((row) {
-      final tableCell = _getTextFromTableRow(row, 1);
-      return tableCell == selectedItemName;
+    if (values.isEmpty) {
+      print("is empty");
+      _addNewRow();
+      return;
+    }
+
+    int existingIndex = values.indexWhere((item) {
+      return item['itemName'] == selectedItemId;
     });
 
     if (existingIndex != -1) {
+      print("yes this row exists");
       _updateExistingRow(existingIndex);
     } else {
       _addNewRow();
@@ -3323,19 +3602,27 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
     );
   }
 
+  void deleteTableRow(int index) {
+    setState(() {
+      values.removeAt(index);
+      tables.removeAt(index);
+      rowItems.removeAt(index);
+    });
+
+    _calculateTotalAmount();
+  }
+
   void openDialog2({int? rowIndex, Item? item}) {
-    if (rowItems.contains(item)) {
-      rowIndex = rowItems.indexOf(item!);
+    var itemId = item?.id;
+
+    if (rowItems.any((existingItem) => existingItem.id == itemId)) {
+      rowIndex =
+          rowItems.indexWhere((existingItem) => existingItem.id == itemId);
     }
 
     if (rowIndex != null) {
-      print("row index is not null");
-
       selectedRowIndex = rowIndex;
       final selectedItem = values[rowIndex];
-      print("selectedItem : ${selectedItem}");
-      print(selectedItemId);
-
       selectedItemId = selectedItem['itemName'];
       selectedItemName = selectedItem['Item_Name'];
       _qtyController.text = selectedItem['qty'];
@@ -3350,8 +3637,6 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
       _mrpController.text = selectedItem['mrp'];
       _amountController.text = selectedItem['amount'];
     } else {
-      print("row index is  null");
-
       final selectedItem = item;
 
       selectedItemName = selectedItem!.itemName;
@@ -3382,7 +3667,6 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
         }
       }
 
-      // Calculate the Rate
       double ratepercent = (double.parse(_taxController.text) / 100);
 
       ratepercent += 1.00;
@@ -3402,13 +3686,10 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
       _mrpController.text = selectedItem.mrp.toStringAsFixed(2);
       _baseController.text = selectedItem.mrp.toStringAsFixed(2);
 
-      final tax = selectedItem.mrp - rate;
+      // final tax = selectedItem.mrp - rate;
 
-      // Change to taxAmountController
+      // _taxController.text = tax.toStringAsFixed(2);
 
-      _taxController.text = tax.toStringAsFixed(2);
-
-      // For Net Amount, multiply qty with real rate
       double qty = double.parse(_qtyController.text);
       double rate2 = double.parse(selectedItem.mrp.toString());
 
@@ -3459,10 +3740,9 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                         if (!rowItems.contains(item)) {
                           rowItems.add(item!);
                         }
-
+                        addTableRow2();
                         _saveValues();
                         _calculateTotalAmount();
-                        addTableRow2();
                         dataText.clear();
 
                         setState(() {});
@@ -3600,7 +3880,7 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                   },
                                 ),
                                 CustomTextField(
-                                  name: "Tax",
+                                  name: "Tax%",
                                   // focusNode: taxFocus,
                                   isReadOnly: true,
                                   controller: _taxController,
@@ -3638,10 +3918,10 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                   if (!rowItems.contains(item)) {
                                     rowItems.add(item!);
                                   }
+                                  addTableRow2();
 
                                   _saveValues();
                                   _calculateTotalAmount();
-                                  addTableRow2();
                                   dataText.clear();
                                 },
                                 name: "Save",
@@ -3655,10 +3935,16 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                 name: "Cancel",
                               ),
                             ),
-                            const Padding(
+                            Padding(
                               padding: EdgeInsets.only(
                                   bottom: 10, left: 5, right: 5),
                               child: Buttons(
+                                onTap: rowIndex != null
+                                    ? () {
+                                        deleteTableRow(rowIndex!);
+                                        Navigator.pop(context);
+                                      }
+                                    : () {},
                                 name: "Delete",
                               ),
                             ),
@@ -4050,11 +4336,12 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
       String basicText = _getTextFromTableRow(tables[i], 9);
       double basicAmount = double.tryParse(basicText) ?? 0.0;
 
-      double taxAmount = double.tryParse(values[i]['tax'].toString()) ?? 0.0;
+      double taxPer = double.tryParse(values[i]['tax'].toString()) ?? 0.0;
 
       double totalBasicAmount = basicAmount * quantity;
 
-      double totalAmountWithTax = totalBasicAmount + taxAmount;
+      double totalAmountWithTax =
+          totalBasicAmount + (totalBasicAmount * (taxPer / 100));
 
       double discountAmount = (totalAmountWithTax * discountPercent) / 100;
       double netAmount = totalAmountWithTax - discountAmount;
@@ -4130,13 +4417,15 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
       'amount': _amountController.text,
       'netAmount': _netAmountController.text,
     };
-    print("new item : ${newItem}");
 
     if (selectedRowIndex != null) {
+      print("selectedRowIndex : $selectedRowIndex");
+      newItem['uniqueKey'] = values[selectedRowIndex!]['uniqueKey'];
       values[selectedRowIndex!] = newItem;
     } else {
       bool itemExists = false;
       int existingIndex = -1;
+
       for (int i = 0; i < values.length; i++) {
         if (values[i]['itemName'] == selectedItemId) {
           itemExists = true;
@@ -4146,18 +4435,29 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
       }
 
       if (itemExists) {
-        // Update quantity and calculate net amount
-        final qty = int.parse(values[existingIndex]['qty']) +
-            int.parse(newItem['qty']!);
-        final mrp = double.parse(values[existingIndex]['mrp']);
-        final netAmount = qty * mrp;
+        // Retain the original uniqueKey and itemName
+        newItem['uniqueKey'] = values[existingIndex]['uniqueKey'];
+        newItem['itemName'] = values[existingIndex]['itemName'];
 
-        // Update values
-        values[existingIndex]['qty'] = qty.toString();
+        final existingQty = int.parse(values[existingIndex]['qty']);
+        print("existingQty : $existingQty");
+        final newQty = int.parse(newItem['qty']!);
+        print("newQty : ${newQty}");
+        final updatedQty = existingQty + newQty;
+        print("updatedQty : $updatedQty");
+
+        values[existingIndex]['qty'] = updatedQty.toString();
+
+        final rate = double.parse(values[existingIndex]['mrp']);
+        final netAmount = updatedQty * rate;
+
         values[existingIndex]['netAmount'] = netAmount.toStringAsFixed(2);
+        values[existingIndex]['discPer'] = newItem['discPer'];
+        values[existingIndex]['discRs'] = newItem['discRs'];
+        values[existingIndex]['amount'] =
+            (updatedQty * rate).toStringAsFixed(2);
       } else {
         if (newItem['itemName'] != null) {
-          // Add new item to the list
           values.add(newItem);
         }
       }
@@ -4626,8 +4926,6 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
       },
     );
 
-    // Construct table rows from the map data
-
     final List<TableRow> tableRows =
         selectedCustomerData.expand((data) => data.entries).map((entry) {
       final item = itemList.firstWhere((item) => item.id == entry.itemName);
@@ -4722,7 +5020,6 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
       Ctables2 = tableRows;
     });
 
-    // Construct table data
     final List<TableRow> tableData = selectedCustomerData.map((data) {
       return TableRow(
         children: [
@@ -4849,7 +5146,6 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
             child: Column(
               children: [
                 Container(
-                  // height: MediaQuery.of(context).size.height,
                   width: MediaQuery.of(context).size.width * 0.85,
                   decoration: BoxDecoration(
                     border: Border.all(
@@ -5194,7 +5490,9 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Expanded(
+                                  Container(
+                                    height: MediaQuery.of(context).size.height *
+                                        0.65,
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
@@ -5213,240 +5511,24 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                               color: Colors.black,
                                             ),
                                           ),
-                                          child: Column(
-                                            children: [
-                                              Table(
-                                                border: TableBorder.all(
-                                                    width: 1,
-                                                    color: Colors.black),
-                                                columnWidths: const {
-                                                  0: FlexColumnWidth(4),
-                                                  1: FlexColumnWidth(2),
-                                                  2: FlexColumnWidth(2),
-                                                  3: FlexColumnWidth(3),
-                                                  4: FlexColumnWidth(3),
-                                                  5: FlexColumnWidth(3),
-                                                  6: FlexColumnWidth(3),
-                                                },
-                                                children: [
-                                                  TableRow(children: [
-                                                    TableCell(
-                                                        child: SizedBox(
-                                                      height: 40,
-                                                      child: Align(
-                                                        alignment:
-                                                            Alignment.center,
-                                                        child: Text(
-                                                          "Date",
-                                                          textAlign:
-                                                              TextAlign.center,
-                                                          style: GoogleFonts
-                                                              .poppins(
-                                                            fontSize: 15,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: const Color(
-                                                                0xff4B0082),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    )),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment:
-                                                              Alignment.center,
-                                                          child: Text(
-                                                            "Time",
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                            style: GoogleFonts
-                                                                .poppins(
-                                                              fontSize: 15,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color: const Color(
-                                                                  0xff4B0082),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment:
-                                                              Alignment.center,
-                                                          child: Text(
-                                                            "No",
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                            style: GoogleFonts
-                                                                .poppins(
-                                                              fontSize: 15,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color: const Color(
-                                                                  0xff4B0082),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment: Alignment
-                                                              .centerRight,
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(4.0),
-                                                            child: Text(
-                                                              "Amount",
-                                                              textAlign:
-                                                                  TextAlign.end,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment: Alignment
-                                                              .centerRight,
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(4.0),
-                                                            child: Text(
-                                                              "Items",
-                                                              textAlign:
-                                                                  TextAlign.end,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment: Alignment
-                                                              .centerRight,
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(4.0),
-                                                            child: Text(
-                                                              "Points",
-                                                              textAlign:
-                                                                  TextAlign.end,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    TableCell(
-                                                      child: SizedBox(
-                                                        height: 40,
-                                                        child: Align(
-                                                          alignment: Alignment
-                                                              .centerRight,
-                                                          child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .all(4.0),
-                                                            child: Text(
-                                                              "Redeem",
-                                                              textAlign:
-                                                                  TextAlign.end,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ]),
-                                                  ...Ctables,
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(height: 10),
-                                        Container(
-                                          height: MediaQuery.of(context)
-                                                  .size
-                                                  .height *
-                                              0.30,
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.40,
-                                          decoration: BoxDecoration(
-                                            border: Border.all(
-                                              color: Colors.black,
-                                            ),
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              Table(
-                                                border: TableBorder.all(
-                                                    width: 1,
-                                                    color: Colors.black),
-                                                columnWidths: const {
-                                                  0: FlexColumnWidth(3),
-                                                  1: FlexColumnWidth(2),
-                                                  2: FlexColumnWidth(2),
-                                                  3: FlexColumnWidth(2),
-                                                  4: FlexColumnWidth(2),
-                                                },
-                                                children: [
-                                                  TableRow(
-                                                    children: [
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              children: [
+                                                Table(
+                                                  border: TableBorder.all(
+                                                      width: 1,
+                                                      color: Colors.black),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(4),
+                                                    1: FlexColumnWidth(2),
+                                                    2: FlexColumnWidth(2),
+                                                    3: FlexColumnWidth(3),
+                                                    4: FlexColumnWidth(3),
+                                                    5: FlexColumnWidth(3),
+                                                    6: FlexColumnWidth(3),
+                                                  },
+                                                  children: [
+                                                    TableRow(children: [
                                                       TableCell(
                                                           child: SizedBox(
                                                         height: 40,
@@ -5454,7 +5536,7 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                           alignment:
                                                               Alignment.center,
                                                           child: Text(
-                                                            "Month",
+                                                            "Date",
                                                             textAlign: TextAlign
                                                                 .center,
                                                             style: GoogleFonts
@@ -5476,7 +5558,7 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                             alignment: Alignment
                                                                 .center,
                                                             child: Text(
-                                                              "Bill",
+                                                              "Time",
                                                               textAlign:
                                                                   TextAlign
                                                                       .center,
@@ -5500,7 +5582,7 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                             alignment: Alignment
                                                                 .center,
                                                             child: Text(
-                                                              "Amount",
+                                                              "No",
                                                               textAlign:
                                                                   TextAlign
                                                                       .center,
@@ -5522,20 +5604,26 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                           height: 40,
                                                           child: Align(
                                                             alignment: Alignment
-                                                                .center,
-                                                            child: Text(
-                                                              "Points",
-                                                              textAlign:
-                                                                  TextAlign
-                                                                      .center,
-                                                              style: GoogleFonts
-                                                                  .poppins(
-                                                                fontSize: 15,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color: const Color(
-                                                                    0xff4B0082),
+                                                                .centerRight,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(4.0),
+                                                              child: Text(
+                                                                "Amount",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .end,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
                                                               ),
                                                             ),
                                                           ),
@@ -5546,9 +5634,139 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                           height: 40,
                                                           child: Align(
                                                             alignment: Alignment
+                                                                .centerRight,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(4.0),
+                                                              child: Text(
+                                                                "Items",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .end,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      TableCell(
+                                                        child: SizedBox(
+                                                          height: 40,
+                                                          child: Align(
+                                                            alignment: Alignment
+                                                                .centerRight,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(4.0),
+                                                              child: Text(
+                                                                "Points",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .end,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      TableCell(
+                                                        child: SizedBox(
+                                                          height: 40,
+                                                          child: Align(
+                                                            alignment: Alignment
+                                                                .centerRight,
+                                                            child: Padding(
+                                                              padding:
+                                                                  const EdgeInsets
+                                                                      .all(4.0),
+                                                              child: Text(
+                                                                "Redeem",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .end,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ]),
+                                                    ...Ctables,
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 10),
+                                        Container(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.30,
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.40,
+                                          decoration: BoxDecoration(
+                                            border: Border.all(
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                          child: SingleChildScrollView(
+                                            child: Column(
+                                              children: [
+                                                Table(
+                                                  border: TableBorder.all(
+                                                      width: 1,
+                                                      color: Colors.black),
+                                                  columnWidths: const {
+                                                    0: FlexColumnWidth(3),
+                                                    1: FlexColumnWidth(2),
+                                                    2: FlexColumnWidth(2),
+                                                    3: FlexColumnWidth(2),
+                                                    4: FlexColumnWidth(2),
+                                                  },
+                                                  children: [
+                                                    TableRow(
+                                                      children: [
+                                                        TableCell(
+                                                            child: SizedBox(
+                                                          height: 40,
+                                                          child: Align(
+                                                            alignment: Alignment
                                                                 .center,
                                                             child: Text(
-                                                              "Redeem",
+                                                              "Month",
                                                               textAlign:
                                                                   TextAlign
                                                                       .center,
@@ -5563,15 +5781,119 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                               ),
                                                             ),
                                                           ),
+                                                        )),
+                                                        TableCell(
+                                                          child: SizedBox(
+                                                            height: 40,
+                                                            child: Align(
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              child: Text(
+                                                                "Bill",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
                                                         ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  ..._buildTableRows(
-                                                      groupedData),
-                                                ],
-                                              ),
-                                            ],
+                                                        TableCell(
+                                                          child: SizedBox(
+                                                            height: 40,
+                                                            child: Align(
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              child: Text(
+                                                                "Amount",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        TableCell(
+                                                          child: SizedBox(
+                                                            height: 40,
+                                                            child: Align(
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              child: Text(
+                                                                "Points",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                        TableCell(
+                                                          child: SizedBox(
+                                                            height: 40,
+                                                            child: Align(
+                                                              alignment:
+                                                                  Alignment
+                                                                      .center,
+                                                              child: Text(
+                                                                "Redeem",
+                                                                textAlign:
+                                                                    TextAlign
+                                                                        .center,
+                                                                style:
+                                                                    GoogleFonts
+                                                                        .poppins(
+                                                                  fontSize: 15,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                  color: const Color(
+                                                                      0xff4B0082),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                    ..._buildTableRows(
+                                                        groupedData),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -5587,102 +5909,57 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                         color: Colors.black,
                                       ),
                                     ),
-                                    child: Column(
-                                      children: [
-                                        Table(
-                                          border: TableBorder.all(
-                                              width: 1, color: Colors.black),
-                                          columnWidths: const {
-                                            0: FlexColumnWidth(5),
-                                            1: FlexColumnWidth(2),
-                                            2: FlexColumnWidth(2),
-                                            3: FlexColumnWidth(3),
-                                            4: FlexColumnWidth(2),
-                                          },
-                                          children: [
-                                            TableRow(children: [
-                                              TableCell(
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          Table(
+                                            border: TableBorder.all(
+                                                width: 1, color: Colors.black),
+                                            columnWidths: const {
+                                              0: FlexColumnWidth(5),
+                                              1: FlexColumnWidth(2),
+                                              2: FlexColumnWidth(2),
+                                              3: FlexColumnWidth(3),
+                                              4: FlexColumnWidth(2),
+                                            },
+                                            children: [
+                                              TableRow(children: [
+                                                TableCell(
+                                                    child: SizedBox(
+                                                  height: 40,
+                                                  child: Align(
+                                                    alignment:
+                                                        Alignment.centerLeft,
+                                                    child: Padding(
+                                                      padding:
+                                                          const EdgeInsets.all(
+                                                              4.0),
+                                                      child: Text(
+                                                        "Item Name",
+                                                        textAlign:
+                                                            TextAlign.start,
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                          fontSize: 15,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: const Color(
+                                                              0xff4B0082),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                )),
+                                                TableCell(
                                                   child: SizedBox(
-                                                height: 40,
-                                                child: Align(
-                                                  alignment:
-                                                      Alignment.centerLeft,
-                                                  child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            4.0),
-                                                    child: Text(
-                                                      "Item Name",
-                                                      textAlign:
-                                                          TextAlign.start,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              )),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Qty",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      "Rate",
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                            0xff4B0082),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment:
-                                                        Alignment.centerRight,
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              4.0),
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.center,
                                                       child: Text(
-                                                        "Total Amount",
+                                                        "Qty",
                                                         textAlign:
-                                                            TextAlign.end,
+                                                            TextAlign.center,
                                                         style:
                                                             GoogleFonts.poppins(
                                                           fontSize: 15,
@@ -5695,21 +5972,16 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                              TableCell(
-                                                child: SizedBox(
-                                                  height: 40,
-                                                  child: Align(
-                                                    alignment:
-                                                        Alignment.centerRight,
-                                                    child: Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              4.0),
+                                                TableCell(
+                                                  child: SizedBox(
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.center,
                                                       child: Text(
-                                                        "Points",
+                                                        "Rate",
                                                         textAlign:
-                                                            TextAlign.end,
+                                                            TextAlign.center,
                                                         style:
                                                             GoogleFonts.poppins(
                                                           fontSize: 15,
@@ -5722,20 +5994,72 @@ class _SalesPosEditScreenState extends State<SalesPosEditScreen> {
                                                     ),
                                                   ),
                                                 ),
-                                              ),
-                                            ]),
-                                            ...Ctables2,
-                                          ],
-                                        ),
-                                      ],
+                                                TableCell(
+                                                  child: SizedBox(
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.centerRight,
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(4.0),
+                                                        child: Text(
+                                                          "Total Amount",
+                                                          textAlign:
+                                                              TextAlign.end,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                TableCell(
+                                                  child: SizedBox(
+                                                    height: 40,
+                                                    child: Align(
+                                                      alignment:
+                                                          Alignment.centerRight,
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(4.0),
+                                                        child: Text(
+                                                          "Points",
+                                                          textAlign:
+                                                              TextAlign.end,
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 15,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                                0xff4B0082),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ]),
+                                              ...Ctables2,
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
                             ),
                           ),
-
-                          //  Total Amount Here....
                           Padding(
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 10),

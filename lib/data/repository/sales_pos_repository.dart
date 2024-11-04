@@ -17,7 +17,7 @@ class SalesPosRepository {
     return prefs.getStringList('companies');
   }
 
-  Future<void> createPosEntry(SalesPos salesPos) async {
+  Future<SalesPos> createPosEntry(SalesPos salesPos) async {
     String? token = await getToken();
 
     final response = await http.post(
@@ -30,7 +30,8 @@ class SalesPosRepository {
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      return;
+      final responseData = jsonDecode(response.body);
+      return SalesPos.fromMap(responseData['data']);
     } else {
       throw Exception(response.body);
     }

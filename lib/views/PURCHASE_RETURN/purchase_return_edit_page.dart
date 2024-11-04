@@ -1932,7 +1932,11 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                     width:
                                         MediaQuery.of(context).size.width * 0,
                                     child: ElevatedButton(
-                                      onPressed: () {},
+                                      onPressed: () async {
+                                        await purchaseReturnService
+                                            .deletePurchaseReturn(widget.data);
+                                        Navigator.pop(context);
+                                      },
                                       style: ButtonStyle(
                                         backgroundColor:
                                             MaterialStateProperty.all<Color>(
