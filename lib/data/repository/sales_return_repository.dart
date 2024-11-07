@@ -1,19 +1,18 @@
 import 'dart:convert';
-import 'package:billingsphere/data/models/purchaseReturn/purchase_return_model.dart';
+import 'package:billingsphere/data/models/salesReturn/sales_return_model.dart';
 import 'package:billingsphere/utils/constant.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-class PurchaseReturnService {
-  PurchaseReturnService() {
+class SalesReturnService {
+  SalesReturnService() {
     _initPrefs();
   }
 
   late SharedPreferences _prefs;
 
-  // Initialize SharedPreferences
   Future<void> _initPrefs() async {
     _prefs = await SharedPreferences.getInstance();
   }
@@ -33,40 +32,67 @@ class PurchaseReturnService {
     return prefs.getStringList('companies');
   }
 
-  Future<void> createPurchaseReturn(PurchaseReturn purchaseReturn) async {
+  Future<void> createSalesReturn(SalesReturn salesReturn) async {
     String? token = await getToken();
 
     try {
       final response = await http.post(
-        Uri.parse('${Constants.baseUrl}/purchase-return/create'),
+        Uri.parse('${Constants.baseUrl}/sales-return/create'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': '$token',
         },
-        body: json.encode(purchaseReturn.toJson()),
+        body: json.encode(salesReturn.toJson()),
       );
+
+      print("response : $response");
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
+        print("responseData : $responseData");
+
         if (responseData['success'] == true) {
-          print(
-              "Purchase Return created successfully: ${responseData['message']}");
+          Fluttertoast.showToast(
+            msg: "Saales Return created successfully!",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.green,
+            textColor: Colors.white,
+          );
         } else {
-          print("Failed to create Purchase Return: ${responseData['message']}");
+          Fluttertoast.showToast(
+            msg: "Failed to create sales Return: ${responseData['message']}",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+          );
         }
       } else {
-        print("Error: ${response.statusCode} - ${response.reasonPhrase}");
+        Fluttertoast.showToast(
+          msg: "Error: ${response.statusCode} - ${response.reasonPhrase}",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+        );
       }
     } catch (e) {
-      print("Exception caught: $e");
+      Fluttertoast.showToast(
+        msg: "Exception: $e",
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM,
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
     }
   }
 
-  Future<List<PurchaseReturn>> getAllPurchaseReturns() async {
+  Future<List<SalesReturn>> getAllSalesReturns() async {
     try {
       String? token = await getToken();
       final response = await http.get(
-        Uri.parse('${Constants.baseUrl}/purchase-return/get-all'),
+        Uri.parse('${Constants.baseUrl}/sales-return/get-all'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': '$token',
@@ -76,29 +102,29 @@ class PurchaseReturnService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success']) {
-          List<PurchaseReturn> purchaseReturns = (data['data'] as List)
-              .map((item) => PurchaseReturn.fromJson(item))
+          List<SalesReturn> salesReturn = (data['data'] as List)
+              .map((item) => SalesReturn.fromJson(item))
               .toList();
-          return purchaseReturns;
+          return salesReturn;
         } else {
           throw Exception(data['message']);
         }
       } else {
-        throw Exception('Failed to load purchase returns');
+        throw Exception('Failed to load sales returns');
       }
     } catch (ex) {
-      print('Error fetching all purchase returns: $ex');
+      print('Error fetching all sales returns: $ex');
       return [];
     }
   }
 
-  Future<List<PurchaseReturn>> fetchAllPurchaseReturns() async {
+  Future<List<SalesReturn>> fetchAllSalesReturns() async {
     try {
       String? token = await getToken();
       List<String>? code = await getCompanyCode();
 
       final response = await http.get(
-        Uri.parse('${Constants.baseUrl}/purchase-return/fetch-all/${code?[0]}'),
+        Uri.parse('${Constants.baseUrl}/sales-return/fetch-all/${code?[0]}'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': '$token',
@@ -108,25 +134,24 @@ class PurchaseReturnService {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         if (data['success']) {
-          await _prefs.setString(
-              "purchaseReturnLength", "${data['data'].length}");
-          List<PurchaseReturn> purchaseReturns = (data['data'] as List)
-              .map((item) => PurchaseReturn.fromJson(item))
+          await _prefs.setString("salesReturnLength", "${data['data'].length}");
+          List<SalesReturn> salesReturn = (data['data'] as List)
+              .map((item) => SalesReturn.fromJson(item))
               .toList();
-          return purchaseReturns;
+          return salesReturn;
         } else {
           throw Exception(data['message']);
         }
       } else {
-        throw Exception('Failed to fetch purchase returns by company code');
+        throw Exception('Failed to fetch sales returns by company code');
       }
     } catch (ex) {
-      print('Error fetching purchase returns by company code: $ex');
+      print('Error fetching sales returns by company code: $ex');
       return [];
     }
   }
 
-  Future<PurchaseReturn?> fetchPurchaseReturnById(String id) async {
+  Future<SalesReturn?> fetchSalesReturnById(String id) async {
     try {
       String? token = await getToken();
       List<String>? code = await getCompanyCode();
@@ -137,7 +162,7 @@ class PurchaseReturnService {
 
       final response = await http.get(
         Uri.parse(
-            '${Constants.baseUrl}/purchase-return/fetch-by-id/${code[0]}/$id'),
+            '${Constants.baseUrl}/sales-return/fetch-by-id/${code[0]}/$id'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': '$token',
@@ -148,10 +173,10 @@ class PurchaseReturnService {
         final data = json.decode(response.body);
         print(data);
         if (data['success']) {
-          return PurchaseReturn.fromJson(data['data']);
+          return SalesReturn.fromJson(data['data']);
         } else {
           Fluttertoast.showToast(
-            msg: "Failed to fetch Purchase Return: ${data['message']}",
+            msg: "Failed to fetch sales Return: ${data['message']}",
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.BOTTOM,
             backgroundColor: Colors.red,
@@ -170,23 +195,23 @@ class PurchaseReturnService {
         return null;
       }
     } catch (e) {
-      print("Error fetching Purchase Return by ID: $e");
+      print("Error fetching sales Return by ID: $e");
       return null;
     }
   }
 
-  Future<void> updatePurchaseReturn(
-      String id, PurchaseReturn updatedPurchaseReturn) async {
+  Future<void> updateSalesReturn(
+      String id, SalesReturn updatedSalesReturn) async {
     String? token = await getToken();
 
     try {
       final response = await http.put(
-        Uri.parse('${Constants.baseUrl}/purchase-return/update-by-id/$id'),
+        Uri.parse('${Constants.baseUrl}/sales-return/update-by-id/$id'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': '$token',
         },
-        body: json.encode(updatedPurchaseReturn.toJson()),
+        body: json.encode(updatedSalesReturn.toJson()),
       );
 
       if (response.statusCode == 200) {
@@ -194,19 +219,19 @@ class PurchaseReturnService {
         final responseData = json.decode(response.body);
         if (responseData['success'] == true) {
           Fluttertoast.showToast(
-            msg: "Purchase Return updated successfully!",
+            msg: "Sales Return updated successfully!",
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.BOTTOM,
             backgroundColor: Colors.green,
             textColor: Colors.white,
           );
           print(
-              "Purchase Return updated successfully: ${responseData['message']}");
+              "Sales Return updated successfully: ${responseData['message']}");
         } else {
           print(response.statusCode);
 
           Fluttertoast.showToast(
-            msg: "Failed to update Purchase Return: ${responseData['message']}",
+            msg: "Failed to update Sales Return: ${responseData['message']}",
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.BOTTOM,
             backgroundColor: Colors.red,
@@ -225,7 +250,7 @@ class PurchaseReturnService {
         print("Error: ${response.statusCode} - ${response.reasonPhrase}");
       }
     } catch (e) {
-      print("Exception caught while updating Purchase Return: $e");
+      print("Exception caught while updating Sales Return: $e");
       Fluttertoast.showToast(
         msg: "Exception: $e",
         toastLength: Toast.LENGTH_SHORT,
@@ -236,12 +261,12 @@ class PurchaseReturnService {
     }
   }
 
-  Future<void> deletePurchaseReturn(String id) async {
+  Future<void> deleteSalesReturn(String id) async {
     String? token = await getToken();
 
     try {
       final response = await http.delete(
-        Uri.parse('${Constants.baseUrl}/purchase-return/delete-by-id/$id'),
+        Uri.parse('${Constants.baseUrl}/sales-return/delete-by-id/$id'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': '$token',
@@ -252,23 +277,23 @@ class PurchaseReturnService {
         final responseData = json.decode(response.body);
         if (responseData['success'] == true) {
           Fluttertoast.showToast(
-            msg: "Purchase Return deleted successfully!",
+            msg: "Sales Return deleted successfully!",
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.BOTTOM,
             backgroundColor: Colors.green,
             textColor: Colors.white,
           );
           print(
-              "Purchase Return deleted successfully: ${responseData['message']}");
+              "Sales Return deleted successfully: ${responseData['message']}");
         } else {
           Fluttertoast.showToast(
-            msg: "Failed to delete Purchase Return: ${responseData['message']}",
+            msg: "Failed to delete Sales Return: ${responseData['message']}",
             toastLength: Toast.LENGTH_SHORT,
             gravity: ToastGravity.BOTTOM,
             backgroundColor: Colors.red,
             textColor: Colors.white,
           );
-          print("Failed to delete Purchase Return: ${responseData['message']}");
+          print("Failed to delete Sales Return: ${responseData['message']}");
         }
       } else {
         Fluttertoast.showToast(
@@ -281,7 +306,7 @@ class PurchaseReturnService {
         print("Error: ${response.statusCode} - ${response.reasonPhrase}");
       }
     } catch (e) {
-      print("Exception caught while deleting Purchase Return: $e");
+      print("Exception caught while deleting Salaes Return: $e");
       Fluttertoast.showToast(
         msg: "Exception: $e",
         toastLength: Toast.LENGTH_SHORT,

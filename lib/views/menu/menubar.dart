@@ -1,3 +1,4 @@
+import 'package:billingsphere/views/Sales_Return/sales_return.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -962,6 +963,16 @@ class CustomAppBarMenuAdmin {
           Navigator.of(context).push(MaterialPageRoute(
             builder: (context) {
               return PRDesktopBody();
+            },
+          ));
+        } else {}
+        if (value == 'Sales Return / Credit Note') {
+          print(value);
+          print("xcvbnm");
+
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) {
+              return const SalesReturnPage();
             },
           ));
         } else {}

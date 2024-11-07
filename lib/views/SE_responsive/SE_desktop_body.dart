@@ -1770,8 +1770,7 @@ class _SEMyDesktopBodyState extends State<SEMyDesktopBody> {
                                                         (element) =>
                                                             element.id ==
                                                             selectedLedgerName,
-                                                        orElse: () =>
-                                                            value, // Fallback to selected value if not found
+                                                        orElse: () => value,
                                                       );
                                                       ledgerAmount =
                                                           selectedLedger

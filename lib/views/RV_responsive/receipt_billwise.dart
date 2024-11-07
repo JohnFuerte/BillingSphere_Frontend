@@ -2,6 +2,7 @@ import 'package:billingsphere/data/models/receiptVoucher/receipt_voucher_model.d
 import 'package:billingsphere/data/models/salesEntries/sales_entrires_model.dart';
 import 'package:billingsphere/data/repository/receipt_voucher_repository.dart';
 import 'package:billingsphere/data/repository/sales_enteries_repository.dart';
+import 'package:billingsphere/data/repository/sales_return_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -19,6 +20,7 @@ class ReceiptBillwise extends StatefulWidget {
     required this.allValuesCallback,
     required this.onSave,
     this.receiptID,
+    this.isSalesReturn = false,
   });
   final String ledgerID;
   final String ledgerName;
@@ -26,6 +28,7 @@ class ReceiptBillwise extends StatefulWidget {
   final Function(List<Map<String, dynamic>>) allValuesCallback;
   final VoidCallback onSave;
   final String? receiptID;
+  final bool isSalesReturn;
 
   @override
   State<ReceiptBillwise> createState() => _ChequeReturnEntryState();
@@ -85,6 +88,7 @@ class _ChequeReturnEntryState extends State<ReceiptBillwise> {
   late LinkedScrollControllerGroup _horizontalControllersGroup;
 
   SalesEntryService saleServices = SalesEntryService();
+  SalesReturnService salesReturnService = SalesReturnService();
   LedgerService ledgerService = LedgerService();
   ReceiptVoucherService receiptServices = ReceiptVoucherService();
 
@@ -120,10 +124,58 @@ class _ChequeReturnEntryState extends State<ReceiptBillwise> {
     });
 
     if (widget.receiptID != null) {
-      fetchAndSetReceipt();
+      if (widget.isSalesReturn) {
+        fetchAndSetSalesereturn();
+      } else {
+        fetchAndSetReceipt();
+      }
     }
 
     print('filteredSale $filteredSale');
+  }
+
+  Future<void> fetchAndSetSalesereturn() async {
+    try {
+      if (widget.receiptID != null) {
+        final receipt =
+            await salesReturnService.fetchSalesReturnById(widget.receiptID!);
+        rowDataList.clear();
+
+        if (receipt != null) {
+          bool entryFound = false;
+
+          if (receipt.ledger == widget.ledgerID) {
+            entryFound = true;
+            for (var bill in receipt.billwise) {
+              RowData rowData = RowData(
+                selectedTypeOfRef: ' Against Ref.',
+                selectedSales: bill.sales,
+                billno: bill.billNo,
+                date: bill.date,
+                amount: bill.amount.toString(),
+                dateController: TextEditingController(text: bill.date),
+                amountController:
+                    TextEditingController(text: bill.amount.toString()),
+              );
+
+              rowDataList.add(rowData);
+              saveValues(rowData.toMap());
+            }
+          }
+          totalAmount = widget.debitAmount;
+          if (!entryFound) {
+            addNewRow();
+          }
+          setState(() {});
+        }
+      } else {
+        print('No receiptID provided.');
+      }
+    } catch (error) {
+      print('Failed to fetch receipt: $error');
+      addNewRow();
+      setState(() {});
+    }
   }
 
   Future<void> fetchAndSetReceipt() async {

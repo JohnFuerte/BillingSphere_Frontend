@@ -1,3 +1,4 @@
+import 'package:billingsphere/views/Sales_Return/sales_return.dart';
 import 'package:flutter/material.dart';
 
 import '../../NU_responsive/user_group_master.dart';
@@ -869,6 +870,15 @@ class CustomAppBarMenuOwner {
           Navigator.of(context).push(MaterialPageRoute(
             builder: (context) {
               return PRDesktopBody();
+            },
+          ));
+        } else {}
+        if (value == 'Sales Return / Credit Note') {
+          print(value);
+
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) {
+              return const SalesReturnPage();
             },
           ));
         } else {}

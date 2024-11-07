@@ -1553,7 +1553,7 @@ class _SalesReturnState extends State<SalesReturn> {
 
       ratepercent += 1.00;
 
-      double mpr = selectedItem.mrp;
+      double mpr = selectedItem.retail;
 
       double rate = mpr / ratepercent;
 
@@ -1565,15 +1565,15 @@ class _SalesReturnState extends State<SalesReturn> {
 
       _amountController.text = rate.toStringAsFixed(2);
 
-      _mrpController.text = selectedItem.mrp.toStringAsFixed(2);
-      _baseController.text = selectedItem.mrp.toStringAsFixed(2);
+      _mrpController.text = selectedItem.retail.toStringAsFixed(2);
+      _baseController.text = selectedItem.retail.toStringAsFixed(2);
 
       // final tax = selectedItem.mrp - rate;
 
       // _taxController.text = tax.toStringAsFixed(2);
 
       double qty = double.parse(_qtyController.text);
-      double rate2 = double.parse(selectedItem.mrp.toString());
+      double rate2 = double.parse(selectedItem.retail.toString());
 
       double netAmount = qty * rate2;
 
@@ -4014,7 +4014,7 @@ class _SalesReturnState extends State<SalesReturn> {
                                                     0) /
                                                 100 +
                                             1.00;
-                                    double mrp = selectedItem.mrp;
+                                    double mrp = selectedItem.retail;
                                     double rate = mrp / ratePercent;
 
                                     // Set default values for the new item
@@ -4028,15 +4028,15 @@ class _SalesReturnState extends State<SalesReturn> {
                                     _amountController.text =
                                         rate.toStringAsFixed(2);
                                     _mrpController.text =
-                                        selectedItem.mrp.toStringAsFixed(2);
+                                        selectedItem.retail.toStringAsFixed(2);
                                     _baseController.text =
-                                        selectedItem.mrp.toStringAsFixed(2);
+                                        selectedItem.retail.toStringAsFixed(2);
 
                                     double qty =
                                         double.tryParse(_qtyController.text) ??
                                             0;
                                     double rate2 = double.tryParse(
-                                            selectedItem.mrp.toString()) ??
+                                            selectedItem.retail.toString()) ??
                                         0;
                                     double netAmount = qty * rate2;
                                     _netAmountController.text =

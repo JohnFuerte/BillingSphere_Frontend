@@ -1,35 +1,37 @@
 import 'package:billingsphere/data/models/purchase/purchase_model.dart';
-import 'package:billingsphere/data/models/purchaseReturn/purchase_return_model.dart';
+import 'package:billingsphere/data/models/salesReturn/sales_return_model.dart';
 import 'package:billingsphere/data/models/user/user_group_model.dart';
 import 'package:billingsphere/data/repository/ledger_repository.dart';
-import 'package:billingsphere/data/repository/purchase_return_repository.dart';
+import 'package:billingsphere/data/repository/sales_return_repository.dart';
 import 'package:billingsphere/data/repository/user_group_repository.dart';
 import 'package:billingsphere/utils/constant.dart';
 import 'package:billingsphere/views/PEresponsive/PE_edit_desktop_body.dart';
 import 'package:billingsphere/views/PEresponsive/PE_receipt_print.dart';
-import 'package:billingsphere/views/PURCHASE_RETURN/PR_desktop_body.dart';
-import 'package:billingsphere/views/PURCHASE_RETURN/purchase_return_edit_page.dart';
+import 'package:billingsphere/views/Sales_Return/sales_return.dart';
+import 'package:billingsphere/views/Sales_Return/sales_return_edit_page.dart';
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/models/ledger/ledger_model.dart';
+import '../../data/repository/purchase_repository.dart';
 import '../SE_responsive/SE_master.dart';
 
-class ListOfPurchaseReturn extends StatefulWidget {
-  const ListOfPurchaseReturn({super.key});
+class ListOfSalesReturn extends StatefulWidget {
+  const ListOfSalesReturn({super.key});
 
   @override
-  State<ListOfPurchaseReturn> createState() => _ListOfPurchaseReturnState();
+  State<ListOfSalesReturn> createState() => _ListOfSalesReturnState();
 }
 
-class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
+class _ListOfSalesReturnState extends State<ListOfSalesReturn> {
   late SharedPreferences _prefs;
 
   LedgerService ledgerService = LedgerService();
-  PurchaseReturnService purchaseReturnService = PurchaseReturnService();
-  List<PurchaseReturn> fetchedPurchaseReturn = [];
-  List<PurchaseReturn> fetchedPurchaseReturn2 = [];
+  SalesReturnService salesReturnService = SalesReturnService();
+  List<SalesReturn> fetchedSalesReturn = [];
+  List<SalesReturn> fetchedSalesReturn2 = [];
   String? selectedId;
   bool isLoading = false;
   int? activeIndex;
@@ -57,24 +59,24 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
     });
   }
 
-  Future<void> fetchPurchaseEntries() async {
+  Future<void> fetchSalesReturn() async {
     setState(() {
       isLoading = true;
     });
     try {
-      final List<PurchaseReturn> purchase =
-          await purchaseReturnService.fetchAllPurchaseReturns();
+      final List<SalesReturn> salesReturn =
+          await salesReturnService.fetchAllSalesReturns();
 
       setState(() {
-        fetchedPurchaseReturn = purchase;
-        fetchedPurchaseReturn2 = purchase;
-        if (fetchedPurchaseReturn.isNotEmpty) {
-          selectedId = fetchedPurchaseReturn[0].id;
+        fetchedSalesReturn = salesReturn;
+        fetchedSalesReturn2 = salesReturn;
+        if (fetchedSalesReturn.isNotEmpty) {
+          selectedId = fetchedSalesReturn[0].id;
         }
         isLoading = false;
       });
     } catch (error) {
-      print('Failed to fetch purchase name: $error');
+      print('Failed to fetch Sales Return name: $error');
     }
   }
 
@@ -110,7 +112,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
               userGroup = _prefs.getString('usergroup'),
             }),
         fetchUserGroup().then((value) => {}),
-        fetchPurchaseEntries(),
+        fetchSalesReturn(),
         fetchLedger(),
       ]);
     } catch (e) {
@@ -156,7 +158,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
   // For Date
   void searchDate(String value) {
     setState(() {
-      fetchedPurchaseReturn = fetchedPurchaseReturn2
+      fetchedSalesReturn = fetchedSalesReturn2
           .where(
               (sales) => sales.date.toLowerCase().contains(value.toLowerCase()))
           .toList();
@@ -166,7 +168,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
   // For No
   void searchNo(String value) {
     setState(() {
-      fetchedPurchaseReturn = fetchedPurchaseReturn2
+      fetchedSalesReturn = fetchedSalesReturn2
           .where((sales) =>
               sales.billNumber.toLowerCase().contains(value.toLowerCase()))
           .toList();
@@ -176,7 +178,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
   // For Type
   void searchType(String value) {
     setState(() {
-      fetchedPurchaseReturn = fetchedPurchaseReturn2
+      fetchedSalesReturn = fetchedSalesReturn2
           .where(
               (sales) => sales.type.toLowerCase().contains(value.toLowerCase()))
           .toList();
@@ -186,7 +188,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
   // For Print
   void searchPrint(String value) {
     setState(() {
-      fetchedPurchaseReturn = fetchedPurchaseReturn2
+      fetchedSalesReturn = fetchedSalesReturn2
           .where(
               (sales) => sales.id!.toLowerCase().contains(value.toLowerCase()))
           .toList();
@@ -196,7 +198,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
   // For RefNo
   void searchRefNo(String value) {
     setState(() {
-      fetchedPurchaseReturn = fetchedPurchaseReturn2
+      fetchedSalesReturn = fetchedSalesReturn2
           .where((sales) =>
               sales.billNumber.toLowerCase().contains(value.toLowerCase()))
           .toList();
@@ -206,7 +208,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
   void searchParticulars(String value) {
     setState(() {
       // Get the ledger name from the fetchedLedger list
-      fetchedPurchaseReturn = fetchedPurchaseReturn2.where((sales) {
+      fetchedSalesReturn = fetchedSalesReturn2.where((sales) {
         final ledger =
             fetchedLedger.firstWhere((ledger) => ledger.id == sales.ledger,
                 orElse: () => Ledger(
@@ -262,7 +264,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
   // For Remarks
   void searchRemarks(String value) {
     setState(() {
-      fetchedPurchaseReturn = fetchedPurchaseReturn2
+      fetchedSalesReturn = fetchedSalesReturn2
           .where((sales) =>
               sales.remarks!.toLowerCase().contains(value.toLowerCase()))
           .toList();
@@ -271,7 +273,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
 
   void searchAmount(String value) {
     setState(() {
-      fetchedPurchaseReturn = fetchedPurchaseReturn2
+      fetchedSalesReturn = fetchedSalesReturn2
           .where((sales) =>
               sales.totalAmount.toLowerCase().contains(value.toLowerCase()))
           .toList();
@@ -327,7 +329,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            'List of Purchase Return',
+            'List of Sales Return',
             style: GoogleFonts.poppins(
               textStyle: const TextStyle(
                 color: Colors.white,
@@ -366,7 +368,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 8.0),
                                 child: Text(
-                                  '${fetchedPurchaseReturn.length} Records',
+                                  '${fetchedSalesReturn.length} Records',
                                   style: GoogleFonts.poppins(
                                       fontSize: 15,
                                       fontWeight: FontWeight.w500,
@@ -645,9 +647,9 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                               BorderSide(color: Colors.black),
                                         ),
                                         children: [
-                                          // Iterate over fetchedPurchaseReturn list and display each sales entry
+                                          // Iterate over fetchedPurchase list and display each sales entry
                                           for (int i = 0;
-                                              i < fetchedPurchaseReturn.length;
+                                              i < fetchedSalesReturn.length;
                                               i++)
                                             TableRow(
                                               children: [
@@ -655,24 +657,20 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                   onTap: () {
                                                     setState(() {
                                                       selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
+                                                          fetchedSalesReturn[i]
                                                               .id;
                                                       index = i;
                                                     });
                                                   },
                                                   onDoubleTap: () {
                                                     print('Double Tapped');
-                                                    selectedId =
-                                                        fetchedPurchaseReturn[i]
-                                                            .id;
                                                     Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
                                                         builder: (context) =>
-                                                            PurchaseReturnEditPage(
+                                                            PurchaseEditD(
                                                           data:
-                                                              fetchedPurchaseReturn[
+                                                              fetchedSalesReturn[
                                                                       i]
                                                                   .id!,
                                                         ),
@@ -689,7 +687,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                                 .width *
                                                             0.20,
                                                     color: selectedId ==
-                                                            fetchedPurchaseReturn[
+                                                            fetchedSalesReturn[
                                                                     i]
                                                                 .id
                                                         ? Colors.blue[500]
@@ -698,7 +696,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                       maxLines: 1,
                                                       overflow:
                                                           TextOverflow.ellipsis,
-                                                      fetchedPurchaseReturn[i]
+                                                      fetchedSalesReturn[i]
                                                           .date,
                                                       style:
                                                           GoogleFonts.poppins(
@@ -706,7 +704,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                         fontWeight:
                                                             FontWeight.w500,
                                                         color: selectedId ==
-                                                                fetchedPurchaseReturn[
+                                                                fetchedSalesReturn[
                                                                         i]
                                                                     .id
                                                             ? Colors.white
@@ -721,24 +719,20 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                   onTap: () {
                                                     setState(() {
                                                       selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
+                                                          fetchedSalesReturn[i]
                                                               .id;
                                                       index = i;
                                                     });
                                                   },
                                                   onDoubleTap: () {
                                                     print('Double Tapped');
-                                                    selectedId =
-                                                        fetchedPurchaseReturn[i]
-                                                            .id;
                                                     Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
                                                         builder: (context) =>
-                                                            PurchaseReturnEditPage(
+                                                            PurchaseEditD(
                                                           data:
-                                                              fetchedPurchaseReturn[
+                                                              fetchedSalesReturn[
                                                                       i]
                                                                   .id!,
                                                         ),
@@ -750,13 +744,13 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                         const EdgeInsets.all(
                                                             8.0),
                                                     color: selectedId ==
-                                                            fetchedPurchaseReturn[
+                                                            fetchedSalesReturn[
                                                                     i]
                                                                 .id
                                                         ? Colors.blue[500]
                                                         : Colors.white,
                                                     child: Text(
-                                                      fetchedPurchaseReturn[i]
+                                                      fetchedSalesReturn[i]
                                                           .billNumber,
                                                       style:
                                                           GoogleFonts.poppins(
@@ -764,7 +758,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                         fontWeight:
                                                             FontWeight.w500,
                                                         color: selectedId ==
-                                                                fetchedPurchaseReturn[
+                                                                fetchedSalesReturn[
                                                                         i]
                                                                     .id
                                                             ? Colors.white
@@ -779,8 +773,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                   onTap: () {
                                                     setState(() {
                                                       selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
+                                                          fetchedSalesReturn[i]
                                                               .id;
                                                       index = i;
                                                     });
@@ -791,9 +784,9 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                       context,
                                                       MaterialPageRoute(
                                                         builder: (context) =>
-                                                            PurchaseReturnEditPage(
+                                                            PurchaseEditD(
                                                           data:
-                                                              fetchedPurchaseReturn[
+                                                              fetchedSalesReturn[
                                                                       i]
                                                                   .id!,
                                                         ),
@@ -810,7 +803,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                                 .width *
                                                             0.20,
                                                     color: selectedId ==
-                                                            fetchedPurchaseReturn[
+                                                            fetchedSalesReturn[
                                                                     i]
                                                                 .id
                                                         ? Colors.blue[500]
@@ -819,7 +812,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                       maxLines: 1,
                                                       overflow:
                                                           TextOverflow.ellipsis,
-                                                      fetchedPurchaseReturn[i]
+                                                      fetchedSalesReturn[i]
                                                           .type,
                                                       style:
                                                           GoogleFonts.poppins(
@@ -827,7 +820,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                         fontWeight:
                                                             FontWeight.w500,
                                                         color: selectedId ==
-                                                                fetchedPurchaseReturn[
+                                                                fetchedSalesReturn[
                                                                         i]
                                                                     .id
                                                             ? Colors.white
@@ -842,8 +835,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                   onTap: () {
                                                     setState(() {
                                                       selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
+                                                          fetchedSalesReturn[i]
                                                               .id;
                                                       index = i;
                                                     });
@@ -854,9 +846,9 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                       context,
                                                       MaterialPageRoute(
                                                         builder: (context) =>
-                                                            PurchaseReturnEditPage(
+                                                            PurchaseEditD(
                                                           data:
-                                                              fetchedPurchaseReturn[
+                                                              fetchedSalesReturn[
                                                                       i]
                                                                   .id!,
                                                         ),
@@ -868,7 +860,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                         const EdgeInsets.all(
                                                             8.0),
                                                     color: selectedId ==
-                                                            fetchedPurchaseReturn[
+                                                            fetchedSalesReturn[
                                                                     i]
                                                                 .id
                                                         ? Colors.blue[500]
@@ -881,7 +873,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                         fontWeight:
                                                             FontWeight.w500,
                                                         color: selectedId ==
-                                                                fetchedPurchaseReturn[
+                                                                fetchedSalesReturn[
                                                                         i]
                                                                     .id
                                                             ? Colors.white
@@ -896,8 +888,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                   onTap: () {
                                                     setState(() {
                                                       selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
+                                                          fetchedSalesReturn[i]
                                                               .id;
                                                       index = i;
                                                     });
@@ -908,9 +899,9 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                       context,
                                                       MaterialPageRoute(
                                                         builder: (context) =>
-                                                            PurchaseReturnEditPage(
+                                                            PurchaseEditD(
                                                           data:
-                                                              fetchedPurchaseReturn[
+                                                              fetchedSalesReturn[
                                                                       i]
                                                                   .id!,
                                                         ),
@@ -922,13 +913,13 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                         const EdgeInsets.all(
                                                             8.0),
                                                     color: selectedId ==
-                                                            fetchedPurchaseReturn[
+                                                            fetchedSalesReturn[
                                                                     i]
                                                                 .id
                                                         ? Colors.blue[500]
                                                         : Colors.white,
                                                     child: Text(
-                                                      fetchedPurchaseReturn[i]
+                                                      fetchedSalesReturn[i]
                                                           .billNumber,
                                                       style:
                                                           GoogleFonts.poppins(
@@ -936,7 +927,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                         fontWeight:
                                                             FontWeight.w500,
                                                         color: selectedId ==
-                                                                fetchedPurchaseReturn[
+                                                                fetchedSalesReturn[
                                                                         i]
                                                                     .id
                                                             ? Colors.white
@@ -951,8 +942,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                   onTap: () {
                                                     setState(() {
                                                       selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
+                                                          fetchedSalesReturn[i]
                                                               .id;
                                                       index = i;
                                                     });
@@ -963,9 +953,9 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                       context,
                                                       MaterialPageRoute(
                                                         builder: (context) =>
-                                                            PurchaseReturnEditPage(
+                                                            PurchaseEditD(
                                                           data:
-                                                              fetchedPurchaseReturn[
+                                                              fetchedSalesReturn[
                                                                       i]
                                                                   .id!,
                                                         ),
@@ -977,13 +967,13 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                         const EdgeInsets.all(
                                                             8.0),
                                                     color: selectedId ==
-                                                            fetchedPurchaseReturn[
+                                                            fetchedSalesReturn[
                                                                     i]
                                                                 .id
                                                         ? Colors.blue[500]
                                                         : Colors.white,
                                                     child: Text(
-                                                      fetchedPurchaseReturn[i]
+                                                      fetchedSalesReturn[i]
                                                           .billNumber,
                                                       style:
                                                           GoogleFonts.poppins(
@@ -991,7 +981,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                         fontWeight:
                                                             FontWeight.w500,
                                                         color: selectedId ==
-                                                                fetchedPurchaseReturn[
+                                                                fetchedSalesReturn[
                                                                         i]
                                                                     .id
                                                             ? Colors.white
@@ -1006,8 +996,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                   onTap: () {
                                                     setState(() {
                                                       selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
+                                                          fetchedSalesReturn[i]
                                                               .id;
                                                       index = i;
                                                     });
@@ -1018,10 +1007,10 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                       context,
                                                       MaterialPageRoute(
                                                         builder: (context) =>
-                                                            PurchaseReturnEditPage(
+                                                            PurchaseEditD(
                                                           data:
-                                                              fetchedPurchaseReturn[
-                                                                      index]
+                                                              fetchedSalesReturn[
+                                                                      i]
                                                                   .id!,
                                                         ),
                                                       ),
@@ -1038,7 +1027,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                                 .width *
                                                             0.20,
                                                     color: selectedId ==
-                                                            fetchedPurchaseReturn[
+                                                            fetchedSalesReturn[
                                                                     i]
                                                                 .id
                                                         ? Colors.blue[500]
@@ -1053,7 +1042,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                             fetchedLedger
                                                                 .firstWhere((ledger) =>
                                                                     ledger.id ==
-                                                                    fetchedPurchaseReturn[
+                                                                    fetchedSalesReturn[
                                                                             i]
                                                                         .ledger)
                                                                 .name,
@@ -1064,7 +1053,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                                   FontWeight
                                                                       .w500,
                                                               color: selectedId ==
-                                                                      fetchedPurchaseReturn[
+                                                                      fetchedSalesReturn[
                                                                               i]
                                                                           .id
                                                                   ? Colors.white
@@ -1081,8 +1070,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                   onTap: () {
                                                     setState(() {
                                                       selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
+                                                          fetchedSalesReturn[i]
                                                               .id;
                                                       index = i;
                                                     });
@@ -1093,10 +1081,10 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                       context,
                                                       MaterialPageRoute(
                                                         builder: (context) =>
-                                                            PurchaseReturnEditPage(
+                                                            PurchaseEditD(
                                                           data:
-                                                              fetchedPurchaseReturn[
-                                                                      index]
+                                                              fetchedSalesReturn[
+                                                                      i]
                                                                   .id!,
                                                         ),
                                                       ),
@@ -1112,7 +1100,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                                 .width *
                                                             0.20,
                                                     color: selectedId ==
-                                                            fetchedPurchaseReturn[
+                                                            fetchedSalesReturn[
                                                                     i]
                                                                 .id
                                                         ? Colors.blue[500]
@@ -1121,7 +1109,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                       maxLines: 1,
                                                       overflow:
                                                           TextOverflow.ellipsis,
-                                                      fetchedPurchaseReturn[i]
+                                                      fetchedSalesReturn[i]
                                                           .remarks!,
                                                       style:
                                                           GoogleFonts.poppins(
@@ -1129,7 +1117,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                         fontWeight:
                                                             FontWeight.w500,
                                                         color: selectedId ==
-                                                                fetchedPurchaseReturn[
+                                                                fetchedSalesReturn[
                                                                         i]
                                                                     .id
                                                             ? Colors.white
@@ -1144,8 +1132,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                   onTap: () {
                                                     setState(() {
                                                       selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
+                                                          fetchedSalesReturn[i]
                                                               .id;
                                                       index = i;
                                                     });
@@ -1156,10 +1143,10 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                       context,
                                                       MaterialPageRoute(
                                                         builder: (context) =>
-                                                            PurchaseReturnEditPage(
+                                                            PurchaseEditD(
                                                           data:
-                                                              fetchedPurchaseReturn[
-                                                                      index]
+                                                              fetchedSalesReturn[
+                                                                      i]
                                                                   .id!,
                                                         ),
                                                       ),
@@ -1170,13 +1157,13 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                         const EdgeInsets.all(
                                                             8.0),
                                                     color: selectedId ==
-                                                            fetchedPurchaseReturn[
+                                                            fetchedSalesReturn[
                                                                     i]
                                                                 .id
                                                         ? Colors.blue[500]
                                                         : Colors.white,
                                                     child: Text(
-                                                      fetchedPurchaseReturn[i]
+                                                      fetchedSalesReturn[i]
                                                           .totalAmount,
                                                       style:
                                                           GoogleFonts.poppins(
@@ -1184,7 +1171,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                         fontWeight:
                                                             FontWeight.w500,
                                                         color: selectedId ==
-                                                                fetchedPurchaseReturn[
+                                                                fetchedSalesReturn[
                                                                         i]
                                                                     .id
                                                             ? Colors.white
@@ -1237,7 +1224,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  PRDesktopBody(),
+                                                  const SalesReturnPage(),
                                             ),
                                           );
                                         },
@@ -1253,10 +1240,10 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                               context,
                                               MaterialPageRoute(
                                                 builder: (context) =>
-                                                    PurchaseReturnEditPage(
-                                                  data: fetchedPurchaseReturn[
-                                                          index]
-                                                      .id!,
+                                                    SalesReturnEditPage(
+                                                  data:
+                                                      fetchedSalesReturn[index]
+                                                          .id!,
                                                 ),
                                               ),
                                             );
@@ -1281,7 +1268,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                               builder: (context) =>
                                                   PurchasePrintBigReceipt(
                                                 purchaseID:
-                                                    fetchedPurchaseReturn[index]
+                                                    fetchedSalesReturn[index]
                                                         .id!,
                                                 'Print Receipt',
                                               ),
@@ -1372,7 +1359,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  PRDesktopBody(),
+                                                  const SalesReturnPage(),
                                             ),
                                           );
                                         },
@@ -1388,10 +1375,10 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                               context,
                                               MaterialPageRoute(
                                                 builder: (context) =>
-                                                    PurchaseReturnEditPage(
-                                                  data: fetchedPurchaseReturn[
-                                                          index]
-                                                      .id!,
+                                                    SalesReturnEditPage(
+                                                  data:
+                                                      fetchedSalesReturn[index]
+                                                          .id!,
                                                 ),
                                               ),
                                             );
@@ -1416,7 +1403,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                               builder: (context) =>
                                                   PurchasePrintBigReceipt(
                                                 purchaseID:
-                                                    fetchedPurchaseReturn[index]
+                                                    fetchedSalesReturn[index]
                                                         .id!,
                                                 'Print Receipt',
                                               ),

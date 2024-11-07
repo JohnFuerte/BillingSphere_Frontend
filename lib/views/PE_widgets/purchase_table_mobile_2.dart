@@ -60,6 +60,8 @@ class PEntriesM extends StatefulWidget {
 class _PEntriesMState extends State<PEntriesM> {
   late TextEditingController itemNameController;
   late TextEditingController qtyController;
+  late TextEditingController stockController;
+
   final TextEditingController rateController = TextEditingController();
   final TextEditingController unitController = TextEditingController();
   late TextEditingController amountController;
@@ -117,6 +119,7 @@ class _PEntriesMState extends State<PEntriesM> {
     super.initState();
     itemNameController = TextEditingController();
     qtyController = TextEditingController();
+    stockController = TextEditingController();
     amountController = TextEditingController();
     sgstController = TextEditingController();
     cgstController = TextEditingController();

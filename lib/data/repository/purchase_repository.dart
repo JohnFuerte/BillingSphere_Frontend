@@ -171,6 +171,37 @@ class PurchaseServices {
     }
   }
 
+  Future<List<Purchase>?> fetchPurchaseByLedger(String ledger) async {
+    String? token = await getToken();
+
+    final response = await http.get(
+      Uri.parse('${Constants.baseUrl}/purchase/getByLedger/$ledger'),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final responseData = json.decode(response.body);
+
+      if (responseData['success'] == true && responseData['data'] != null) {
+        final purchaseData = responseData['data'];
+        final List<Purchase> purchase = List.from(
+          purchaseData.map((entry) {
+            return Purchase.fromMap(entry);
+          }),
+        );
+        return purchase;
+      } else {
+        print('Failed to fetch purchase: ${responseData['message']}');
+        return null;
+      }
+    } else {
+      print('HTTP Error: ${response.statusCode}');
+      return null;
+    }
+  }
+
   Future<void> updatePurchase(
     Purchase purchase,
   ) async {

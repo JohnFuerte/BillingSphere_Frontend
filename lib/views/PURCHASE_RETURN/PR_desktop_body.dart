@@ -96,7 +96,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
   late TextEditingController roundOffController;
   late FocusNode roundOffFocusNode;
   bool isManualRoundOffChange = false;
-  // late Timer _timer;
   final _formKey = GlobalKey<FormState>();
 
   List<String>? companyCode;
@@ -111,7 +110,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
   ItemsService itemsService = ItemsService();
   PurchaseReturnService purchaseReturnService = PurchaseReturnService();
   PurchaseServices purchaseServices = PurchaseServices();
-
   MeasurementLimitService measurementService = MeasurementLimitService();
   TaxRateService taxRateService = TaxRateService();
   PurchaseFormController purchaseController = PurchaseFormController();
@@ -333,7 +331,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
               width1: 0.18,
               width2: 0.82,
               onPressed: () {
-                _timer.cancel();
                 Navigator.of(context).pop();
               },
             ),
@@ -2565,7 +2562,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
   }
 
   Future<void> createPurchaseReturn() async {
-    print("entering...");
     if (selectedLedgerName == null || selectedLedgerName!.isEmpty) {
       showDialog(
         context: context,
@@ -2635,8 +2631,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
 
       return;
     }
-    print("entering not empty....");
-    print("_allValuesBillwise : ${_allValuesBillwise}");
 
     for (var valueBillwise in _allValuesBillwise) {
       double amount = double.tryParse(valueBillwise['amount']) ?? 0.0;
@@ -2759,7 +2753,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                   onPressed: () {
                     Navigator.of(context).pushReplacement(MaterialPageRoute(
                       builder: (context) {
-                        return const PEMasterBody();
+                        return const ListOfPurchaseReturn();
                       },
                     ));
                   },
@@ -2784,7 +2778,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
   void saveValues(Map<String, dynamic> values) {
     final String uniqueKey = values['uniqueKey'];
 
-    // Check if an entry with the same uniqueKey exists
     final existingEntryIndex =
         _allValues.indexWhere((entry) => entry['uniqueKey'] == uniqueKey);
 
@@ -2792,8 +2785,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
       if (existingEntryIndex != -1) {
         _allValues.removeAt(existingEntryIndex);
       }
-
-      // Add the latest values
       _allValues.add(values);
     });
   }
@@ -2997,13 +2988,11 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
 
   void saveSelectedPurchaseEntries(
       {required Purchase purchase, required List<bool> checkboxStates}) {
-    // Get the selected entries
     for (int i = 0; i < checkboxStates.length; i++) {
       if (checkboxStates[i]) {
         selectedEntries.add(purchase.entries[i]);
       }
     }
-
     print('Selected Entries: $selectedEntries');
   }
 
@@ -3017,7 +3006,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
 
     List<bool> checkboxStates =
         List.generate(purchase.entries.length, (index) => true);
-
+    print("............1");
     showDialog(
       barrierDismissible: false,
       context: context,
@@ -3036,15 +3025,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
               ),
               child: StatefulBuilder(
                 builder: (context, setState) {
-                  // Define methods to handle checkbox actions
-                  // void selectAll() {
-                  //   setState(() {
-                  //     for (int i = 0; i < checkboxStates.length; i++) {
-                  //       checkboxStates[i] = true;
-                  //     }
-                  //   });
-                  // }
-
+                  print("............2");
                   void deselectAll() {
                     setState(() {
                       for (int i = 0; i < checkboxStates.length; i++) {
@@ -3053,12 +3034,12 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                     });
                   }
 
-                  // Construct the table rows from purchase.entries
+                  print("............3");
                   purchaseEntries =
                       purchase.entries.asMap().entries.map((entry) {
                     int index = entry.key;
                     var entryValue = entry.value;
-
+                    print("............4");
                     return TableRow(
                       children: [
                         TableCell(
@@ -3188,8 +3169,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                     );
                   }).toList();
 
-                  // Invoke the method to select all checkboxes
-                  // selectAll();
+                  print("............6");
 
                   return Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -3498,149 +3478,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                         )
                                       ],
                                     ),
-                                    // Table Body with dummy details...
                                     ...purchaseEntries,
-                                    // TableRow(children: [
-                                    //   // Tablecells
-                                    //   TableCell(
-                                    //     child: SizedBox(
-                                    //       height: 40,
-                                    //       child: Align(
-                                    //         alignment: Alignment.center,
-                                    //         child: Padding(
-                                    //           padding:
-                                    //               const EdgeInsets.all(4.0),
-                                    //           child: Text(
-                                    //             '12/12/2021',
-                                    //             textAlign: TextAlign.end,
-                                    //             style: GoogleFonts.poppins(
-                                    //               fontSize: 15,
-                                    //               fontWeight: FontWeight.bold,
-                                    //               color:
-                                    //                   const Color(0xff4B0082),
-                                    //             ),
-                                    //           ),
-                                    //         ),
-                                    //       ),
-                                    //     ),
-                                    //   ),
-                                    //   TableCell(
-                                    //     child: SizedBox(
-                                    //       height: 40,
-                                    //       child: Align(
-                                    //         alignment: Alignment.center,
-                                    //         child: Text(
-                                    //           '1',
-                                    //           textAlign: TextAlign.center,
-                                    //           style: GoogleFonts.poppins(
-                                    //             fontSize: 15,
-                                    //             fontWeight: FontWeight.bold,
-                                    //             color: const Color(0xff4B0082),
-                                    //           ),
-                                    //         ),
-                                    //       ),
-                                    //     ),
-                                    //   ),
-                                    //   TableCell(
-                                    //     child: SizedBox(
-                                    //       height: 40,
-                                    //       child: Align(
-                                    //         alignment: Alignment.centerLeft,
-                                    //         child: Text(
-                                    //           'Purchase',
-                                    //           textAlign: TextAlign.center,
-                                    //           style: GoogleFonts.poppins(
-                                    //             fontSize: 15,
-                                    //             fontWeight: FontWeight.bold,
-                                    //             color: const Color(0xff4B0082),
-                                    //           ),
-                                    //         ),
-                                    //       ),
-                                    //     ),
-                                    //   ),
-                                    //   TableCell(
-                                    //     child: SizedBox(
-                                    //       height: 40,
-                                    //       child: Align(
-                                    //         alignment: Alignment.centerLeft,
-                                    //         child: Text(
-                                    //           'LONG NOTES 400 PAGES WHITE PAPER',
-                                    //           overflow: TextOverflow.ellipsis,
-                                    //           textAlign: TextAlign.center,
-                                    //           style: GoogleFonts.poppins(
-                                    //             fontSize: 15,
-                                    //             fontWeight: FontWeight.bold,
-                                    //             color: const Color(0xff4B0082),
-                                    //           ),
-                                    //         ),
-                                    //       ),
-                                    //     ),
-                                    //   ),
-                                    //   TableCell(
-                                    //     child: SizedBox(
-                                    //       height: 40,
-                                    //       child: Align(
-                                    //         alignment: Alignment.center,
-                                    //         child: Padding(
-                                    //           padding:
-                                    //               const EdgeInsets.all(4.0),
-                                    //           child: Text(
-                                    //             '10',
-                                    //             textAlign: TextAlign.end,
-                                    //             style: GoogleFonts.poppins(
-                                    //               fontSize: 15,
-                                    //               fontWeight: FontWeight.bold,
-                                    //               color:
-                                    //                   const Color(0xff4B0082),
-                                    //             ),
-                                    //           ),
-                                    //         ),
-                                    //       ),
-                                    //     ),
-                                    //   ),
-                                    //   TableCell(
-                                    //     child: SizedBox(
-                                    //       height: 40,
-                                    //       child: Align(
-                                    //         alignment: Alignment.center,
-                                    //         child: Padding(
-                                    //           padding:
-                                    //               const EdgeInsets.all(4.0),
-                                    //           child: Text(
-                                    //             '1000',
-                                    //             textAlign: TextAlign.end,
-                                    //             style: GoogleFonts.poppins(
-                                    //               fontSize: 15,
-                                    //               fontWeight: FontWeight.bold,
-                                    //               color:
-                                    //                   const Color(0xff4B0082),
-                                    //             ),
-                                    //           ),
-                                    //         ),
-                                    //       ),
-                                    //     ),
-                                    //   ),
-                                    //   TableCell(
-                                    //     child: SizedBox(
-                                    //       height: 40,
-                                    //       child: Align(
-                                    //         alignment: Alignment.center,
-                                    //         child: Padding(
-                                    //           padding:
-                                    //               const EdgeInsets.all(4.0),
-                                    //           child: Checkbox(
-                                    //             value: false,
-                                    //             onChanged: (value) {
-                                    //               setState(() {});
-                                    //             },
-                                    //             activeColor:
-                                    //                 const Color(0xFFDAA520),
-                                    //           ),
-                                    //         ),
-                                    //       ),
-                                    //     ),
-                                    //   ),
-                                    // ])
                                   ],
                                 ),
                               ],
@@ -3659,7 +3497,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                           children: [
                             InkWell(
                               onTap: () {
-                                // Create a Map of the selected entries
                                 saveSelectedPurchaseEntries(
                                   purchase: purchase,
                                   checkboxStates: checkboxStates,
@@ -3735,7 +3572,10 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
     );
   }
 
-  void showReturnInfoDialog() {
+  void showReturnInfoDialog() async {
+    List<Purchase>? purchase =
+        await purchaseServices.fetchPurchaseByLedger(selectedLedgerName!);
+    print("purchase length : ${purchase!.length}");
     TextEditingController originalInvoiceNoController = TextEditingController();
     TextEditingController originalInvoiceDateController =
         TextEditingController();
@@ -3833,7 +3673,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                               flex: 2,
                               child: InkWell(
                                 onTap: () async {
-                                  // Call the API
                                   if (originalInvoiceNoController
                                       .text.isEmpty) {
                                     PanaraConfirmDialog.showAnimatedGrow(
@@ -3916,7 +3755,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                           ],
                         ),
                       ),
-
                       Padding(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 10),
@@ -3980,23 +3818,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                     ),
                                     menuHeight: 300,
                                     enableFilter: true,
-                                    // filterCallback:
-                                    //     (List<DropdownMenuEntry<String>> entries,
-                                    //         String filter) {
-                                    //   final String trimmedFilter =
-                                    //       filter.trim().toLowerCase();
-
-                                    //   if (trimmedFilter.isEmpty) {
-                                    //     return entries;
-                                    //   }
-
-                                    //   // Filter the entries based on the query
-                                    //   return entries.where((entry) {
-                                    //     return entry.value.itemName
-                                    //         .toLowerCase()
-                                    //         .contains(trimmedFilter);
-                                    //   }).toList();
-                                    // },
                                     width: MediaQuery.of(context).size.width *
                                         0.19,
                                     selectedTrailingIcon:
@@ -4129,69 +3950,55 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                           ),
                           child: Padding(
                             padding: const EdgeInsets.only(right: 10.0),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Table(
-                                  border: TableBorder.all(
-                                      width: 1, color: Colors.black),
-                                  columnWidths: const {
-                                    0: FlexColumnWidth(3),
-                                    1: FlexColumnWidth(3),
-                                    2: FlexColumnWidth(3),
-                                    3: FlexColumnWidth(3),
-                                    4: FlexColumnWidth(3),
-                                    5: FlexColumnWidth(3),
-                                    6: FlexColumnWidth(3),
-                                  },
-                                  children: [
-                                    TableRow(
-                                      children: [
-                                        TableCell(
-                                          child: SizedBox(
-                                            height: 40,
-                                            child: Align(
-                                              alignment: Alignment.center,
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(4.0),
-                                                child: Text(
-                                                  "Voucher",
-                                                  textAlign: TextAlign.end,
-                                                  style: GoogleFonts.poppins(
-                                                    fontSize: 15,
-                                                    fontWeight: FontWeight.bold,
-                                                    color:
-                                                        const Color(0xff4B0082),
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        TableCell(
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Table(
+                                    border: TableBorder.all(
+                                        width: 1, color: Colors.black),
+                                    columnWidths: const {
+                                      0: FlexColumnWidth(3),
+                                      1: FlexColumnWidth(3),
+                                      2: FlexColumnWidth(3),
+                                      3: FlexColumnWidth(3),
+                                      4: FlexColumnWidth(3),
+                                      5: FlexColumnWidth(3),
+                                      6: FlexColumnWidth(3),
+                                    },
+                                    children: [
+                                      TableRow(
+                                        children: [
+                                          TableCell(
                                             child: SizedBox(
-                                          height: 40,
-                                          child: Align(
-                                            alignment: Alignment.center,
-                                            child: Text(
-                                              "Date",
-                                              textAlign: TextAlign.center,
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 15,
-                                                fontWeight: FontWeight.bold,
-                                                color: const Color(0xff4B0082),
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(4.0),
+                                                  child: Text(
+                                                    "Voucher",
+                                                    textAlign: TextAlign.end,
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 15,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: const Color(
+                                                          0xff4B0082),
+                                                    ),
+                                                  ),
+                                                ),
                                               ),
                                             ),
                                           ),
-                                        )),
-                                        TableCell(
-                                          child: SizedBox(
+                                          TableCell(
+                                              child: SizedBox(
                                             height: 40,
                                             child: Align(
                                               alignment: Alignment.center,
                                               child: Text(
-                                                "Time",
+                                                "Date",
                                                 textAlign: TextAlign.center,
                                                 style: GoogleFonts.poppins(
                                                   fontSize: 15,
@@ -4201,37 +4008,15 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                        ),
-                                        TableCell(
-                                          child: SizedBox(
-                                            height: 40,
-                                            child: Align(
-                                              alignment: Alignment.center,
-                                              child: Text(
-                                                "No",
-                                                textAlign: TextAlign.center,
-                                                style: GoogleFonts.poppins(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.bold,
-                                                  color:
-                                                      const Color(0xff4B0082),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        TableCell(
-                                          child: SizedBox(
-                                            height: 40,
-                                            child: Align(
-                                              alignment: Alignment.center,
-                                              child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(4.0),
+                                          )),
+                                          TableCell(
+                                            child: SizedBox(
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.center,
                                                 child: Text(
-                                                  "Amount",
-                                                  textAlign: TextAlign.end,
+                                                  "Time",
+                                                  textAlign: TextAlign.center,
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 15,
                                                     fontWeight: FontWeight.bold,
@@ -4242,19 +4027,148 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                               ),
                                             ),
                                           ),
+                                          TableCell(
+                                            child: SizedBox(
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  "No",
+                                                  textAlign: TextAlign.center,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.bold,
+                                                    color:
+                                                        const Color(0xff4B0082),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          TableCell(
+                                            child: SizedBox(
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(4.0),
+                                                  child: Text(
+                                                    "Amount",
+                                                    textAlign: TextAlign.end,
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 15,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: const Color(
+                                                          0xff4B0082),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      for (var entry in purchase)
+                                        TableRow(
+                                          children: [
+                                            TableCell(
+                                              child: SizedBox(
+                                                height: 40,
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    "Retail Purchase",
+                                                    textAlign: TextAlign.end,
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 15,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            TableCell(
+                                              child: SizedBox(
+                                                height: 40,
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    entry.date,
+                                                    textAlign: TextAlign.center,
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 15,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            TableCell(
+                                              child: SizedBox(
+                                                height: 40,
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    entry.date,
+                                                    textAlign: TextAlign.center,
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 15,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            TableCell(
+                                              child: SizedBox(
+                                                height: 40,
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    entry.billNumber,
+                                                    textAlign: TextAlign.center,
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 15,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            TableCell(
+                                              child: SizedBox(
+                                                height: 40,
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Padding(
+                                                    padding:
+                                                        const EdgeInsets.all(
+                                                            4.0),
+                                                    child: Text(
+                                                      entry.totalamount,
+                                                      textAlign: TextAlign.end,
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                        fontSize: 15,
+                                                        color: Colors.black,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ],
-                                    ),
-                                    // ...Ctables,
-                                  ],
-                                ),
-                              ],
+                                    ],
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
-
-                      // Add your content here
                     ],
                   );
                 },
@@ -4314,28 +4228,63 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
 
       for (var i = 0; i < selectedEntries.length; i++) {
         final entry = selectedEntries[i];
+        print("add all values");
+
+        _allValues.add({
+          'uniqueKey': entry.itemName,
+          'itemName': entry.itemName,
+          'qty': entry.qty.toString(),
+          'rate': entry.rate.toString(),
+          'unit': entry.unit,
+          'amount': entry.amount.toString(),
+          'tax': entry.tax,
+          'sgst': entry.sgst.toString(),
+          'cgst': entry.cgst.toString(),
+          'igst': entry.igst.toString(),
+          'discount': entry.discount.toString(),
+          'netAmount': entry.netAmount.toString(),
+          'sellingPrice': entry.sellingPrice.toString(),
+        });
+
+        final itemNameController = TextEditingController(text: entry.itemName);
+        final qtyController = TextEditingController(text: entry.qty.toString());
+        final rateController =
+            TextEditingController(text: entry.rate.toString());
+        final unitController = TextEditingController(text: entry.unit);
+        final amountController =
+            TextEditingController(text: entry.amount.toString());
+        final taxController = TextEditingController(text: entry.tax.toString());
+        final sgstController =
+            TextEditingController(text: entry.sgst.toString());
+        final cgstController =
+            TextEditingController(text: entry.cgst.toString());
+        final igstController =
+            TextEditingController(text: entry.igst.toString());
+        final netAmountController =
+            TextEditingController(text: entry.netAmount.toString());
+        final discountController =
+            TextEditingController(text: entry.discount.toString());
+        final sellingPriceController =
+            TextEditingController(text: entry.sellingPrice.toString());
+
         _newWidget.add(
           PEntriesT(
-            key: ValueKey(entry.itemName), // or another unique key
+            key: ValueKey(entry.itemName),
             entryId: entry.itemName,
             serialNumber: i + 1,
-            itemNameControllerP: TextEditingController(text: entry.itemName),
-            qtyControllerP: TextEditingController(text: entry.qty.toString()),
-            rateControllerP: TextEditingController(text: entry.rate.toString()),
-            unitControllerP: TextEditingController(text: entry.unit),
-            amountControllerP:
-                TextEditingController(text: entry.amount.toString()),
-            taxControllerP: TextEditingController(text: entry.tax.toString()),
-            sgstControllerP: TextEditingController(text: entry.sgst.toString()),
-            cgstControllerP: TextEditingController(text: entry.cgst.toString()),
-            igstControllerP: TextEditingController(text: entry.igst.toString()),
-            netAmountControllerP:
-                TextEditingController(text: entry.netAmount.toString()),
-            discountControllerP:
-                TextEditingController(text: entry.discount.toString()),
-            sellingPriceControllerP:
-                TextEditingController(text: entry.sellingPrice.toString()),
-            onSaveValues: (p0) {},
+            itemNameControllerP: itemNameController,
+            qtyControllerP: qtyController,
+            rateControllerP: rateController,
+            unitControllerP: unitController,
+            amountControllerP: amountController,
+            taxControllerP: taxController,
+            sgstControllerP: sgstController,
+            cgstControllerP: cgstController,
+            igstControllerP: igstController,
+            netAmountControllerP: netAmountController,
+            discountControllerP: discountController,
+            sellingPriceControllerP: sellingPriceController,
+            onSaveValues: saveValues,
             onDelete: (p0) {},
             item: itemsList,
             measurementLimit: measurement,
@@ -4369,6 +4318,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
         ));
       }
     });
+    print("done");
   }
 
   void clearAll() {
