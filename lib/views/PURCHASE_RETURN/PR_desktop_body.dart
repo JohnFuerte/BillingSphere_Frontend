@@ -198,48 +198,48 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
           ),
         );
 
-        _newWidget2.add(
-          PEntriesM(
-            key: ValueKey(entryId),
-            entryId: entryId,
-            serialNumber: i + 1,
-            itemNameControllerP: purchaseController.itemNameController,
-            qtyControllerP: purchaseController.qtyController,
-            rateControllerP: purchaseController.rateController,
-            unitControllerP: purchaseController.unitController,
-            amountControllerP: purchaseController.amountController,
-            taxControllerP: purchaseController.taxController,
-            sgstControllerP: purchaseController.sgstController,
-            cgstControllerP: purchaseController.cgstController,
-            igstControllerP: purchaseController.igstController,
-            netAmountControllerP: purchaseController.netAmountController,
-            discountControllerP: purchaseController.discountController,
-            sellingPriceControllerP: purchaseController.sellingPriceController,
-            onSaveValues: saveValues,
-            onDelete: (String entryId) {
-              setState(
-                () {
-                  _newWidget
-                      .removeWhere((widget) => widget.key == ValueKey(entryId));
-                  Map<String, dynamic>? entryToRemove;
-                  for (final entry in _allValues) {
-                    if (entry['uniqueKey'] == entryId) {
-                      entryToRemove = entry;
-                      break;
-                    }
-                  }
-                  if (entryToRemove != null) {
-                    _allValues.remove(entryToRemove);
-                  }
-                  calculateTotal();
-                },
-              );
-            },
-            item: itemsList,
-            measurementLimit: measurement,
-            taxCategory: taxLists,
-          ),
-        );
+        // _newWidget2.add(
+        //   PEntriesM(
+        //     key: ValueKey(entryId),
+        //     entryId: entryId,
+        //     serialNumber: i + 1,
+        //     itemNameControllerP: purchaseController.itemNameController,
+        //     qtyControllerP: purchaseController.qtyController,
+        //     rateControllerP: purchaseController.rateController,
+        //     unitControllerP: purchaseController.unitController,
+        //     amountControllerP: purchaseController.amountController,
+        //     taxControllerP: purchaseController.taxController,
+        //     sgstControllerP: purchaseController.sgstController,
+        //     cgstControllerP: purchaseController.cgstController,
+        //     igstControllerP: purchaseController.igstController,
+        //     netAmountControllerP: purchaseController.netAmountController,
+        //     discountControllerP: purchaseController.discountController,
+        //     sellingPriceControllerP: purchaseController.sellingPriceController,
+        //     onSaveValues: saveValues,
+        //     onDelete: (String entryId) {
+        //       setState(
+        //         () {
+        //           _newWidget
+        //               .removeWhere((widget) => widget.key == ValueKey(entryId));
+        //           Map<String, dynamic>? entryToRemove;
+        //           for (final entry in _allValues) {
+        //             if (entry['uniqueKey'] == entryId) {
+        //               entryToRemove = entry;
+        //               break;
+        //             }
+        //           }
+        //           if (entryToRemove != null) {
+        //             _allValues.remove(entryToRemove);
+        //           }
+        //           calculateTotal();
+        //         },
+        //       );
+        //     },
+        //     item: itemsList,
+        //     measurementLimit: measurement,
+        //     taxCategory: taxLists,
+        //   ),
+        // );
       });
     }
 
@@ -917,7 +917,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                         MediaQuery.of(context).size.width * 0,
                                     child: ElevatedButton(
                                       onPressed: () {
-                                        Navigator.of(context).pop();
+                                        showGetItemDialog();
                                       },
                                       style: ButtonStyle(
                                         backgroundColor:
@@ -2325,6 +2325,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                               _newWidget.add(
                                 PEntriesT(
                                   key: ValueKey(entryId),
+                                  entryId: entryId,
                                   serialNumber: _newWidget.length + 1,
                                   itemNameControllerP:
                                       purchaseController.itemNameController,
@@ -2338,8 +2339,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                       purchaseController.amountController,
                                   taxControllerP:
                                       purchaseController.taxController,
-                                  discountControllerP:
-                                      purchaseController.discountController,
                                   sgstControllerP:
                                       purchaseController.sgstController,
                                   cgstControllerP:
@@ -2348,6 +2347,8 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                       purchaseController.igstController,
                                   netAmountControllerP:
                                       purchaseController.netAmountController,
+                                  discountControllerP:
+                                      purchaseController.discountController,
                                   sellingPriceControllerP:
                                       purchaseController.sellingPriceController,
                                   onSaveValues: saveValues,
@@ -2356,8 +2357,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                       () {
                                         _newWidget.removeWhere((widget) =>
                                             widget.key == ValueKey(entryId));
-
-                                        // Find the map in _allValues that contains the entry with the specified entryId
                                         Map<String, dynamic>? entryToRemove;
                                         for (final entry in _allValues) {
                                           if (entry['uniqueKey'] == entryId) {
@@ -2365,8 +2364,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                             break;
                                           }
                                         }
-
-                                        // Remove the map from _allValues if found
                                         if (entryToRemove != null) {
                                           _allValues.remove(entryToRemove);
                                         }
@@ -2374,10 +2371,9 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                       },
                                     );
                                   },
-                                  entryId: entryId,
                                   item: itemsList,
-                                  taxCategory: [],
-                                  measurementLimit: [],
+                                  measurementLimit: measurement,
+                                  taxCategory: taxLists,
                                 ),
                               );
                             });
@@ -4147,7 +4143,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                         const EdgeInsets.all(
                                                             4.0),
                                                     child: Text(
-                                                      entry.totalamount,
+                                                      entry.totalAmount,
                                                       textAlign: TextAlign.end,
                                                       style:
                                                           GoogleFonts.poppins(
@@ -4177,6 +4173,464 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
           ),
         );
       },
+    );
+  }
+
+  void showGetItemDialog() async {
+    TextEditingController originalInvoiceNoController = TextEditingController();
+    TextEditingController vchController = TextEditingController();
+
+    List<String> reasons = [
+      'Bill OF SUPPLY',
+      'Credit Note',
+      'Debit Note',
+      'Delivery Challan',
+      'Inward Challan',
+      'Production',
+      'Proforma Invoice',
+      'Purchase Enquiry',
+      'Purchase Order',
+      'Purchase Return',
+      'Retail Purchase',
+      'Sales Order',
+      'Sales Quotation',
+      'Sales Return',
+      'Tax INVOICE',
+      'Tax Purchase',
+    ];
+
+    List<dynamic>? purchase;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Center(
+          child: Dialog(
+            alignment: AlignmentDirectional.center,
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(0),
+            ),
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width / 2.5,
+              ),
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        height: 50,
+                        color: const Color(0xFF4169E1),
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Text(
+                                'Import Items From Voucher',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Positioned(
+                              right: 0,
+                              child: IconButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SETopText(
+                              text: 'From Voucher',
+                              padding: EdgeInsets.zero,
+                              height: 40,
+                              width: MediaQuery.of(context).size.width * 0.12,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 4,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                height: 40,
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownMenu<String>(
+                                    requestFocusOnTap: true,
+                                    initialSelection: null,
+                                    enableSearch: true,
+                                    trailingIcon: const SizedBox.shrink(),
+                                    textStyle: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xff000000),
+                                      decoration: TextDecoration.none,
+                                    ),
+                                    menuHeight: 300,
+                                    enableFilter: true,
+                                    width: MediaQuery.of(context).size.width *
+                                        0.19,
+                                    selectedTrailingIcon:
+                                        const SizedBox.shrink(),
+                                    inputDecorationTheme:
+                                        const InputDecorationTheme(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 16),
+                                      isDense: true,
+                                      activeIndicatorBorder: BorderSide(
+                                        color: Colors.transparent,
+                                      ),
+                                    ),
+                                    expandedInsets: EdgeInsets.zero,
+                                    onSelected: (String? value) async {
+                                      List<dynamic>? fetchedData;
+                                      if (value == "Retail Purchase") {
+                                        fetchedData = await purchaseServices
+                                            .fetchPurchaseByLedger(
+                                                selectedLedgerName!);
+                                      } else if (value == "Purchase Return") {
+                                        fetchedData =
+                                            await purchaseReturnService
+                                                .fetchPurchaseReturnByLedger(
+                                                    selectedLedgerName!);
+                                      }
+
+                                      setState(() {
+                                        purchase = fetchedData;
+                                      });
+                                    },
+                                    dropdownMenuEntries: reasons
+                                        .map<DropdownMenuEntry<String>>(
+                                            (String value) {
+                                      return DropdownMenuEntry<String>(
+                                        value: value,
+                                        label: value,
+                                        style: ButtonStyle(
+                                          textStyle: WidgetStateProperty.all(
+                                            GoogleFonts.poppins(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SETopText(
+                              text: 'Vch No',
+                              padding: EdgeInsets.zero,
+                              height: 40,
+                              width: MediaQuery.of(context).size.width * 0.12,
+                            ),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              height: 40,
+                              width: MediaQuery.of(context).size.width * 0.12,
+                              child: PRTopTextfield(
+                                controller: vchController,
+                                onSaved: (newValue) {},
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, bottom: 16.0),
+                                hintText: '',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            InkWell(
+                              onTap: () async {
+                                if (vchController.text.isEmpty) {
+                                  PanaraConfirmDialog.showAnimatedGrow(
+                                    context,
+                                    title: "BillingSphere",
+                                    message: "From Voucher is Empty",
+                                    confirmButtonText: "Confirm",
+                                    cancelButtonText: "Cancel",
+                                    onTapCancel: () {
+                                      Navigator.pop(context);
+                                    },
+                                    onTapConfirm: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    panaraDialogType: PanaraDialogType.warning,
+                                  );
+                                } else {
+                                  var matchingPurchase = purchase?.firstWhere(
+                                    (entry) =>
+                                        entry.billNumber == vchController.text,
+                                  );
+
+                                  if (matchingPurchase == null) {
+                                    PanaraConfirmDialog.showAnimatedGrow(
+                                      context,
+                                      title: "BillingSphere",
+                                      message:
+                                          "No purchase found with the given invoice number",
+                                      confirmButtonText: "Confirm",
+                                      cancelButtonText: "Cancel",
+                                      onTapCancel: () {
+                                        Navigator.pop(context);
+                                      },
+                                      onTapConfirm: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      panaraDialogType: PanaraDialogType.error,
+                                    );
+                                  } else {
+                                    print(matchingPurchase.entries);
+                                    List<PurchaseEntry> entries =
+                                        (matchingPurchase.entries
+                                                as List<dynamic>)
+                                            .map((entry) => PurchaseEntry(
+                                                  itemName: entry.itemName,
+                                                  qty: entry.qty,
+                                                  rate: entry.rate,
+                                                  unit: entry.unit,
+                                                  amount: entry.amount,
+                                                  tax: entry.tax,
+                                                  sgst: entry.sgst,
+                                                  discount: entry.discount,
+                                                  cgst: entry.cgst,
+                                                  igst: entry.igst,
+                                                  netAmount: entry.netAmount,
+                                                  sellingPrice:
+                                                      entry.sellingPrice,
+                                                ))
+                                            .toList();
+
+                                    _updateWidgetList(entries);
+                                  }
+                                }
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFFACD),
+                                  border: Border.all(
+                                    color: const Color(0xFFFFFACD),
+                                    width: 1,
+                                  ),
+                                ),
+                                width: MediaQuery.of(context).size.width * 0.1,
+                                height: 40,
+                                padding: const EdgeInsets.all(2.0),
+                                child: Center(
+                                  child: Text(
+                                    'Import [F4]',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // const Spacer(),
+                            const SizedBox(width: 10),
+                            InkWell(
+                              onTap: () {},
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFFACD),
+                                  border: Border.all(
+                                    color: const Color(0xFFFFFACD),
+                                    width: 1,
+                                  ),
+                                ),
+                                width: MediaQuery.of(context).size.width * 0.1,
+                                height: 40,
+                                padding: const EdgeInsets.all(2.0),
+                                child: Center(
+                                  child: Text(
+                                    'Cancel',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8.0, vertical: 5),
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height / 2.5,
+                            maxWidth: MediaQuery.of(context).size.width / 2.5,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.black,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 10.0),
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (purchase != null)
+                                    Table(
+                                      border: TableBorder.all(
+                                          width: 1, color: Colors.black),
+                                      columnWidths: const {
+                                        0: FlexColumnWidth(3),
+                                        1: FlexColumnWidth(3),
+                                        2: FlexColumnWidth(3),
+                                        3: FlexColumnWidth(3),
+                                      },
+                                      children: [
+                                        TableRow(
+                                          children: [
+                                            buildTableCell(
+                                              text: "Date",
+                                              isHeader: true,
+                                            ),
+                                            buildTableCell(
+                                              text: "No",
+                                              isHeader: true,
+                                            ),
+                                            buildTableCell(
+                                              text: "Particular",
+                                              isHeader: true,
+                                            ),
+                                            buildTableCell(
+                                              text: "Amount",
+                                              isHeader: true,
+                                            ),
+                                          ],
+                                        ),
+                                        for (var entry in purchase!)
+                                          TableRow(
+                                            children: [
+                                              buildTableCell(
+                                                text: entry.date,
+                                              ),
+                                              buildTableCell(
+                                                text: entry.billNumber,
+                                              ),
+                                              buildTableCell(
+                                                text: purchaseController
+                                                    .partyController.text,
+                                              ),
+                                              buildTableCell(
+                                                text: entry.totalAmount,
+                                              ),
+                                            ],
+                                          ),
+                                      ],
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  List<PurchaseEntry> convertEntriesToPurchaseEntries(List<dynamic> entries) {
+    return entries.map((entry) {
+      return PurchaseEntry(
+        itemName: entry.itemName,
+        qty: entry.qty,
+        rate: entry.rate,
+        unit: entry.unit,
+        amount: entry.amount,
+        tax: entry.tax,
+        sgst: entry.sgst,
+        discount: entry.discount,
+        cgst: entry.cgst,
+        igst: entry.igst,
+        netAmount: entry.netAmount,
+        sellingPrice: entry.sellingPrice,
+      );
+    }).toList();
+  }
+
+  Widget buildTableCell({
+    required String text,
+    Alignment alignment = Alignment.center,
+    TextAlign textAlign = TextAlign.center,
+    bool isHeader = false,
+    EdgeInsets padding = const EdgeInsets.all(4.0),
+  }) {
+    return TableCell(
+      child: SizedBox(
+        height: 40,
+        child: Align(
+          alignment: alignment,
+          child: Padding(
+            padding: padding,
+            child: Text(
+              text,
+              textAlign: textAlign,
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+                color: isHeader ? const Color(0xff4B0082) : Colors.black,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -4211,21 +4665,22 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
   void _updateWidgetList(List<PurchaseEntry> selectedEntries) {
     setState(() {
       _newWidget.clear();
-      purchaseController.noController.text = selectedPurchase!.no;
-      purchaseController.dateController.text = selectedPurchase!.date;
-      purchaseController.ledgerController.text = suggestionItems5.isNotEmpty
-          ? suggestionItems5
-              .firstWhere((element) => element.id == selectedPurchase!.ledger)
-              .name
-          : '';
-      purchaseController.billNumberController.text =
-          selectedPurchase!.billNumber;
-      purchaseController.date2Controller.text = selectedPurchase!.date2;
-      purchaseController.remarksController!.text = selectedPurchase!.remarks;
-      selectedLedgerName = selectedPurchase!.ledger;
-      selectedState = selectedPurchase!.place;
-      selectedStatus = selectedPurchase!.type;
-
+      print("enetring....updateWidget");
+      // purchaseController.noController.text = selectedPurchase!.no;
+      // purchaseController.dateController.text = selectedPurchase!.date;
+      // purchaseController.ledgerController.text = suggestionItems5.isNotEmpty
+      //     ? suggestionItems5
+      //         .firstWhere((element) => element.id == selectedPurchase!.ledger)
+      //         .name
+      //     : '';
+      // purchaseController.billNumberController.text =
+      //     selectedPurchase!.billNumber;
+      // purchaseController.date2Controller.text = selectedPurchase!.date2;
+      // purchaseController.remarksController!.text = selectedPurchase!.remarks;
+      // selectedLedgerName = selectedPurchase!.ledger;
+      // selectedState = selectedPurchase!.place;
+      // selectedStatus = selectedPurchase!.type;
+      print("after assinging");
       for (var i = 0; i < selectedEntries.length; i++) {
         final entry = selectedEntries[i];
         print("add all values");

@@ -142,7 +142,7 @@ class _LedgerShowState extends State<LedgerShow> {
                       widget.endDate!))
           .toList();
       double totalAmountSumPurchase = filteredPurchase.fold(
-          0, (sum, item) => sum + double.parse(item.totalamount));
+          0, (sum, item) => sum + double.parse(item.totalAmount));
 
       final filteredPayment = payment
           .where((paymenteentry) =>
@@ -487,7 +487,7 @@ class _LedgerShowState extends State<LedgerShow> {
                                   particulars = 'Purchase Entry';
                                   type = 'RP';
                                   noRef = item.no.toString();
-                                  credit = double.parse(item.totalamount);
+                                  credit = double.parse(item.totalAmount);
                                   balance += credit;
                                 } else if (item is Payment) {
                                   date = item.date;

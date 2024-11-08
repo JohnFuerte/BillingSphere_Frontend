@@ -260,7 +260,7 @@ class _PAReceipyBodyState extends State<PEReceiptBody> {
                                     ),
                                     const SizedBox(width: 30),
                                     Text(
-                                      'Rs. ${widget.data.totalamount}.00',
+                                      'Rs. ${widget.data.totalAmount}.00',
                                       style: GoogleFonts.poppins(
                                         fontSize: 14,
                                         color: Colors.black,

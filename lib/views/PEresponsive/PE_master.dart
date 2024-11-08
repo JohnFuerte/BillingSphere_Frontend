@@ -271,7 +271,7 @@ class _PEMasterBodyState extends State<PEMasterBody> {
     setState(() {
       fetchedPurchase = fetchedPurchase2
           .where((sales) =>
-              sales.totalamount.toLowerCase().contains(value.toLowerCase()))
+              sales.totalAmount.toLowerCase().contains(value.toLowerCase()))
           .toList();
     });
   }
@@ -1066,7 +1066,7 @@ class _PEMasterBodyState extends State<PEMasterBody> {
                                                       : Colors.white,
                                                   child: Text(
                                                     fetchedPurchase[i]
-                                                        .totalamount,
+                                                        .totalAmount,
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 15,
                                                       fontWeight:

@@ -4,7 +4,7 @@ import 'dart:convert';
 class Purchase {
   final String id;
   final String companyCode;
-  final String totalamount;
+  final String totalAmount;
   final String no;
   final String date;
   final String date2;
@@ -22,7 +22,7 @@ class Purchase {
   Purchase({
     required this.id,
     required this.companyCode,
-    required this.totalamount,
+    required this.totalAmount,
     required this.no,
     required this.date,
     required this.cashAmount,
@@ -42,7 +42,7 @@ class Purchase {
     return <String, dynamic>{
       'id': id,
       'companyCode': companyCode,
-      'totalamount': totalamount,
+      'totalamount': totalAmount,
       'cashAmount': cashAmount,
       'dueAmount': dueAmount,
       'roundoffDiff': roundoffDiff,
@@ -63,7 +63,7 @@ class Purchase {
   factory Purchase.fromMap(Map<String, dynamic> map) {
     return Purchase(
       companyCode: map['companyCode'] as String,
-      totalamount: map['totalamount'] as String,
+      totalAmount: map['totalamount'] as String,
       id: map['_id'] as String,
       no: map['no'] as String,
       date: map['date'] as String,

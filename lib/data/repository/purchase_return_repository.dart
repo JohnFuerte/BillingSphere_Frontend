@@ -175,6 +175,59 @@ class PurchaseReturnService {
     }
   }
 
+  Future<List<PurchaseReturn>?> fetchPurchaseReturnByLedger(
+      String ledger) async {
+    try {
+      String? token = await getToken();
+      List<String>? code = await getCompanyCode();
+
+      if (code == null || code.isEmpty) {
+        throw Exception("Company code is not available.");
+      }
+
+      final response = await http.get(
+        Uri.parse(
+            '${Constants.baseUrl}/purchase-return/fetch-by-ledger/${code[0]}/$ledger'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': '$token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print(data);
+        if (data['success']) {
+          List<PurchaseReturn> purchaseReturns = (data['data'] as List)
+              .map((item) => PurchaseReturn.fromJson(item))
+              .toList();
+          return purchaseReturns;
+        } else {
+          Fluttertoast.showToast(
+            msg: "Failed to fetch Purchase Return: ${data['message']}",
+            toastLength: Toast.LENGTH_SHORT,
+            gravity: ToastGravity.BOTTOM,
+            backgroundColor: Colors.red,
+            textColor: Colors.white,
+          );
+          return null;
+        }
+      } else {
+        Fluttertoast.showToast(
+          msg: "Error: ${response.statusCode} - ${response.reasonPhrase}",
+          toastLength: Toast.LENGTH_SHORT,
+          gravity: ToastGravity.BOTTOM,
+          backgroundColor: Colors.red,
+          textColor: Colors.white,
+        );
+        return null;
+      }
+    } catch (e) {
+      print("Error fetching Purchase Return by ID: $e");
+      return null;
+    }
+  }
+
   Future<void> updatePurchaseReturn(
       String id, PurchaseReturn updatedPurchaseReturn) async {
     String? token = await getToken();

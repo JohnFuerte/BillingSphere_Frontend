@@ -284,7 +284,6 @@ class PurchaseServices {
     final responseData = json.decode(response.body);
 
     if (responseData['success'] == true) {
-      // Show a toast message to indicate successful deletion
       showToast("Purchase deleted successfully!");
     } else {
       print('Failed to delete purchase: ${responseData['message']}');

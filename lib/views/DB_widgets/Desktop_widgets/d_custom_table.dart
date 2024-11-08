@@ -158,7 +158,7 @@ class _DTableState extends State<DTable> {
       if (entryDay == todayDay &&
           entryMonth == todayMonth &&
           entryYear == todayYear) {
-        totalAmount += double.parse(entry.totalamount);
+        totalAmount += double.parse(entry.totalAmount);
       }
     }
 
@@ -168,7 +168,7 @@ class _DTableState extends State<DTable> {
   double calculatePurchaseTotalAmount() {
     double totalAmount = 0;
     for (var entry in widget.suggestionPurchase) {
-      totalAmount += double.parse(entry.totalamount);
+      totalAmount += double.parse(entry.totalAmount);
     }
     return totalAmount;
   }
@@ -183,7 +183,7 @@ class _DTableState extends State<DTable> {
       int entryMonth = int.parse(entryDateComponents[0]);
       int entryYear = int.parse(entryDateComponents[2]);
       if (entryMonth == currentMonth && entryYear == currentYear) {
-        totalAmount += double.parse(entry.totalamount);
+        totalAmount += double.parse(entry.totalAmount);
       }
     }
 

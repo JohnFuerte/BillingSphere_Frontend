@@ -687,7 +687,7 @@ class _PaymentVoucherPrintState extends State<PaymentVoucherPrint> {
                                         child: pw.Text(
                                           purchase != null
                                               ? (double.parse(
-                                                      purchase.totalamount)
+                                                      purchase.totalAmount)
                                                   .toStringAsFixed(2))
                                               : '0.00',
                                           textAlign: pw.TextAlign.center,

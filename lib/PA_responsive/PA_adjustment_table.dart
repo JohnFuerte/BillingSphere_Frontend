@@ -141,7 +141,7 @@ class _MyTableState extends State<MyTable2> {
 
     for (var i = 0; i < purchase.length; i++) {
       setState(() {
-        totalAmount += double.parse(purchase[i].totalamount ?? '0');
+        totalAmount += double.parse(purchase[i].totalAmount ?? '0');
         dueAmount += double.parse(purchase[i].dueAmount ?? '0');
       });
     }
@@ -180,7 +180,7 @@ class _MyTableState extends State<MyTable2> {
             'invoiceGST': purchase[i].no.toString(),
             'dueAmount': _dueAmountList[i].toString(),
             'totalAmount':
-                double.parse(purchase[i].totalamount).toStringAsFixed(2),
+                double.parse(purchase[i].totalAmount).toStringAsFixed(2),
             'paidAmount': widget.paidAmount,
             'adjustmentAmount': _dueAmountList[i].toStringAsFixed(2),
             'pendingAmount':
@@ -209,7 +209,7 @@ class _MyTableState extends State<MyTable2> {
             'invoiceGST': purchase[i].no.toString(),
             'dueAmount': _dueAmountList[i].toString(),
             'totalAmount':
-                double.parse(purchase[i].totalamount).toStringAsFixed(2),
+                double.parse(purchase[i].totalAmount).toStringAsFixed(2),
             'paidAmount': widget.paidAmount,
             'adjustmentAmount': _dueAmountList[i].toStringAsFixed(2),
             'pendingAmount':
@@ -277,7 +277,7 @@ class _MyTableState extends State<MyTable2> {
                         // Default value if sales is empty
                         MyTableText1(
                             text: purchase.isNotEmpty
-                                ? purchase.map((e) => e.totalamount).reduce(
+                                ? purchase.map((e) => e.totalAmount).reduce(
                                     (value, element) => (double.parse(value) +
                                             double.parse(element))
                                         .toStringAsFixed(2))
@@ -337,7 +337,7 @@ class _MyTableState extends State<MyTable2> {
                                         'dueAmount':
                                             _dueAmountList[i].toString(),
                                         'totalAmount': double.parse(
-                                                purchase[i].totalamount)
+                                                purchase[i].totalAmount)
                                             .toStringAsFixed(2),
                                         'paidAmount': widget.paidAmount,
                                         'adjustmentAmount': _dueAmountList[i]
@@ -368,7 +368,7 @@ class _MyTableState extends State<MyTable2> {
                             textAlign: TextAlign.end,
                           ),
                           MyTableText2(
-                            text: double.parse(purchase[i].totalamount)
+                            text: double.parse(purchase[i].totalAmount)
                                 .toStringAsFixed(2),
                             textAlign: TextAlign.end,
                           ),

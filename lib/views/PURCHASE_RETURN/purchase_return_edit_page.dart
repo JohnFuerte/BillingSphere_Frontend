@@ -338,7 +338,6 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
         );
       }
 
-      // Add the existing sundry to the _allValuesSundry list
       for (final entry in response.sundry) {
         final entryId = UniqueKey().toString();
         _allValuesSundry.add({
@@ -1329,6 +1328,96 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                 ),
                               ],
                             ),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 26.0),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  SizedBox(
+                                    width: MediaQuery.of(context).size.width *
+                                        0.12,
+                                    height: 30,
+                                    child: SizedBox(
+                                      width:
+                                          MediaQuery.of(context).size.width * 0,
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          // showReturnInfoDialog();
+                                        },
+                                        style: ButtonStyle(
+                                          backgroundColor:
+                                              MaterialStateProperty.all<Color>(
+                                            const Color(0xFFFFFACD),
+                                          ),
+                                          shape: MaterialStateProperty.all<
+                                              OutlinedBorder>(
+                                            RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(1.0),
+                                              side: const BorderSide(
+                                                  color: Colors.black),
+                                            ),
+                                          ),
+                                        ),
+                                        child: Align(
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            'Return Info',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  SizedBox(
+                                    width: MediaQuery.of(context).size.width *
+                                        0.12,
+                                    height: 30,
+                                    child: SizedBox(
+                                      width:
+                                          MediaQuery.of(context).size.width * 0,
+                                      child: ElevatedButton(
+                                        onPressed: () {
+                                          // showGetItemDialog();
+                                        },
+                                        style: ButtonStyle(
+                                          backgroundColor:
+                                              MaterialStateProperty.all<Color>(
+                                            const Color(0xFFFFFACD),
+                                          ),
+                                          shape: MaterialStateProperty.all<
+                                              OutlinedBorder>(
+                                            RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(1.0),
+                                              side: const BorderSide(
+                                                  color: Colors.black),
+                                            ),
+                                          ),
+                                        ),
+                                        child: Align(
+                                          alignment: Alignment.center,
+                                          child: Text(
+                                            'Get Items',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 15,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
                             SizedBox(
                                 height:
                                     MediaQuery.of(context).size.height * 0.02),

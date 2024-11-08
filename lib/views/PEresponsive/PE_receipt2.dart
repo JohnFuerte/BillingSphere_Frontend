@@ -304,7 +304,7 @@ class _PurchaseReceiptByIDState extends State<PurchaseReceiptByID> {
                                       ),
                                       const SizedBox(width: 30),
                                       Text(
-                                        'Rs. ${_PurchaseEntry!.totalamount}.00',
+                                        'Rs. ${_PurchaseEntry!.totalAmount}.00',
                                         style: GoogleFonts.poppins(
                                           fontSize: 14,
                                           color: Colors.black,

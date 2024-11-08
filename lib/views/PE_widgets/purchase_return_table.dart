@@ -59,6 +59,7 @@ class PEntriesT extends StatefulWidget {
 }
 
 class _PEntriesTState extends State<PEntriesT> {
+  final TextEditingController stockController = TextEditingController();
   final TextEditingController itemNameController = TextEditingController();
   final TextEditingController qtyController = TextEditingController();
   final TextEditingController rateController = TextEditingController();
@@ -80,7 +81,7 @@ class _PEntriesTState extends State<PEntriesT> {
   String? selectedItemId;
   String? selectedTaxRateId;
   String? selectedmeasurementId;
-  double itemRate = 0.0; // Track the selected item's rate
+  double itemRate = 0.0;
 
   // List of items
   double persistentTotal = 0.00;

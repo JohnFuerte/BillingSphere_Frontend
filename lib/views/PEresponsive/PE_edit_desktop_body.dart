@@ -528,7 +528,7 @@ class _PurchaseEditDState extends State<PurchaseEditD> {
     Purchase purchaseData = Purchase(
         id: widget.data,
         companyCode: companyCode!.first,
-        totalamount: (TnetAmount + Ttotal).toString(),
+        totalAmount: (TnetAmount + Ttotal).toString(),
         no: purchaseController.noController.text,
         date: purchaseController.dateController.text,
         cashAmount: purchaseController.cashAmountController.text,
@@ -2652,7 +2652,12 @@ class _PurchaseEditDState extends State<PurchaseEditD> {
                                             MediaQuery.of(context).size.width *
                                                 0,
                                         child: ElevatedButton(
-                                          onPressed: () {},
+                                          onPressed: () async {
+                                            await purchaseServices
+                                                .deletePurchase(
+                                                    widget.data, context);
+                                            Navigator.pop(context);
+                                          },
                                           style: ButtonStyle(
                                             backgroundColor:
                                                 MaterialStateProperty.all<

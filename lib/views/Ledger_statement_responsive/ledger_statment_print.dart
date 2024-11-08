@@ -661,7 +661,7 @@ class _LedgerStatmentPrintState extends State<LedgerStatmentPrint> {
                       particulars = 'Purchase Entry';
                       type = 'RP';
                       noRef = item.no.toString();
-                      credit = double.parse(item.totalamount);
+                      credit = double.parse(item.totalAmount);
                       balance += credit;
                     } else if (item is Payment) {
                       date = item.date;

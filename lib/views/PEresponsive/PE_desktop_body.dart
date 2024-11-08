@@ -318,7 +318,7 @@ class _PEMyDesktopBodyState extends State<PEMyDesktopBody> {
       billNumber: purchaseController.billNumberController.text,
       remarks:
           purchaseController.remarksController?.text ?? 'No remark available',
-      totalamount: TfinalAmt.toStringAsFixed(2),
+      totalAmount: TfinalAmt.toStringAsFixed(2),
       roundoffDiff: double.parse(roundOffController.text),
       entries: _allValues.map((entry) {
         return PurchaseEntry(
@@ -356,7 +356,7 @@ class _PEMyDesktopBodyState extends State<PEMyDesktopBody> {
                 orElse: () => Purchase(
                       id: '',
                       companyCode: '',
-                      totalamount: '',
+                      totalAmount: '',
                       no: '',
                       date: '',
                       cashAmount: '',
