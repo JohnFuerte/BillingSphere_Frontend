@@ -61,8 +61,7 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
   List<UserGroup> userGroupM = [];
   bool isLoading = false;
   Future<void> fetchUserGroup() async {
-    final List<UserGroup> userGroupFetch =
-        await userGroupServices.getUserGroups();
+    final List<UserGroup> userGroupFetch = await userGroupServices.getUserGroups();
 
     setState(() {
       userGroupM = userGroupFetch;
@@ -105,14 +104,8 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
     try {
       final List<Ledger> ledger = await ledgerService.fetchLedgers();
       // print(ledger);
-      final filteredLedgerEntry = ledger
-          .where((ledgerentry) =>
-              ledgerentry.ledgerGroup == '662f97d2a07ec73369c237b0')
-          .toList();
-      final filteredLedgerCustomerEntry = ledger
-          .where((ledgerentry) =>
-              ledgerentry.ledgerGroup == '662f984ba07ec73369c237c8')
-          .toList();
+      final filteredLedgerEntry = ledger.where((ledgerentry) => ledgerentry.ledgerGroup == '662f97d2a07ec73369c237b0').toList();
+      final filteredLedgerCustomerEntry = ledger.where((ledgerentry) => ledgerentry.ledgerGroup == '662f984ba07ec73369c237c8').toList();
       setState(() {
         suggestionLedger = filteredLedgerEntry;
         suggestionLedgerCustomer = filteredLedgerCustomerEntry;
@@ -130,10 +123,7 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
   Future<void> fetchPayment() async {
     try {
       final List<Payment> payment = await paymentService.fetchPayments();
-      final filteredPaymentEntry = payment
-          .where(
-              (purchasentry) => purchasentry.companyCode == companyCode!.first)
-          .toList();
+      final filteredPaymentEntry = payment.where((purchasentry) => purchasentry.companyCode == companyCode!.first).toList();
       setState(() {
         suggestionPayment = filteredPaymentEntry;
       });
@@ -150,10 +140,7 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
   Future<void> fetchPurchase() async {
     try {
       final List<Purchase> purchase = await purchaseService.getPurchase();
-      final filteredPurchaseEntry = purchase
-          .where(
-              (purchasentry) => purchasentry.companyCode == companyCode!.first)
-          .toList();
+      final filteredPurchaseEntry = purchase.where((purchasentry) => purchasentry.companyCode == companyCode!.first).toList();
       setState(() {
         suggestionPurchase = filteredPurchaseEntry;
       });
@@ -170,14 +157,8 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
   Future<void> fetchSales() async {
     try {
       final List<SalesEntry> sales = await salesService.fetchSalesEntries();
-      final filteredSalesEntry = sales
-          .where((salesentry) => salesentry.companyCode == companyCode!.first)
-          .toList();
-      final filteredSalesCashEntry = sales
-          .where((salesentry) =>
-              salesentry.companyCode == companyCode!.first &&
-              salesentry.type == 'CASH')
-          .toList();
+      final filteredSalesEntry = sales.where((salesentry) => salesentry.companyCode == companyCode!.first).toList();
+      final filteredSalesCashEntry = sales.where((salesentry) => salesentry.companyCode == companyCode!.first && salesentry.type == 'CASH').toList();
       setState(() {
         suggestionSales = filteredSalesEntry;
         suggestionSalesCash = filteredSalesCashEntry;
@@ -374,8 +355,7 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
       } else {
         Navigator.push(
           context,
-          MaterialPageRoute(
-              builder: (context) => const PMMyPaymentDesktopBody()),
+          MaterialPageRoute(builder: (context) => const PMMyPaymentDesktopBody()),
         );
       }
     }
@@ -537,8 +517,7 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
           builder: (context) {
             return AlertDialog(
               title: const Text('Access Denied'),
-              content: const Text(
-                  'You do not have access to Ledger Statement page.'),
+              content: const Text('You do not have access to Ledger Statement page.'),
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
@@ -573,8 +552,7 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
           builder: (context) {
             return AlertDialog(
               title: const Text('Access Denied'),
-              content:
-                  const Text('You do not have access to Stock Status page.'),
+              content: const Text('You do not have access to Stock Status page.'),
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
@@ -615,8 +593,7 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
           builder: (context) {
             return AlertDialog(
               title: const Text('Access Denied'),
-              content:
-                  const Text('You do not have access to Stock Vouchers page.'),
+              content: const Text('You do not have access to Stock Vouchers page.'),
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
@@ -651,8 +628,7 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
           builder: (context) {
             return AlertDialog(
               title: const Text('Access Denied'),
-              content:
-                  const Text('You do not have access to Sales Register page.'),
+              content: const Text('You do not have access to Sales Register page.'),
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
@@ -688,59 +664,44 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
       child: Focus(
         autofocus: true,
         onKey: (node, event) {
-          if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.keyA) {
+          if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyA) {
             navigateSales();
             return KeyEventResult.handled;
-          } else if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.keyB) {
+          } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyB) {
             navigateToSalesPos();
-          } else if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.keyC) {
+          } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyC) {
             navigateReceipt();
-          } else if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.keyD) {
+          } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyD) {
             navigatePurchase();
-          } else if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.keyE) {
+          } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyE) {
             navigatePayment();
-          } else if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.keyF) {
+          } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyF) {
             navigateReceivable();
-          } else if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.keyG) {
+          } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyG) {
             navigatePayable();
-          } else if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.digit1) {
+          } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.digit1) {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (context) => const DataTablePaginationExample(),
               ),
             );
-          } else if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.digit2) {
+          } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.digit2) {
             navigateLedgerStmnt();
-          } else if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.keyS) {
+          } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyS) {
             Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (context) => const GstReportDesktop(),
               ),
             );
-          } else if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.keyM) {
+          } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyM) {
             navigateLedger();
-          } else if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.keyN) {
+          } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyN) {
             navigateItem();
-          } else if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.digit6) {
+          } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.digit6) {
             navigateStockStatus();
-          } else if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.digit7) {
+          } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.digit7) {
             navigateStockVoucher();
-          } else if (event is RawKeyDownEvent &&
-              event.logicalKey == LogicalKeyboardKey.digit8) {
+          } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.digit8) {
             navigateSalesRegister();
           }
           return KeyEventResult.ignored;
@@ -758,17 +719,14 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: screenWidth * 0.0859,
-                            vertical: screenHeight * 0.01),
+                        padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.0859, vertical: screenHeight * 0.01),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
                                 Visibility(
-                                  visible: (userGroup == "Admin" ||
-                                      userGroup == "Owner"),
+                                  visible: (userGroup == "Admin" || userGroup == "Owner"),
                                   child: Padding(
                                     padding: const EdgeInsets.only(bottom: 15),
                                     child: Container(
@@ -781,13 +739,7 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                           width: 2.0,
                                         ),
                                       ),
-                                      child: userGroup == "Admin"
-                                          ? CustomAppBarMenuAdmin
-                                              .buildTitleMenu(context)
-                                          : (userGroup == "Owner"
-                                              ? CustomAppBarMenuOwner
-                                                  .buildTitleMenu(context)
-                                              : const Text('')),
+                                      child: userGroup == "Admin" ? CustomAppBarMenuAdmin.buildTitleMenu(context) : (userGroup == "Owner" ? CustomAppBarMenuOwner.buildTitleMenu(context) : const Text('')),
                                     ),
                                   ),
                                 ),
@@ -851,11 +803,9 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                 _prefs.clear();
                                                 setState(() {});
 
-                                                Navigator.of(context)
-                                                    .pushReplacement(
+                                                Navigator.of(context).pushReplacement(
                                                   MaterialPageRoute(
-                                                    builder: (_) =>
-                                                        const BlankScreen(),
+                                                    builder: (_) => const BlankScreen(),
                                                   ),
                                                 );
                                               },
@@ -889,21 +839,18 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                     ),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       Container(
                                         width: double.infinity,
                                         decoration: const BoxDecoration(
-                                          color:
-                                              Color.fromARGB(255, 208, 31, 34),
+                                          color: Color.fromARGB(255, 208, 31, 34),
                                         ),
                                         child: const Text(
                                           'QUICK ACCESS',
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                            color: Color.fromARGB(
-                                                255, 255, 255, 255),
+                                            color: Color.fromARGB(255, 255, 255, 255),
                                             fontSize: 18,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -912,55 +859,35 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                       Padding(
                                         padding: const EdgeInsets.all(8.0),
                                         child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Row(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
+                                              crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
                                                 // Transaction
                                                 SizedBox(
                                                   width: screenWidth * 0.15,
                                                   height: 300,
                                                   child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
                                                     children: [
                                                       const Text(
                                                         'Transactions',
                                                         style: TextStyle(
                                                           fontSize: 18,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: Color.fromARGB(
-                                                              255, 208, 31, 34),
-                                                          decoration:
-                                                              TextDecoration
-                                                                  .underline,
-                                                          decorationColor:
-                                                              Color.fromARGB(
-                                                                  255,
-                                                                  208,
-                                                                  31,
-                                                                  34),
-                                                          decorationThickness:
-                                                              2.0,
+                                                          fontWeight: FontWeight.bold,
+                                                          color: Color.fromARGB(255, 208, 31, 34),
+                                                          decoration: TextDecoration.underline,
+                                                          decorationColor: Color.fromARGB(255, 208, 31, 34),
+                                                          decorationThickness: 2.0,
                                                         ),
                                                       ),
-                                                      const SizedBox(
-                                                          height: 10),
+                                                      const SizedBox(height: 10),
                                                       Visibility(
-                                                        visible: (userGroup ==
-                                                                    "Admin" ||
-                                                                userGroup ==
-                                                                    "Owner") ||
+                                                        visible: (userGroup == "Admin" || userGroup == "Owner") ||
                                                             userGroupM
                                                                     .firstWhere(
-                                                                      (e) =>
-                                                                          e.userGroupName ==
-                                                                          userGroup,
+                                                                      (e) => e.userGroupName == userGroup,
                                                                     )
                                                                     .sales !=
                                                                 "No",
@@ -970,9 +897,7 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                             Navigator.push(
                                                               context,
                                                               MaterialPageRoute(
-                                                                builder:
-                                                                    (context) =>
-                                                                        const SEMyDesktopBody(),
+                                                                builder: (context) => const SEMyDesktopBody(),
                                                               ),
                                                             );
                                                           },
@@ -985,23 +910,17 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                           Navigator.push(
                                                             context,
                                                             MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  const SalesReturn(),
+                                                              builder: (context) => const SalesReturn(),
                                                             ),
                                                           );
                                                         },
                                                       ),
                                                       const SizedBox(height: 1),
                                                       Visibility(
-                                                        visible: (userGroup ==
-                                                                    "Admin" ||
-                                                                userGroup ==
-                                                                    "Owner") ||
+                                                        visible: (userGroup == "Admin" || userGroup == "Owner") ||
                                                             userGroupM
                                                                     .firstWhere(
-                                                                      (e) =>
-                                                                          e.userGroupName ==
-                                                                          userGroup,
+                                                                      (e) => e.userGroupName == userGroup,
                                                                     )
                                                                     .receipt2 !=
                                                                 "No",
@@ -1011,24 +930,17 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                             Navigator.push(
                                                               context,
                                                               MaterialPageRoute(
-                                                                builder:
-                                                                    (context) =>
-                                                                        const RVDesktopBody(),
+                                                                builder: (context) => const RVDesktopBody(),
                                                               ),
                                                             );
                                                           },
                                                         ),
                                                       ),
                                                       Visibility(
-                                                        visible: (userGroup ==
-                                                                    "Admin" ||
-                                                                userGroup ==
-                                                                    "Owner") ||
+                                                        visible: (userGroup == "Admin" || userGroup == "Owner") ||
                                                             userGroupM
                                                                     .firstWhere(
-                                                                      (e) =>
-                                                                          e.userGroupName ==
-                                                                          userGroup,
+                                                                      (e) => e.userGroupName == userGroup,
                                                                     )
                                                                     .purchase !=
                                                                 "No",
@@ -1038,9 +950,7 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                             Navigator.push(
                                                               context,
                                                               MaterialPageRoute(
-                                                                builder:
-                                                                    (context) =>
-                                                                        const PEMyDesktopBody(),
+                                                                builder: (context) => const PEMyDesktopBody(),
                                                               ),
                                                             );
                                                           },
@@ -1048,15 +958,10 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                       ),
                                                       const SizedBox(height: 1),
                                                       Visibility(
-                                                        visible: (userGroup ==
-                                                                    "Admin" ||
-                                                                userGroup ==
-                                                                    "Owner") ||
+                                                        visible: (userGroup == "Admin" || userGroup == "Owner") ||
                                                             userGroupM
                                                                     .firstWhere(
-                                                                      (e) =>
-                                                                          e.userGroupName ==
-                                                                          userGroup,
+                                                                      (e) => e.userGroupName == userGroup,
                                                                     )
                                                                     .payment !=
                                                                 "No",
@@ -1065,25 +970,17 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                           onPressed: () {
                                                             Navigator.push(
                                                               context,
-                                                              MaterialPageRoute(
-                                                                  builder:
-                                                                      (context) =>
-                                                                          const PMMyPaymentDesktopBody()),
+                                                              MaterialPageRoute(builder: (context) => const PMMyPaymentDesktopBody()),
                                                             );
                                                           },
                                                         ),
                                                       ),
                                                       const SizedBox(height: 1),
                                                       Visibility(
-                                                        visible: (userGroup ==
-                                                                    "Admin" ||
-                                                                userGroup ==
-                                                                    "Owner") ||
+                                                        visible: (userGroup == "Admin" || userGroup == "Owner") ||
                                                             userGroupM
                                                                     .firstWhere(
-                                                                      (e) =>
-                                                                          e.userGroupName ==
-                                                                          userGroup,
+                                                                      (e) => e.userGroupName == userGroup,
                                                                     )
                                                                     .stock !=
                                                                 "No",
@@ -1093,9 +990,7 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                             Navigator.push(
                                                               context,
                                                               MaterialPageRoute(
-                                                                builder:
-                                                                    (context) =>
-                                                                        const RAhomepage(),
+                                                                builder: (context) => const RAhomepage(),
                                                               ),
                                                             );
                                                           },
@@ -1103,15 +998,10 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                       ),
                                                       const SizedBox(height: 1),
                                                       Visibility(
-                                                        visible: (userGroup ==
-                                                                    "Admin" ||
-                                                                userGroup ==
-                                                                    "Owner") ||
+                                                        visible: (userGroup == "Admin" || userGroup == "Owner") ||
                                                             userGroupM
                                                                     .firstWhere(
-                                                                      (e) =>
-                                                                          e.userGroupName ==
-                                                                          userGroup,
+                                                                      (e) => e.userGroupName == userGroup,
                                                                     )
                                                                     .ownerGroup !=
                                                                 "No",
@@ -1121,9 +1011,7 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                             Navigator.push(
                                                               context,
                                                               MaterialPageRoute(
-                                                                builder:
-                                                                    (context) =>
-                                                                        const PAHomepage(),
+                                                                builder: (context) => const PAHomepage(),
                                                               ),
                                                             );
                                                           },
@@ -1139,79 +1027,40 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                   width: screenWidth * 0.15,
                                                   height: 140,
                                                   child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
                                                     children: [
                                                       const Text(
                                                         'Account Reports',
                                                         style: TextStyle(
                                                           fontSize: 18,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: Color.fromARGB(
-                                                              255, 208, 31, 34),
-                                                          decoration:
-                                                              TextDecoration
-                                                                  .underline,
-                                                          decorationColor:
-                                                              Color.fromARGB(
-                                                                  255,
-                                                                  208,
-                                                                  31,
-                                                                  34),
-                                                          decorationThickness:
-                                                              2.0,
+                                                          fontWeight: FontWeight.bold,
+                                                          color: Color.fromARGB(255, 208, 31, 34),
+                                                          decoration: TextDecoration.underline,
+                                                          decorationColor: Color.fromARGB(255, 208, 31, 34),
+                                                          decorationThickness: 2.0,
                                                         ),
                                                       ),
-                                                      const SizedBox(
-                                                          height: 10),
+                                                      const SizedBox(height: 10),
                                                       DButtons(
-                                                        text:
-                                                            '1) Trial Balance',
+                                                        text: '1) Trial Balance',
                                                         onPressed: () {
-                                                          Navigator.of(context)
-                                                              .push(
+                                                          Navigator.of(context).push(
                                                             MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  const DataTablePaginationExample(),
+                                                              builder: (context) => const DataTablePaginationExample(),
                                                             ),
                                                           );
                                                         },
                                                       ),
                                                       const SizedBox(height: 1),
                                                       DButtons(
-                                                        isDisabled: (userGroup ==
-                                                                    "Admin" ||
-                                                                userGroup ==
-                                                                    "Owner" ||
-                                                                userGroupM
-                                                                        .firstWhere((e) =>
-                                                                            e.userGroupName ==
-                                                                            userGroup)
-                                                                        .receiptNote !=
-                                                                    "No")
-                                                            ? false
-                                                            : true,
-                                                        text:
-                                                            '2) Ledger Stmnt.',
-                                                        onPressed: (userGroup ==
-                                                                    "Admin" ||
-                                                                userGroup ==
-                                                                    "Owner" ||
-                                                                userGroupM
-                                                                        .firstWhere((e) =>
-                                                                            e.userGroupName ==
-                                                                            userGroup)
-                                                                        .receiptNote !=
-                                                                    "No")
+                                                        isDisabled: (userGroup == "Admin" || userGroup == "Owner" || userGroupM.firstWhere((e) => e.userGroupName == userGroup).receiptNote != "No") ? false : true,
+                                                        text: '2) Ledger Stmnt.',
+                                                        onPressed: (userGroup == "Admin" || userGroup == "Owner" || userGroupM.firstWhere((e) => e.userGroupName == userGroup).receiptNote != "No")
                                                             ? () {
                                                                 Navigator.push(
                                                                   context,
                                                                   MaterialPageRoute(
-                                                                    builder:
-                                                                        (context) =>
-                                                                            const LedgerStmnt(),
+                                                                    builder: (context) => const LedgerStmnt(),
                                                                   ),
                                                                 );
                                                               }
@@ -1219,14 +1068,12 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                       ),
                                                       const SizedBox(height: 1),
                                                       DButtons(
-                                                        text:
-                                                            '3) Voucher Regi.',
+                                                        text: '3) Voucher Regi.',
                                                         onPressed: () {
                                                           Navigator.push(
                                                             context,
                                                             MaterialPageRoute(
-                                                              builder: (context) =>
-                                                                  const StockFilter(),
+                                                              builder: (context) => const StockFilter(),
                                                             ),
                                                           );
                                                         },
@@ -1242,52 +1089,28 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                   width: screenWidth * 0.15,
                                                   height: 110,
                                                   child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
                                                     children: [
                                                       const Text(
                                                         'Masters',
                                                         style: TextStyle(
                                                           fontSize: 18,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: Color.fromARGB(
-                                                              255, 208, 31, 34),
-                                                          decoration:
-                                                              TextDecoration
-                                                                  .underline,
-                                                          decorationColor:
-                                                              Color.fromARGB(
-                                                                  255,
-                                                                  208,
-                                                                  31,
-                                                                  34),
-                                                          decorationThickness:
-                                                              2.0,
+                                                          fontWeight: FontWeight.bold,
+                                                          color: Color.fromARGB(255, 208, 31, 34),
+                                                          decoration: TextDecoration.underline,
+                                                          decorationColor: Color.fromARGB(255, 208, 31, 34),
+                                                          decorationThickness: 2.0,
                                                         ),
                                                       ),
-                                                      const SizedBox(
-                                                          height: 10),
+                                                      const SizedBox(height: 10),
                                                       DButtons(
                                                         text: 'm) Ledgers',
-                                                        onPressed: (userGroup ==
-                                                                    "Admin" ||
-                                                                userGroup ==
-                                                                    "Owner" ||
-                                                                userGroupM
-                                                                        .firstWhere((e) =>
-                                                                            e.userGroupName ==
-                                                                            userGroup)
-                                                                        .addMaster !=
-                                                                    "No")
+                                                        onPressed: (userGroup == "Admin" || userGroup == "Owner" || userGroupM.firstWhere((e) => e.userGroupName == userGroup).addMaster != "No")
                                                             ? () {
                                                                 Navigator.push(
                                                                   context,
                                                                   MaterialPageRoute(
-                                                                    builder:
-                                                                        (context) =>
-                                                                            const LedgerHome(),
+                                                                    builder: (context) => const LedgerHome(),
                                                                   ),
                                                                 );
                                                               }
@@ -1296,23 +1119,12 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                       const SizedBox(height: 1),
                                                       DButtons(
                                                         text: 'n) Items',
-                                                        onPressed: (userGroup ==
-                                                                    "Admin" ||
-                                                                userGroup ==
-                                                                    "Owner" ||
-                                                                userGroupM
-                                                                        .firstWhere((e) =>
-                                                                            e.userGroupName ==
-                                                                            userGroup)
-                                                                        .jobcard !=
-                                                                    "No")
+                                                        onPressed: (userGroup == "Admin" || userGroup == "Owner" || userGroupM.firstWhere((e) => e.userGroupName == userGroup).jobcard != "No")
                                                             ? () {
                                                                 Navigator.push(
                                                                   context,
                                                                   MaterialPageRoute(
-                                                                    builder:
-                                                                        (context) =>
-                                                                            const ItemHome(),
+                                                                    builder: (context) => const ItemHome(),
                                                                   ),
                                                                 );
                                                               }
@@ -1326,64 +1138,39 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                   width: screenWidth * 0.15,
                                                   height: 140,
                                                   child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
+                                                    crossAxisAlignment: CrossAxisAlignment.start,
                                                     children: [
                                                       const Text(
                                                         'Inventory Reports',
                                                         style: TextStyle(
                                                           fontSize: 18,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: Color.fromARGB(
-                                                              255, 208, 31, 34),
-                                                          decoration:
-                                                              TextDecoration
-                                                                  .underline,
-                                                          decorationColor:
-                                                              Color.fromARGB(
-                                                                  255,
-                                                                  208,
-                                                                  31,
-                                                                  34),
-                                                          decorationThickness:
-                                                              2.0,
+                                                          fontWeight: FontWeight.bold,
+                                                          color: Color.fromARGB(255, 208, 31, 34),
+                                                          decoration: TextDecoration.underline,
+                                                          decorationColor: Color.fromARGB(255, 208, 31, 34),
+                                                          decorationThickness: 2.0,
                                                         ),
                                                       ),
-                                                      const SizedBox(
-                                                          height: 10),
+                                                      const SizedBox(height: 10),
                                                       userGroup == "Owner"
                                                           ? DButtons(
-                                                              text:
-                                                                  '6) Stock Status',
+                                                              text: '6) Stock Status',
                                                               onPressed: () {
                                                                 Navigator.push(
                                                                   context,
                                                                   MaterialPageRoute(
-                                                                    builder:
-                                                                        (context) =>
-                                                                            const StockFilter(),
+                                                                    builder: (context) => const StockFilter(),
                                                                   ),
                                                                 );
                                                               })
                                                           : DButtons(
-                                                              text:
-                                                                  '6) Stock Status',
-                                                              onPressed: (userGroup == "Admin" ||
-                                                                      userGroup ==
-                                                                          "Owner" ||
-                                                                      userGroupM
-                                                                              .firstWhere((e) => e.userGroupName == userGroup)
-                                                                              .deliveryNote !=
-                                                                          "No")
+                                                              text: '6) Stock Status',
+                                                              onPressed: (userGroup == "Admin" || userGroup == "Owner" || userGroupM.firstWhere((e) => e.userGroupName == userGroup).deliveryNote != "No")
                                                                   ? () {
-                                                                      Navigator
-                                                                          .push(
+                                                                      Navigator.push(
                                                                         context,
                                                                         MaterialPageRoute(
-                                                                          builder: (context) =>
-                                                                              const StockStatus(),
+                                                                          builder: (context) => const StockStatus(),
                                                                         ),
                                                                       );
                                                                     }
@@ -1391,25 +1178,13 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                             ),
                                                       const SizedBox(height: 1),
                                                       DButtons(
-                                                        text:
-                                                            '7) Stock Vouchers',
-                                                        onPressed: (userGroup ==
-                                                                    "Admin" ||
-                                                                userGroup ==
-                                                                    "Owner" ||
-                                                                userGroupM
-                                                                        .firstWhere((e) =>
-                                                                            e.userGroupName ==
-                                                                            userGroup)
-                                                                        .purchaseOrder !=
-                                                                    "No")
+                                                        text: '7) Stock Vouchers',
+                                                        onPressed: (userGroup == "Admin" || userGroup == "Owner" || userGroupM.firstWhere((e) => e.userGroupName == userGroup).purchaseOrder != "No")
                                                             ? () {
                                                                 Navigator.push(
                                                                   context,
                                                                   MaterialPageRoute(
-                                                                    builder:
-                                                                        (context) =>
-                                                                            const StockVoucherDesktopBody(),
+                                                                    builder: (context) => const StockVoucherDesktopBody(),
                                                                   ),
                                                                 );
                                                               }
@@ -1417,25 +1192,13 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                                       ),
                                                       const SizedBox(height: 1),
                                                       DButtons(
-                                                        text:
-                                                            '8)  Sales Register',
-                                                        onPressed: (userGroup ==
-                                                                    "Admin" ||
-                                                                userGroup ==
-                                                                    "Owner" ||
-                                                                userGroupM
-                                                                        .firstWhere((e) =>
-                                                                            e.userGroupName ==
-                                                                            userGroup)
-                                                                        .salesOrder !=
-                                                                    "No")
+                                                        text: '8)  Sales Register',
+                                                        onPressed: (userGroup == "Admin" || userGroup == "Owner" || userGroupM.firstWhere((e) => e.userGroupName == userGroup).salesOrder != "No")
                                                             ? () {
                                                                 Navigator.push(
                                                                   context,
                                                                   MaterialPageRoute(
-                                                                    builder:
-                                                                        (context) =>
-                                                                            const SalesRegisterDesktop(),
+                                                                    builder: (context) => const SalesRegisterDesktop(),
                                                                   ),
                                                                 );
                                                               }
@@ -1457,70 +1220,50 @@ class _DBMyDesktopBodyState extends State<DBMyDesktopBody> {
                                   child: Column(
                                     children: [
                                       Padding(
-                                        padding: EdgeInsets.only(
-                                            bottom: 2,
-                                            top: screenHeight * 0.001),
+                                        padding: EdgeInsets.only(bottom: 2, top: screenHeight * 0.001),
                                         child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Shortcuts(
                                               shortcuts: {
-                                                LogicalKeySet(
-                                                        LogicalKeyboardKey.f1):
-                                                    const ActivateIntent(),
+                                                LogicalKeySet(LogicalKeyboardKey.f1): const ActivateIntent(),
                                               },
                                               child: Focus(
                                                 autofocus: true,
-                                                onKey: (FocusNode focusNode,
-                                                    RawKeyEvent event) {
-                                                  if (event
-                                                          is RawKeyDownEvent &&
-                                                      event.logicalKey ==
-                                                          LogicalKeyboardKey
-                                                              .f1) {
+                                                onKey: (FocusNode focusNode, RawKeyEvent event) {
+                                                  if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.f1) {
                                                     // Handle the shortcut, e.g., navigate to a new page
                                                     Navigator.push(
                                                       context,
-                                                      MaterialPageRoute(
-                                                          builder: (context) =>
-                                                              const LedgerHome()),
+                                                      MaterialPageRoute(builder: (context) => const LedgerHome()),
                                                     );
-                                                    return KeyEventResult
-                                                        .handled;
+                                                    return KeyEventResult.handled;
                                                   }
                                                   return KeyEventResult.ignored;
                                                 },
                                                 child: const DToDo(),
                                               ),
                                             ),
-                                            SizedBox(
-                                                width: screenWidth * 0.006),
+                                            SizedBox(width: screenWidth * 0.006),
                                             const DRemainder(),
                                           ],
                                         ),
                                       ),
                                       Visibility(
-                                        visible: (userGroup == "Admin" ||
-                                                userGroup == "Owner") ||
+                                        visible: (userGroup == "Admin" || userGroup == "Owner") ||
                                             userGroupM
                                                     .firstWhere(
-                                                      (e) =>
-                                                          e.userGroupName ==
-                                                          userGroup,
+                                                      (e) => e.userGroupName == userGroup,
                                                     )
                                                     .ownerGroup !=
                                                 "No",
                                         child: DTable(
                                           suggestionLedger: suggestionLedger,
-                                          suggestionLedgerCustomer:
-                                              suggestionLedgerCustomer,
+                                          suggestionLedgerCustomer: suggestionLedgerCustomer,
                                           suggestionPayment: suggestionPayment,
-                                          suggestionPurchase:
-                                              suggestionPurchase,
+                                          suggestionPurchase: suggestionPurchase,
                                           suggestionSales: suggestionSales,
-                                          suggestionSalesCash:
-                                              suggestionSalesCash,
+                                          suggestionSalesCash: suggestionSalesCash,
                                         ),
                                       ),
                                     ],
@@ -1602,8 +1345,7 @@ class QuickAccessShimmer extends StatelessWidget {
                                       height: 24.0,
                                       decoration: BoxDecoration(
                                         color: Colors.grey,
-                                        borderRadius:
-                                            BorderRadius.circular(4.0),
+                                        borderRadius: BorderRadius.circular(4.0),
                                       ),
                                     ),
                                   ),
@@ -1616,8 +1358,7 @@ class QuickAccessShimmer extends StatelessWidget {
                                       height: 40.0,
                                       decoration: BoxDecoration(
                                         color: Colors.grey,
-                                        borderRadius:
-                                            BorderRadius.circular(4.0),
+                                        borderRadius: BorderRadius.circular(4.0),
                                       ),
                                     ),
                                   ),
@@ -1626,8 +1367,7 @@ class QuickAccessShimmer extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(
-                              width: 10), // Add spacing between items
+                          const SizedBox(width: 10), // Add spacing between items
                           Expanded(
                             flex: 1,
                             child: SizedBox(
@@ -1643,8 +1383,7 @@ class QuickAccessShimmer extends StatelessWidget {
                                       height: 24.0,
                                       decoration: BoxDecoration(
                                         color: Colors.grey,
-                                        borderRadius:
-                                            BorderRadius.circular(4.0),
+                                        borderRadius: BorderRadius.circular(4.0),
                                       ),
                                     ),
                                   ),
@@ -1657,8 +1396,7 @@ class QuickAccessShimmer extends StatelessWidget {
                                       height: 40.0,
                                       decoration: BoxDecoration(
                                         color: Colors.grey,
-                                        borderRadius:
-                                            BorderRadius.circular(4.0),
+                                        borderRadius: BorderRadius.circular(4.0),
                                       ),
                                     ),
                                   ),
@@ -1687,8 +1425,7 @@ class QuickAccessShimmer extends StatelessWidget {
                                       height: 24.0,
                                       decoration: BoxDecoration(
                                         color: Colors.grey,
-                                        borderRadius:
-                                            BorderRadius.circular(4.0),
+                                        borderRadius: BorderRadius.circular(4.0),
                                       ),
                                     ),
                                   ),
@@ -1701,8 +1438,7 @@ class QuickAccessShimmer extends StatelessWidget {
                                       height: 40.0,
                                       decoration: BoxDecoration(
                                         color: Colors.grey,
-                                        borderRadius:
-                                            BorderRadius.circular(4.0),
+                                        borderRadius: BorderRadius.circular(4.0),
                                       ),
                                     ),
                                   ),
@@ -1711,8 +1447,7 @@ class QuickAccessShimmer extends StatelessWidget {
                               ),
                             ),
                           ),
-                          const SizedBox(
-                              width: 10), // Add spacing between items
+                          const SizedBox(width: 10), // Add spacing between items
                           Expanded(
                             flex: 1,
                             child: SizedBox(
@@ -1728,8 +1463,7 @@ class QuickAccessShimmer extends StatelessWidget {
                                       height: 24.0,
                                       decoration: BoxDecoration(
                                         color: Colors.grey,
-                                        borderRadius:
-                                            BorderRadius.circular(4.0),
+                                        borderRadius: BorderRadius.circular(4.0),
                                       ),
                                     ),
                                   ),
@@ -1742,8 +1476,7 @@ class QuickAccessShimmer extends StatelessWidget {
                                       height: 40.0,
                                       decoration: BoxDecoration(
                                         color: Colors.grey,
-                                        borderRadius:
-                                            BorderRadius.circular(4.0),
+                                        borderRadius: BorderRadius.circular(4.0),
                                       ),
                                     ),
                                   ),
