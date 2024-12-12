@@ -6,12 +6,9 @@ class Constants {
   // static String baseUrl =
   //     'https://billingsphere-backend-yogeshbhai-2.onrender.com/api';
 
-  // static String baseUrl = 'https://billing-sphere-backend.onrender.com/api';
-  // static String baseUrl = 'https://billing-sphere-backend.onrender.com/api';
-  // static String baseUrl = 'https://billing-sphere-backend.onrender.com/api';
   static String baseUrl = 'https://billing-sphere-backend.onrender.com/api';
 
-  // static String baseUrl = 'http://192.168.0.107:4567/api';
+  // static String baseUrl = 'http://192.168.0.111:4567/api';
 
   // static String baseUrl = 'https://65.1.89.63/api';
 
@@ -25,9 +22,7 @@ class Constants {
     size: 35,
     itemBuilder: (BuildContext context, int index) {
       return DecoratedBox(
-        decoration: BoxDecoration(
-            color: index.isEven ? Colors.blue.shade500 : Colors.blue.shade600,
-            shape: BoxShape.circle),
+        decoration: BoxDecoration(color: index.isEven ? Colors.blue.shade500 : Colors.blue.shade600, shape: BoxShape.circle),
       );
     },
   );

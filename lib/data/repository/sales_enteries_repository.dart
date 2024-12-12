@@ -71,6 +71,30 @@ class SalesEntryService {
     }
   }
 
+  Future<List<SalesEntry>> fetchSalesEntriesByParty(String party) async {
+    String? token = await getToken();
+
+    final response = await http.get(
+      Uri.parse('${Constants.baseUrl}/sales/fetch-sales-by-Party/${party}'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': '$token',
+      },
+    );
+    final responseData = json.decode(response.body);
+    if (responseData['success'] == true) {
+      final salesEntriesData = responseData['data'];
+
+      final List<SalesEntry> sales = List.from(salesEntriesData.map((entry) {
+        return SalesEntry.fromMap(entry);
+      }));
+
+      return sales;
+    } else {
+      throw Exception('${responseData['message']}');
+    }
+  }
+
   Future<List<SalesEntry>> getSales() async {
     String? token = await getToken();
     List<String>? code = await getCompanyCode();
@@ -159,7 +183,7 @@ class SalesEntryService {
           'Content-Type': 'application/json',
           'Authorization': '$token',
         },
-        body: jsonEncode(salesEntry.toJson()),
+        body: jsonEncode(salesEntry.toMap()),
         // body: salesEntry.toJson(),
       );
 
@@ -225,6 +249,40 @@ class SalesEntryService {
     }
   }
 
+  Future<SalesEntry?> fetchSalesByBillNumber(String billNumber) async {
+    String? token = await getToken();
+    try {
+      final response = await http.get(
+        Uri.parse(
+            '${Constants.baseUrl}/sales/fetch-sales-by-BillNumber/$billNumber'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': '$token',
+        },
+      );
+
+      final responseData = json.decode(response.body);
+
+      if (responseData['success'] == true) {
+        final salesData = responseData['data'];
+        print("object..........................${salesData}");
+        if (salesData != null) {
+          return SalesEntry.fromMap(salesData);
+        } else {
+          return null;
+        }
+      } else {
+        print('${responseData['message']}');
+
+        return null;
+      }
+    } catch (error) {
+      print(error.toString());
+
+      return null;
+    }
+  }
+
   // Write Update Sales Repository
   Future<void> updateSalesEntry(
     SalesEntry salesEntry,
@@ -238,7 +296,7 @@ class SalesEntryService {
         'Content-Type': 'application/json',
         'Authorization': '$token',
       },
-      body: jsonEncode(salesEntry.toJson()),
+      body: jsonEncode(salesEntry.toMap()),
     );
     final responseData = json.decode(response.body);
 

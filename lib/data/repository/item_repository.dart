@@ -16,7 +16,6 @@ import '../models/user/user_group_model.dart';
 import 'user_group_repository.dart';
 
 class ItemsService {
-  // Method to retrieve token from SharedPreferences
   Future<String?> getToken() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     return prefs.getString('token');
@@ -68,15 +67,12 @@ class ItemsService {
 
       UserGroupServices userGroupServices = UserGroupServices();
 
-      final List<UserGroup> usersGroups =
-          await userGroupServices.getUserGroups();
+      final List<UserGroup> usersGroups = await userGroupServices.getUserGroups();
 
-      bool canCreateMaster = usersGroups.any((userGroup) =>
-          userGroup.userGroupName == userType && userGroup.sales == "Yes");
+      bool canCreateMaster = usersGroups.any((userGroup) => userGroup.userGroupName == userType && userGroup.sales == "Yes");
 
       if (!canCreateMaster) {
-        showSnackBar(
-            context, "You do not have permission to create Ledger data.");
+        showSnackBar(context, "You do not have permission to create Ledger data.");
         return;
       } else {
         final Uri uri = Uri.parse('${Constants.baseUrl}/items/create-item');
@@ -177,8 +173,7 @@ class ItemsService {
       if (responseData['success'] == true) {
         final itemEntriesData = responseData['data'];
 
-        final List<Item> itemEntry =
-            List.from(itemEntriesData.map((entry) => Item.fromMap(entry)));
+        final List<Item> itemEntry = List.from(itemEntriesData.map((entry) => Item.fromMap(entry)));
 
         return itemEntry;
       } else {
@@ -201,8 +196,7 @@ class ItemsService {
       // print(code);
 
       final response = await http.get(
-        Uri.parse(
-            '${Constants.baseUrl}/items/get-items/${code![0]}?limit=$limit'),
+        Uri.parse('${Constants.baseUrl}/items/get-items/${code![0]}?limit=$limit'),
         headers: {
           'Authorization': '$token',
         },
@@ -231,15 +225,13 @@ class ItemsService {
     }
   }
 
-  Future<List<Item>> fetchItemsWithPagination(int page,
-      {int limit = 25}) async {
+  Future<List<Item>> fetchItemsWithPagination(int page, {int limit = 25}) async {
     try {
       final String? token = await getToken();
       final List<String>? code = await getCompanyCode();
 
       final response = await http.get(
-        Uri.parse(
-            '${Constants.baseUrl}/items/get-items/${code![0]}?page=$page&limit=$limit'),
+        Uri.parse('${Constants.baseUrl}/items/get-items/${code![0]}?page=$page&limit=$limit'),
         headers: {
           'Authorization': '$token',
         },
@@ -250,8 +242,7 @@ class ItemsService {
       if (responseData['success'] == true) {
         final itemData = responseData['data'];
 
-        totalPages =
-            responseData['totalPages']; // Ensure totalPages is set correctly
+        totalPages = responseData['totalPages']; // Ensure totalPages is set correctly
 
         final List<Item> items = List.from(itemData.map((entry) {
           entry.remove('images');
@@ -301,6 +292,170 @@ class ItemsService {
     } catch (error) {
       print(error.toString());
       return null;
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchGroupedItems({
+    required String groupBy,
+    int page = 1,
+    int limit = 10,
+    required String companyCode,
+    String search = "",
+  }) async {
+    try {
+      final String? token = await getToken();
+
+      final encodedSearch = Uri.encodeComponent(search);
+
+      // Pass companyCode and search in the request URL correctly
+      final response = await http.get(
+        Uri.parse('${Constants.baseUrl}/items/group?groupBy=$groupBy&companyCode=$companyCode&search=$encodedSearch&page=$page'),
+        headers: {
+          'Authorization': '$token',
+        },
+      );
+
+      final responseData = json.decode(response.body);
+
+      if (responseData['success'] == true) {
+        final groupedItemsData = responseData['data'];
+
+        final List<Item> groupedItems = List.from(groupedItemsData.map((entry) {
+          return Item.fromMap(entry);
+        }));
+
+        final totalPages = responseData['pagination']['totalPages'];
+
+        return {
+          'items': groupedItems,
+          'totalPages': totalPages,
+        };
+      } else {
+        print('${responseData['message']}');
+      }
+
+      return {'items': [], 'totalPages': 0};
+    } catch (error) {
+      print(error.toString());
+      return {'items': [], 'totalPages': 0};
+    }
+  }
+
+  Future<List<Item>> searchItems({
+    String query = "",
+  }) async {
+    try {
+      final String? token = await getToken();
+      final List<String>? code = await getCompanyCode();
+      if (token == null) {
+        throw Exception("Token is null");
+      }
+
+      // Construct the URL with query parameters
+      final url = Uri.parse(
+        '${Constants.baseUrl}/items/get-items/search/${code![0]}?query=$query',
+      );
+
+      // Make the GET request with query and pagination
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': token,
+        },
+      );
+
+      // Parse the response
+      final responseData = json.decode(response.body);
+
+      // Check if the request was successful
+      if (responseData['success'] == true) {
+        final itemData = responseData['data'];
+        if (itemData is List) {
+          //  print("These is Item Data .........................$itemData.................Item Data");
+          final totalPages = responseData['totalPages'] ?? 1;
+
+          // Parse item data and handle images
+          return itemData.map<Item>((entry) {
+            if (!entry.containsKey('images')) {
+              entry['images'] = []; // Set default if missing
+            } else if (entry['images'] is String) {
+              entry['images'] = [entry['images']]; // Wrap in a list if it’s a string
+            }
+            return Item.fromMap(entry);
+          }).toList();
+        } else {
+          print('Expected a list of items but got: $itemData');
+          return [];
+        }
+      } else {
+        print('Error from backend: ${responseData['message']}');
+        return [];
+      }
+    } catch (error) {
+      print('Error during searchItems: ${error.toString()}');
+      return [];
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchMultipleItemsByIds(List<String> itemIds) async {
+    try {
+      final String? token = await getToken();
+      final List<String>? code = await getCompanyCode();
+      if (token == null) {
+        throw Exception("Token is null");
+      }
+
+      // Construct the query parameter
+      final String itemIdsParam = itemIds.join(',');
+
+      // Build the request URL
+      final url = Uri.parse(
+        '${Constants.baseUrl}/items/get-item-multiple/${code![0]}?itemIds=$itemIdsParam',
+      );
+
+      // Make the GET request
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': token,
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+        },
+      );
+
+      // Check if the request was successful
+      if (response.statusCode == 200) {
+        final responseData = json.decode(response.body);
+
+        // Check if the response indicates success
+        if (responseData['success'] == true) {
+          final itemData = responseData['data'];
+
+          // Ensure itemData is a list of maps
+          if (itemData is List) {
+            // Process the data and handle the 'images' field
+            final updatedItems = itemData.map((entry) {
+              if (!entry.containsKey('images')) {
+                entry['images'] = []; // Set default if missing
+              } else if (entry['images'] is String) {
+                entry['images'] = [entry['images']]; // Wrap in a list if it's a string
+              }
+              return entry; // Return the processed entry
+            }).toList();
+
+            // Return the updated responseData
+            responseData['data'] = updatedItems;
+            return responseData; // Return the data as a map
+          } else {
+            return {'success': false, 'message': 'Data is not in the expected format (List).'};
+          }
+        } else {
+          return {'success': false, 'message': responseData['message']};
+        }
+      } else {
+        return {'success': false, 'message': 'Failed to fetch items'};
+      }
+    } catch (e) {
+      return {'success': false, 'message': e.toString()};
     }
   }
 

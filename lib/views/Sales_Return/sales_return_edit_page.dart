@@ -557,7 +557,7 @@ class _SalesReturnEditPageState extends State<SalesReturnEditPage> {
             purchaseController.remarksController?.text ?? 'No remark available',
         totalAmount: TnetAmount.toStringAsFixed(2),
         entries: _allValues.map((entry) {
-          return SalesEntry(
+          return SalesEntries(
             itemName: entry['itemName'] ?? '',
             qty: int.tryParse(entry['qty'].toString()) ?? 0,
             rate: double.tryParse(entry['rate'].toString()) ?? 0,

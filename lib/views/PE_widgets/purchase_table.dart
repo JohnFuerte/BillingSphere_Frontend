@@ -138,8 +138,7 @@ class _PEntriesState extends State<PEntries> {
 
   @override
   Widget build(BuildContext context) {
-    final itemProvider =
-        Provider.of<OnChangeItenProvider>(context, listen: false);
+    final itemProvider = Provider.of<OnChangeItenProvider>(context, listen: false);
     return Form(
       key: formKey,
       child: Padding(
@@ -175,11 +174,7 @@ class _PEntriesState extends State<PEntries> {
                 Container(
                   height: 40,
                   width: MediaQuery.of(context).size.width * 0.20,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: DropdownButtonHideUnderline(
                     child: DropdownMenu<Item>(
                       requestFocusOnTap: true,
@@ -194,24 +189,19 @@ class _PEntriesState extends State<PEntries> {
                       ),
                       menuHeight: 300,
                       enableFilter: true,
-                      searchCallback: (List<DropdownMenuEntry<Item>> entries,
-                          String query) {
+                      searchCallback: (List<DropdownMenuEntry<Item>> entries, String query) {
                         if (query.isEmpty) {
                           return null;
                         }
 
-                        final int index =
-                            entries.indexWhere((DropdownMenuEntry<Item> entry) {
-                          return entry.label.toLowerCase() ==
-                              query.toLowerCase();
+                        final int index = entries.indexWhere((DropdownMenuEntry<Item> entry) {
+                          return entry.label.toLowerCase() == query.toLowerCase();
                         });
 
                         return index != -1 ? index : null;
                       },
-                      filterCallback: (List<DropdownMenuEntry<Item>> entries,
-                          String filter) {
-                        final String trimmedFilter =
-                            filter.trim().toLowerCase();
+                      filterCallback: (List<DropdownMenuEntry<Item>> entries, String filter) {
+                        final String trimmedFilter = filter.trim().toLowerCase();
 
                         if (trimmedFilter.isEmpty) {
                           return entries;
@@ -219,17 +209,14 @@ class _PEntriesState extends State<PEntries> {
 
                         // Filter the entries based on the query
                         return entries.where((entry) {
-                          return entry.value.itemName
-                              .toLowerCase()
-                              .contains(trimmedFilter);
+                          return entry.value.itemName.toLowerCase().contains(trimmedFilter);
                         }).toList();
                       },
                       width: MediaQuery.of(context).size.width * 0.19,
                       selectedTrailingIcon: const SizedBox.shrink(),
                       inputDecorationTheme: const InputDecorationTheme(
                         border: InputBorder.none,
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                         isDense: true,
                         activeIndicatorBorder: BorderSide(
                           color: Colors.transparent,
@@ -242,8 +229,7 @@ class _PEntriesState extends State<PEntries> {
                           selectedmeasurementId = value.id;
 
                           itemNameController.text = selectedItemId!;
-                          widget.itemNameControllerP.text =
-                              itemNameController.text;
+                          widget.itemNameControllerP.text = itemNameController.text;
                           igstController.text = '0.00';
                           discountController.text = '0.00';
 
@@ -265,20 +251,16 @@ class _PEntriesState extends State<PEntries> {
                           for (TaxRate tax in widget.taxCategory) {
                             if (tax.id == newId) {
                               setState(() {
-                                taxController.text =
-                                    items.isNotEmpty ? tax.rate : '0';
+                                taxController.text = items.isNotEmpty ? tax.rate : '0';
                                 widget.taxControllerP.text = taxController.text;
                               });
                             }
                           }
-                          for (MeasurementLimit meu
-                              in widget.measurementLimit) {
+                          for (MeasurementLimit meu in widget.measurementLimit) {
                             if (meu.id == newId2) {
                               setState(() {
-                                unitController.text =
-                                    items.isNotEmpty ? meu.measurement : '0';
-                                widget.unitControllerP.text =
-                                    unitController.text;
+                                unitController.text = items.isNotEmpty ? meu.measurement : '0';
+                                widget.unitControllerP.text = unitController.text;
                               });
                             }
                           }
@@ -286,8 +268,7 @@ class _PEntriesState extends State<PEntries> {
                           itemProvider.updateItemID(selectedItemId!);
                         });
                       },
-                      dropdownMenuEntries: widget.item
-                          .map<DropdownMenuEntry<Item>>((Item value) {
+                      dropdownMenuEntries: widget.item.map<DropdownMenuEntry<Item>>((Item value) {
                         return DropdownMenuEntry<Item>(
                           value: value,
                           label: value.itemName,
@@ -316,11 +297,7 @@ class _PEntriesState extends State<PEntries> {
                 Container(
                   height: 40,
                   width: MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     controller: qtyController,
                     validator: (value) {
@@ -338,22 +315,18 @@ class _PEntriesState extends State<PEntries> {
                       setState(() {
                         discountController.text = '0.00';
 
-                        int amount = (int.tryParse(rateController.text) ?? 0) *
-                            int.parse(value);
+                        int amount = (int.tryParse(rateController.text) ?? 0) * int.parse(value);
 
                         amountController.text = amount.toString();
 
-                        double amountValue =
-                            double.tryParse(amountController.text) ?? 0.0;
-                        double taxValue =
-                            double.tryParse(taxController.text) ?? 0.0;
+                        double amountValue = double.tryParse(amountController.text) ?? 0.0;
+                        double taxValue = double.tryParse(taxController.text) ?? 0.0;
 
                         if (taxValue != 0) {
                           double gsts = (amountValue * taxValue) / 100;
                           sgstController.text = (gsts / 2).toString();
                           cgstController.text = (gsts / 2).toString();
-                          netAmountController.text =
-                              (amountValue + gsts).toString();
+                          netAmountController.text = (amountValue + gsts).toString();
                         } else {
                           // Handle division by zero scenario
                           sgstController.text = '0';
@@ -363,10 +336,8 @@ class _PEntriesState extends State<PEntries> {
                         // Update persistent controllers if needed
                         widget.sgstControllerP.text = sgstController.text;
                         widget.cgstControllerP.text = cgstController.text;
-                        widget.netAmountControllerP.text =
-                            netAmountController.text;
-                        persistentTotal =
-                            double.tryParse(netAmountController.text) ?? 0.0;
+                        widget.netAmountControllerP.text = netAmountController.text;
+                        persistentTotal = double.tryParse(netAmountController.text) ?? 0.0;
                         widget.qtyControllerP.text = qtyController.text;
 
                         _saveValues();
@@ -378,19 +349,14 @@ class _PEntriesState extends State<PEntries> {
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                     ),
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
+                    inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                   ),
                 ),
                 Container(
                   height: 40,
                   width: MediaQuery.of(context).size.width * 0.061,
                   decoration: const BoxDecoration(
-                    border: Border(
-                        bottom: BorderSide(),
-                        top: BorderSide(),
-                        left: BorderSide()),
+                    border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide()),
                   ),
                   child: TextFormField(
                     cursorHeight: 18,
@@ -411,20 +377,14 @@ class _PEntriesState extends State<PEntries> {
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                     ),
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
+                    inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                     readOnly: true,
                   ),
                 ),
                 Container(
                   height: 40,
                   width: MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     // itemRate.toString(),
                     cursorHeight: 18,
@@ -459,15 +419,12 @@ class _PEntriesState extends State<PEntries> {
 
                         sgstController.text = (gsts / 2).toStringAsFixed(2);
                         cgstController.text = (gsts / 2).toStringAsFixed(2);
-                        netAmountController.text =
-                            (amount + gsts).toStringAsFixed(2);
+                        netAmountController.text = (amount + gsts).toStringAsFixed(2);
 
                         widget.sgstControllerP.text = sgstController.text;
                         widget.cgstControllerP.text = cgstController.text;
-                        widget.netAmountControllerP.text =
-                            netAmountController.text;
-                        persistentTotal =
-                            double.parse(netAmountController.text);
+                        widget.netAmountControllerP.text = netAmountController.text;
+                        persistentTotal = double.parse(netAmountController.text);
                         originalNetAmount = persistentTotal;
 
                         widget.qtyControllerP.text = qtyController.text;
@@ -486,11 +443,7 @@ class _PEntriesState extends State<PEntries> {
                 Container(
                   height: 40,
                   width: MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -514,11 +467,7 @@ class _PEntriesState extends State<PEntries> {
                 Container(
                   height: 40,
                   width: MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -533,8 +482,7 @@ class _PEntriesState extends State<PEntries> {
                       double qty = double.tryParse(qtyController.text) ?? 0;
                       double rate = double.tryParse(rateController.text) ?? 0;
 
-                      double discount =
-                          double.tryParse(discountController.text) ?? 0;
+                      double discount = double.tryParse(discountController.text) ?? 0;
                       double taxRate = double.tryParse(taxController.text) ?? 0;
                       double amount = qty * rate;
                       double taxableAmount = amount - discount;
@@ -565,11 +513,7 @@ class _PEntriesState extends State<PEntries> {
                 Container(
                   height: 40,
                   width: MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -596,11 +540,7 @@ class _PEntriesState extends State<PEntries> {
                 Container(
                   height: 40,
                   width: MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -623,11 +563,7 @@ class _PEntriesState extends State<PEntries> {
                 Container(
                   height: 40,
                   width: MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -650,11 +586,7 @@ class _PEntriesState extends State<PEntries> {
                 Container(
                   height: 40,
                   width: MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -675,8 +607,7 @@ class _PEntriesState extends State<PEntries> {
                       fontWeight: FontWeight.bold,
                     ),
                     inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.allow(RegExp(
-                          r'^\d*\.?\d*$')), // Allow digits and a single decimal point
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')), // Allow digits and a single decimal point
                     ],
                   ),
                 ),
@@ -684,12 +615,7 @@ class _PEntriesState extends State<PEntries> {
                 Container(
                   height: 40,
                   width: MediaQuery.of(context).size.width * 0.055,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          left: BorderSide(),
-                          top: BorderSide(),
-                          right: BorderSide())),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), left: BorderSide(), top: BorderSide(), right: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -712,12 +638,7 @@ class _PEntriesState extends State<PEntries> {
                 Container(
                   height: 40,
                   width: MediaQuery.of(context).size.width * 0.055,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          left: BorderSide(color: Colors.transparent),
-                          top: BorderSide(),
-                          right: BorderSide())),
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), left: BorderSide(color: Colors.transparent), top: BorderSide(), right: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(

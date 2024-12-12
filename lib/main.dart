@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:billingsphere/auth/providers/category_provider.dart';
+import 'package:billingsphere/auth/providers/itemSearch_provider.dart';
 import 'package:billingsphere/core/routes.dart';
 import 'package:billingsphere/logic/cubits/itemBrand_cubit/itemBrand_cubit.dart';
 import 'package:billingsphere/logic/cubits/itemGroup_cubit/itemGroup_cubit.dart';
@@ -49,6 +50,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OnChangeItenProvider()),
         ChangeNotifierProvider(create: (_) => OnChangeLedgerProvider()),
         ChangeNotifierProvider(create: (_) => CategoryItemProvider()),
+        ChangeNotifierProvider(create: (_) => ItemSearchProvider()),
       ],
       child: const MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -64,9 +66,7 @@ class MyApp extends StatelessWidget {
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
-    return super.createHttpClient(context)
-      ..badCertificateCallback =
-          (X509Certificate cert, String host, int port) => true;
+    return super.createHttpClient(context)..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
   }
 }
 

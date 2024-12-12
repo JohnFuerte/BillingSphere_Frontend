@@ -10,12 +10,16 @@ import 'package:billingsphere/utils/controllers/purchase_text_controller.dart';
 import 'package:billingsphere/utils/controllers/sundry_controller.dart';
 import 'package:billingsphere/views/PEresponsive/PE_master.dart';
 import 'package:billingsphere/views/PM_responsive/payment_billwise.dart';
+import 'package:billingsphere/views/PURCHASE_RETURN/PR_receipt_print.dart';
 import 'package:billingsphere/views/PURCHASE_RETURN/widget/purchaseEntry_table_widget.dart';
 import 'package:billingsphere/views/PURCHASE_RETURN/purchase_return_List.dart';
+import 'package:billingsphere/views/PURCHASE_RETURN/widget/purchase_return_textfield.dart';
+import 'package:billingsphere/views/SE_common/SE_top_text.dart';
 import 'package:billingsphere/views/responsive_layout.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'package:panara_dialogs/panara_dialogs.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/models/item/item_model.dart';
@@ -64,9 +68,12 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
   List<Ledger> suggestionItems5 = [];
   List<PurchaseReturn> fetchedPurchaseReturn = [];
   PurchaseReturn? purchaseReturn;
+  Purchase? selectedPurchase;
+  List<PurchaseEntry> selectedEntries = [];
+
   LedgerService ledgerService = LedgerService();
   ItemsService itemsService = ItemsService();
-  // PurchaseServices purchaseServices = PurchaseServices();
+  PurchaseServices purchaseServices = PurchaseServices();
   PurchaseReturnService purchaseReturnService = PurchaseReturnService();
 
   SundryFormController sundryFormController = SundryFormController();
@@ -137,9 +144,9 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
 
   Future<void> fetchItem() async {
     try {
-      final List<Item> item = await itemService.fetchItems();
+      final List<Item> items = await itemsService.fetchItemsWithPagination(1);
 
-      itemsList = item;
+      itemsList = items;
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -162,8 +169,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
 
   Future<void> fetchMeasurementLimit() async {
     try {
-      final List<MeasurementLimit> measurements =
-          await measurementService.fetchMeasurementLimits();
+      final List<MeasurementLimit> measurements = await measurementService.fetchMeasurementLimits();
 
       measurement = measurements;
     } catch (error) {
@@ -172,8 +178,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
   }
 
   Future<void> fetchSinglePurchase() async {
-    final response =
-        await purchaseReturnService.fetchPurchaseReturnById(widget.data);
+    final response = await purchaseReturnService.fetchPurchaseReturnById(widget.data);
 
     setState(() {
       purchaseController.noController.text = response!.no;
@@ -188,48 +193,39 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
       selectedState = response.place;
       selectedLedgerName = response.ledger;
 
-      // Add the existing entries to the _allValues list
       for (final entry in response.entries) {
         final entryId = UniqueKey().toString();
         _allValues.add({
-          'uniqueKey': entryId,
-          'itemName': entry.itemName,
-          'qty': entry.qty,
-          'rate': entry.rate,
-          'unit': entry.unit,
-          'amount': entry.amount,
-          'tax': entry.tax,
-          'sgst': entry.sgst,
-          'cgst': entry.cgst,
-          'igst': entry.igst,
-          'discount': entry.discount,
-          'netAmount': entry.netAmount,
-          'sellingPrice': entry.sellingPrice,
+          'uniqueKey': entryId.toString(),
+          'itemName': entry.itemName.toString(),
+          'qty': entry.qty.toString(),
+          'rate': entry.rate.toString(),
+          'unit': entry.unit.toString(),
+          'amount': entry.amount.toString(),
+          'tax': entry.tax.toString(),
+          'sgst': entry.sgst.toString(),
+          'cgst': entry.cgst.toString(),
+          'igst': entry.igst.toString(),
+          'discount': entry.discount.toString(),
+          'netAmount': entry.netAmount.toString(),
+          'sellingPrice': entry.sellingPrice.toString(),
         });
 
-        // Set the controller
         final itemNameController = TextEditingController(text: entry.itemName);
-        final qtyController = TextEditingController(text: entry.qty.toString());
-        final rateController =
-            TextEditingController(text: entry.rate.toString());
-        final unitController = TextEditingController(text: entry.unit);
-        final amountController =
-            TextEditingController(text: entry.amount.toString());
-        final taxController = TextEditingController(text: entry.tax);
-        final sgstController =
-            TextEditingController(text: entry.sgst.toString());
-        final cgstController =
-            TextEditingController(text: entry.cgst.toString());
-        final igstController =
-            TextEditingController(text: entry.igst.toString());
-        final netAmountController =
-            TextEditingController(text: entry.netAmount.toString());
-        final discountController =
-            TextEditingController(text: entry.discount.toString());
-        final sellingPriceController =
-            TextEditingController(text: entry.sellingPrice.toString());
+        final searchController = TextEditingController(text: itemsList.firstWhere((element) => element.id == entry.itemName).itemName);
 
-        // Add the existing entries to the _newWidget list
+        final qtyController = TextEditingController(text: entry.qty.toString());
+        final rateController = TextEditingController(text: entry.rate.toString());
+        final unitController = TextEditingController(text: entry.unit);
+        final amountController = TextEditingController(text: entry.amount.toString());
+        final taxController = TextEditingController(text: entry.tax);
+        final sgstController = TextEditingController(text: entry.sgst.toString());
+        final cgstController = TextEditingController(text: entry.cgst.toString());
+        final igstController = TextEditingController(text: entry.igst.toString());
+        final netAmountController = TextEditingController(text: entry.netAmount.toString());
+        final discountController = TextEditingController(text: entry.discount.toString());
+        final sellingPriceController = TextEditingController(text: entry.sellingPrice.toString());
+
         _newWidget.add(
           PurchaseReturnEditTable(
             key: ValueKey(entryId),
@@ -246,6 +242,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
             netAmountControllerP: netAmountController,
             sellingPriceControllerP: sellingPriceController,
             discountControllerP: discountController,
+            searchControllers: searchController,
             onSaveValues: saveValues,
             itemsList: itemsList,
             measurement: measurement,
@@ -253,10 +250,8 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
             onDelete: (String entryId) {
               setState(
                 () {
-                  _newWidget
-                      .removeWhere((widget) => widget.key == ValueKey(entryId));
+                  _newWidget.removeWhere((widget) => widget.key == ValueKey(entryId));
 
-                  // Find the map in _allValues that contains the entry with the specified entryId
                   Map<String, dynamic>? entryToRemove;
                   for (final entry in _allValues) {
                     if (entry['uniqueKey'] == entryId) {
@@ -265,7 +260,6 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                     }
                   }
 
-                  // Remove the map from _allValues if found
                   if (entryToRemove != null) {
                     _allValues.remove(entryToRemove);
                   }
@@ -290,22 +284,25 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
       while (_newWidget.length < 5) {
         final newEntryId = UniqueKey().toString();
 
+        final searchCtrl = TextEditingController();
+
         _newWidget.add(
           PurchaseReturnEditTable(
             key: ValueKey(newEntryId),
             serialNo: _newWidget.length + 1,
-            itemNameControllerP: TextEditingController(),
-            qtyControllerP: TextEditingController(),
-            rateControllerP: TextEditingController(),
-            unitControllerP: TextEditingController(),
-            amountControllerP: TextEditingController(),
-            taxControllerP: TextEditingController(),
-            sgstControllerP: TextEditingController(),
-            cgstControllerP: TextEditingController(),
-            igstControllerP: TextEditingController(),
-            netAmountControllerP: TextEditingController(),
-            sellingPriceControllerP: TextEditingController(),
-            discountControllerP: TextEditingController(),
+            itemNameControllerP: purchaseController.itemNameController,
+            qtyControllerP: purchaseController.qtyController,
+            rateControllerP: purchaseController.rateController,
+            unitControllerP: purchaseController.unitController,
+            amountControllerP: purchaseController.amountController,
+            taxControllerP: purchaseController.taxController,
+            sgstControllerP: purchaseController.sgstController,
+            cgstControllerP: purchaseController.cgstController,
+            igstControllerP: purchaseController.igstController,
+            netAmountControllerP: purchaseController.netAmountController,
+            discountControllerP: purchaseController.discountController,
+            sellingPriceControllerP: purchaseController.sellingPriceController,
+            searchControllers: searchCtrl,
             onSaveValues: saveValues,
             itemsList: itemsList,
             measurement: measurement,
@@ -313,8 +310,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
             onDelete: (String entryId) {
               setState(
                 () {
-                  _newWidget
-                      .removeWhere((widget) => widget.key == ValueKey(entryId));
+                  _newWidget.removeWhere((widget) => widget.key == ValueKey(entryId));
 
                   // Find the map in _allValues that contains the entry with the specified entryId
                   Map<String, dynamic>? entryToRemove;
@@ -357,8 +353,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
             onDelete: (String entryId) {
               setState(
                 () {
-                  _newSundry
-                      .removeWhere((widget) => widget.key == ValueKey(entryId));
+                  _newSundry.removeWhere((widget) => widget.key == ValueKey(entryId));
 
                   // Find the map in _allValuesSundry that contains the entry with the specified entryId
                   Map<String, dynamic>? entryToRemove;
@@ -395,8 +390,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
 
   Future<void> fetchPurchaseReturnEntries() async {
     try {
-      final List<PurchaseReturn> purchaseReturn =
-          await purchaseReturnService.fetchAllPurchaseReturns();
+      final List<PurchaseReturn> purchaseReturn = await purchaseReturnService.fetchAllPurchaseReturns();
       setState(() {
         fetchedPurchaseReturn = purchaseReturn;
       });
@@ -411,8 +405,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
     final String uniqueKey = values['uniqueKey'];
 
     // Check if an entry with the same uniqueKey exists
-    final existingEntryIndex =
-        _allValues.indexWhere((entry) => entry['uniqueKey'] == uniqueKey);
+    final existingEntryIndex = _allValues.indexWhere((entry) => entry['uniqueKey'] == uniqueKey);
 
     setState(() {
       if (existingEntryIndex != -1) {
@@ -435,8 +428,12 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
   double TsundryAmount = 0.0;
   double Tdiscount = 0.00;
   double ledgerAmount = 0.0;
-  double roundedValue = 0.00;
-  double roundOff = 0.00;
+  double TfinalAmt = 0.00;
+  double TRoundOff = 0.00;
+  late TextEditingController roundOffController;
+  late FocusNode roundOffFocusNode;
+  bool isManualRoundOffChange = false;
+
   late Timer _timer;
 
   void _startTimer() {
@@ -463,26 +460,26 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
       await fetchSinglePurchase();
     } catch (e) {
       print("Error in fetching data: $e");
-    } finally {}
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
   void initState() {
     super.initState();
     _initializeData();
+    roundOffController = TextEditingController();
+    roundOffFocusNode = FocusNode();
+    roundOffController.text = TRoundOff.toStringAsFixed(2);
+    roundOffFocusNode.addListener(() {
+      if (roundOffFocusNode.hasFocus) {
+        isManualRoundOffChange = true;
+      }
+    });
     _startTimer();
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    if (mounted) {
-      FocusScope.of(context).requestFocus(noFocusNode);
-      setState(() {
-        isLoading = false;
-      });
-    }
   }
 
   @override
@@ -551,8 +548,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
         ledger: selectedLedgerName!,
         place: selectedState!,
         billNumber: purchaseController.billNumberController.text,
-        remarks:
-            purchaseController.remarksController?.text ?? 'No remark available',
+        remarks: purchaseController.remarksController?.text ?? 'No remark available',
         totalAmount: TnetAmount.toStringAsFixed(2), // String conversion
         entries: _allValues.map((entry) {
           return Entry(
@@ -566,8 +562,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
             cgst: double.tryParse(entry['cgst'].toString()) ?? 0,
             igst: double.tryParse(entry['igst'].toString()) ?? 0,
             netAmount: double.tryParse(entry['netAmount'].toString()) ?? 0,
-            sellingPrice:
-                double.tryParse(entry['sellingPrice'].toString()) ?? 0,
+            sellingPrice: double.tryParse(entry['sellingPrice'].toString()) ?? 0,
             discount: double.tryParse(entry['discount'].toString()) ?? 0,
           );
         }).toList(),
@@ -578,9 +573,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
           );
         }).toList(),
         billwise: billwise,
-        cashAmount: purchaseController.cashAmountController.text.isEmpty
-            ? '0'
-            : purchaseController.cashAmountController.text,
+        cashAmount: purchaseController.cashAmountController.text.isEmpty ? '0' : purchaseController.cashAmountController.text,
       );
 
       print("PurchaseReturn created successfully: $purchaseReturn");
@@ -590,11 +583,83 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
     }
 
     try {
-      await purchaseReturnService
-          .updatePurchaseReturn(widget.data, purchaseReturn!)
-          .then((value) async {
+      await purchaseReturnService.updatePurchaseReturn(widget.data, purchaseReturn!).then((value) async {
         clearAll();
-        fetchPurchaseReturnEntries().then((_) {});
+        fetchPurchaseReturnEntries().then((_) {
+          final newPurchaseReturnEntry = fetchedPurchaseReturn.firstWhere((element) => element.no == purchaseReturn!.no,
+              orElse: () => PurchaseReturn(
+                    id: '',
+                    companyCode: '',
+                    totalAmount: '',
+                    no: '',
+                    date: '',
+                    cashAmount: '',
+                    type: '',
+                    ledger: '',
+                    place: '',
+                    billNumber: '',
+                    remarks: '',
+                    entries: [],
+                    sundry: [],
+                    billwise: [],
+                  ));
+          showDialog(
+            context: context,
+            builder: (BuildContext context) {
+              return AlertDialog(
+                title: Text(
+                  'PRINT RECEIPT',
+                  style: GoogleFonts.poppins(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                content: Text(
+                  'Do you want to print the receipt?',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black),
+                ),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pushReplacement(
+                        MaterialPageRoute(
+                          builder: (context) => PurchaseReturnPrint(
+                            'Purchase Receipt',
+                            purchaseID: newPurchaseReturnEntry.id!,
+                          ),
+                        ),
+                      );
+                    },
+                    child: const Text(
+                      'YES',
+                      style: TextStyle(
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pushReplacement(MaterialPageRoute(
+                        builder: (context) {
+                          return const ListOfPurchaseReturn();
+                        },
+                      ));
+                    },
+                    child: const Text(
+                      'NO',
+                      style: TextStyle(
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          );
+        });
       }).catchError((error) {
         print('Failed to create purchase: $error');
       });
@@ -637,10 +702,8 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
     );
   }
 
-  void openDialog1(BuildContext context, String ledgerID, String ledgerName,
-      double debitAmount, VoidCallback onSave) async {
-    final response =
-        await purchaseReturnService.fetchPurchaseReturnById(widget.data);
+  void openDialog1(BuildContext context, String ledgerID, String ledgerName, double debitAmount, VoidCallback onSave) async {
+    final response = await purchaseReturnService.fetchPurchaseReturnById(widget.data);
     showDialog(
       context: context,
       builder: (context) => PaymentBillwise(
@@ -715,9 +778,9 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
       netAmount += double.tryParse(values['netAmount'].toString()) ?? 0;
       discount += double.tryParse(values['discount'].toString()) ?? 0;
     }
-    double totalAmount = netAmount + Ttotal;
-    int roundedValue2 = totalAmount.truncate();
-    double roundOff2 = totalAmount - roundedValue2;
+    double originalTotalAmount = netAmount + Ttotal;
+    double roundedTotalAmount = (originalTotalAmount - originalTotalAmount.floor()) >= 0.50 ? originalTotalAmount.ceil().toDouble() : originalTotalAmount.floor().toDouble();
+    double roundOffAmount = roundedTotalAmount - originalTotalAmount;
 
     setState(() {
       Tqty = qty;
@@ -726,9 +789,14 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
       Tcgst = cgst;
       Tigst = igst;
       TnetAmount = netAmount;
-      roundedValue = roundedValue2.toDouble();
-      roundOff = roundOff2;
       Tdiscount = discount;
+      if (!isManualRoundOffChange) {
+        TRoundOff = roundOffAmount;
+        TfinalAmt = TnetAmount + TRoundOff;
+        roundOffController.text = TRoundOff.toStringAsFixed(2);
+      } else {
+        TfinalAmt = TnetAmount + (double.tryParse(roundOffController.text) ?? 0.00);
+      }
     });
   }
 
@@ -800,8 +868,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Row(
                               children: [
                                 purchaseTopText(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.07,
+                                  width: MediaQuery.of(context).size.width * 0.07,
                                   text: 'No',
                                 ),
                                 PETextFieldsNo(
@@ -811,23 +878,19 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                   // },
                                   // focusNode: noFocusNode,
                                   onSaved: (newValue) {
-                                    purchaseController.noController.text =
-                                        newValue!;
+                                    purchaseController.noController.text = newValue!;
                                   },
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.1,
+                                  width: MediaQuery.of(context).size.width * 0.1,
                                   height: 40,
                                   controller: purchaseController.noController,
                                 ),
                                 purchaseTopText(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.06,
+                                  width: MediaQuery.of(context).size.width * 0.06,
                                   text: 'Date',
                                 ),
                                 Flexible(
                                   child: Container(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.075,
+                                    width: MediaQuery.of(context).size.width * 0.075,
                                     height: 40,
                                     decoration: BoxDecoration(
                                       border: Border.all(color: Colors.black),
@@ -835,38 +898,28 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                       color: Colors.white,
                                     ),
                                     child: Padding(
-                                      padding: const EdgeInsets.only(
-                                          left: 8.0, bottom: 14.0),
+                                      padding: const EdgeInsets.only(left: 8.0, bottom: 14.0),
                                       child: TextFormField(
                                         focusNode: dateFocusNode1,
                                         onEditingComplete: () {
-                                          FocusScope.of(context)
-                                              .requestFocus(typeFocus);
+                                          FocusScope.of(context).requestFocus(typeFocus);
 
                                           setState(() {});
                                         },
-                                        controller:
-                                            purchaseController.dateController,
+                                        controller: purchaseController.dateController,
                                         onSaved: (newValue) {
-                                          purchaseController
-                                              .dateController.text = newValue!;
+                                          purchaseController.dateController.text = newValue!;
                                         },
                                         decoration: InputDecoration(
-                                          hintText: _selectedDate == null
-                                              ? '12/12/2023'
-                                              : formatter
-                                                  .format(_selectedDate!),
-                                          contentPadding: const EdgeInsets.only(
-                                              left: 1, bottom: 8),
+                                          hintText: _selectedDate == null ? '12/12/2023' : formatter.format(_selectedDate!),
+                                          contentPadding: const EdgeInsets.only(left: 1, bottom: 8),
                                           border: InputBorder.none,
                                         ),
                                         textAlign: TextAlign.start,
                                         style: GoogleFonts.poppins(
                                           fontSize: 15,
                                           fontWeight: FontWeight.bold,
-                                          color: dateFocusNode1.hasFocus
-                                              ? Colors.white
-                                              : Colors.black,
+                                          color: dateFocusNode1.hasFocus ? Colors.white : Colors.black,
                                           // color: Colors.black,
                                         ),
                                       ),
@@ -874,16 +927,12 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.035,
-                                  child: IconButton(
-                                      onPressed: _presentDatePICKER,
-                                      icon: const Icon(Icons.calendar_month)),
+                                  width: MediaQuery.of(context).size.width * 0.035,
+                                  child: IconButton(onPressed: _presentDatePICKER, icon: const Icon(Icons.calendar_month)),
                                 ),
                                 const SizedBox(width: 50),
                                 purchaseTopText(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.06,
+                                  width: MediaQuery.of(context).size.width * 0.06,
                                   text: 'Type',
                                 ),
                                 Container(
@@ -891,8 +940,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                     border: Border.all(),
                                     color: Colors.white,
                                   ),
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.15,
+                                  width: MediaQuery.of(context).size.width * 0.15,
                                   height: 40,
                                   padding: const EdgeInsets.all(2.0),
                                   child: DropdownButtonHideUnderline(
@@ -901,9 +949,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
 
                                       requestFocusOnTap: true,
 
-                                      initialSelection: selectedStatus!.isEmpty
-                                          ? status.first
-                                          : selectedStatus,
+                                      initialSelection: selectedStatus!.isEmpty ? status.first : selectedStatus,
                                       enableSearch: true,
                                       // enableFilter: true,
                                       // leadingIcon: const SizedBox.shrink(),
@@ -914,15 +960,11 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                         color: Colors.black,
                                         decoration: TextDecoration.none,
                                       ),
-                                      selectedTrailingIcon:
-                                          const SizedBox.shrink(),
+                                      selectedTrailingIcon: const SizedBox.shrink(),
 
-                                      inputDecorationTheme:
-                                          InputDecorationTheme(
+                                      inputDecorationTheme: InputDecorationTheme(
                                         border: InputBorder.none,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 8),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                         isDense: true,
                                         activeIndicatorBorder: const BorderSide(
                                           color: Colors.transparent,
@@ -935,30 +977,23 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                       ),
                                       expandedInsets: EdgeInsets.zero,
                                       onSelected: (String? value) {
-                                        FocusScope.of(context)
-                                            .requestFocus(partyFocus);
+                                        FocusScope.of(context).requestFocus(partyFocus);
                                         setState(() {
                                           selectedStatus = value!;
-                                          purchaseController.typeController
-                                              .text = selectedStatus!;
+                                          purchaseController.typeController.text = selectedStatus!;
                                           // Set Type
                                         });
                                       },
-                                      dropdownMenuEntries: status
-                                          .map<DropdownMenuEntry<String>>(
-                                              (String value) {
+                                      dropdownMenuEntries: status.map<DropdownMenuEntry<String>>((String value) {
                                         return DropdownMenuEntry<String>(
                                             value: value,
                                             label: value,
                                             style: ButtonStyle(
-                                              textStyle:
-                                                  WidgetStateProperty.all(
+                                              textStyle: WidgetStateProperty.all(
                                                 GoogleFonts.poppins(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold,
-                                                  color: typeFocus.hasFocus
-                                                      ? Colors.white
-                                                      : Colors.black,
+                                                  color: typeFocus.hasFocus ? Colors.white : Colors.black,
                                                   // color: Colors.black,
                                                 ),
                                               ),
@@ -974,13 +1009,10 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                               children: [
                                 Expanded(
                                   child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       purchaseTopText(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.07,
+                                        width: MediaQuery.of(context).size.width * 0.07,
                                         text: 'Party',
                                       ),
                                       Container(
@@ -988,28 +1020,17 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                           border: Border.all(),
                                           color: Colors.white,
                                         ),
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.265,
+                                        width: MediaQuery.of(context).size.width * 0.265,
                                         height: 40,
                                         padding: const EdgeInsets.all(2.0),
                                         child: DropdownButtonHideUnderline(
                                           child: DropdownMenu<Ledger>(
-                                            controller: purchaseController
-                                                .partyController,
+                                            controller: purchaseController.partyController,
                                             focusNode: partyFocus,
                                             requestFocusOnTap: true,
-                                            initialSelection: suggestionItems5
-                                                        .isEmpty ||
-                                                    selectedLedgerName == null
-                                                ? null
-                                                : suggestionItems5.firstWhere(
-                                                    (element) =>
-                                                        element.id ==
-                                                        selectedLedgerName),
+                                            initialSelection: suggestionItems5.isEmpty || selectedLedgerName == null ? null : suggestionItems5.firstWhere((element) => element.id == selectedLedgerName),
                                             enableSearch: true,
-                                            trailingIcon:
-                                                const SizedBox.shrink(),
+                                            trailingIcon: const SizedBox.shrink(),
                                             textStyle: GoogleFonts.poppins(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
@@ -1018,12 +1039,8 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                             ),
                                             menuHeight: 300,
                                             enableFilter: true,
-                                            filterCallback:
-                                                (List<DropdownMenuEntry<Ledger>>
-                                                        entries,
-                                                    String filter) {
-                                              final String trimmedFilter =
-                                                  filter.trim().toLowerCase();
+                                            filterCallback: (List<DropdownMenuEntry<Ledger>> entries, String filter) {
+                                              final String trimmedFilter = filter.trim().toLowerCase();
 
                                               if (trimmedFilter.isEmpty) {
                                                 return entries;
@@ -1031,20 +1048,13 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
 
                                               // Filter the entries based on the query
                                               return entries.where((entry) {
-                                                return entry.value.name
-                                                    .toLowerCase()
-                                                    .contains(trimmedFilter);
+                                                return entry.value.name.toLowerCase().contains(trimmedFilter);
                                               }).toList();
                                             },
-                                            selectedTrailingIcon:
-                                                const SizedBox.shrink(),
-                                            inputDecorationTheme:
-                                                const InputDecorationTheme(
+                                            selectedTrailingIcon: const SizedBox.shrink(),
+                                            inputDecorationTheme: const InputDecorationTheme(
                                               border: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 16),
+                                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                                               isDense: true,
                                               activeIndicatorBorder: BorderSide(
                                                 color: Colors.transparent,
@@ -1052,43 +1062,25 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                             ),
                                             expandedInsets: EdgeInsets.zero,
                                             onSelected: (Ledger? value) {
-                                              FocusScope.of(context)
-                                                  .requestFocus(placeFocus);
+                                              FocusScope.of(context).requestFocus(placeFocus);
                                               setState(() {
-                                                if (selectedLedgerName !=
-                                                    null) {
-                                                  selectedLedgerName =
-                                                      value!.id;
-                                                  purchaseController
-                                                      .partyController
-                                                      .text = value.name;
-                                                  purchaseController
-                                                          .ledgerController
-                                                          .text =
-                                                      selectedLedgerName!;
+                                                if (selectedLedgerName != null) {
+                                                  selectedLedgerName = value!.id;
+                                                  purchaseController.partyController.text = value.name;
+                                                  purchaseController.ledgerController.text = selectedLedgerName!;
 
-                                                  final selectedLedger =
-                                                      suggestionItems5.firstWhere(
-                                                          (element) =>
-                                                              element.id ==
-                                                              selectedLedgerName);
+                                                  final selectedLedger = suggestionItems5.firstWhere((element) => element.id == selectedLedgerName);
 
-                                                  ledgerAmount = selectedLedger
-                                                      .debitBalance;
+                                                  ledgerAmount = selectedLedger.debitBalance;
                                                 }
                                               });
                                             },
-                                            dropdownMenuEntries:
-                                                suggestionItems5.map<
-                                                        DropdownMenuEntry<
-                                                            Ledger>>(
-                                                    (Ledger value) {
+                                            dropdownMenuEntries: suggestionItems5.map<DropdownMenuEntry<Ledger>>((Ledger value) {
                                               return DropdownMenuEntry<Ledger>(
                                                 value: value,
                                                 label: value.name,
                                                 trailingIcon: Text(
-                                                  value.debitBalance
-                                                      .toStringAsFixed(2),
+                                                  value.debitBalance.toStringAsFixed(2),
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.bold,
@@ -1096,12 +1088,10 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                                   ),
                                                 ),
                                                 style: ButtonStyle(
-                                                  textStyle:
-                                                      WidgetStateProperty.all(
+                                                  textStyle: WidgetStateProperty.all(
                                                     GoogleFonts.poppins(
                                                       fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                                                      fontWeight: FontWeight.bold,
                                                       color: Colors.black,
                                                     ),
                                                   ),
@@ -1111,15 +1101,9 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                           ),
                                         ),
                                       ),
-                                      SizedBox(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.041),
+                                      SizedBox(width: MediaQuery.of(context).size.width * 0.041),
                                       purchaseTopText(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.06,
+                                        width: MediaQuery.of(context).size.width * 0.06,
                                         text: 'Place',
                                       ),
                                       Container(
@@ -1127,48 +1111,35 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                           border: Border.all(),
                                           color: Colors.white,
                                         ),
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.15,
+                                        width: MediaQuery.of(context).size.width * 0.15,
                                         height: 40,
                                         padding: const EdgeInsets.all(2.0),
                                         child: DropdownButtonHideUnderline(
                                           child: DropdownMenu<String>(
                                             focusNode: placeFocus,
-                                            controller: purchaseController
-                                                .placeController,
+                                            controller: purchaseController.placeController,
                                             requestFocusOnTap: true,
 
-                                            initialSelection:
-                                                selectedState == null
-                                                    ? indianStates.first
-                                                    : null,
+                                            initialSelection: selectedState == null ? indianStates.first : null,
                                             enableSearch: true,
                                             // enableFilter: true,
                                             // leadingIcon: const SizedBox.shrink(),
                                             menuHeight: 300,
 
-                                            trailingIcon:
-                                                const SizedBox.shrink(),
+                                            trailingIcon: const SizedBox.shrink(),
                                             textStyle: GoogleFonts.poppins(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.black,
                                               decoration: TextDecoration.none,
                                             ),
-                                            selectedTrailingIcon:
-                                                const SizedBox.shrink(),
+                                            selectedTrailingIcon: const SizedBox.shrink(),
 
-                                            inputDecorationTheme:
-                                                InputDecorationTheme(
+                                            inputDecorationTheme: InputDecorationTheme(
                                               border: InputBorder.none,
-                                              contentPadding:
-                                                  const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 8),
+                                              contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                               isDense: true,
-                                              activeIndicatorBorder:
-                                                  const BorderSide(
+                                              activeIndicatorBorder: const BorderSide(
                                                 color: Colors.transparent,
                                               ),
                                               counterStyle: GoogleFonts.poppins(
@@ -1180,28 +1151,21 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                             ),
                                             expandedInsets: EdgeInsets.zero,
                                             onSelected: (String? value) {
-                                              FocusScope.of(context)
-                                                  .requestFocus(billFocus);
+                                              FocusScope.of(context).requestFocus(billFocus);
                                               setState(() {
                                                 selectedState = value;
-                                                purchaseController
-                                                    .placeController
-                                                    .text = selectedState!;
+                                                purchaseController.placeController.text = selectedState!;
                                               });
                                             },
-                                            dropdownMenuEntries: indianStates
-                                                .map<DropdownMenuEntry<String>>(
-                                                    (String value) {
+                                            dropdownMenuEntries: indianStates.map<DropdownMenuEntry<String>>((String value) {
                                               return DropdownMenuEntry<String>(
                                                   value: value,
                                                   label: value,
                                                   style: ButtonStyle(
-                                                    textStyle:
-                                                        WidgetStateProperty.all(
+                                                    textStyle: WidgetStateProperty.all(
                                                       GoogleFonts.poppins(
                                                         fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.bold,
+                                                        fontWeight: FontWeight.bold,
                                                         color: Colors.black,
                                                         // color:
                                                         //     Colors.black,
@@ -1222,13 +1186,10 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                               children: [
                                 Expanded(
                                   child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       purchaseTopText(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.07,
+                                        width: MediaQuery.of(context).size.width * 0.07,
                                         text: 'Bill No',
                                       ),
                                       PETextFields(
@@ -1240,88 +1201,58 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                         // },
                                         // focusNode: billFocus,
                                         onSaved: (newValue) {
-                                          purchaseController
-                                              .billNumberController
-                                              .text = newValue!;
+                                          purchaseController.billNumberController.text = newValue!;
                                         },
-                                        controller: purchaseController
-                                            .billNumberController,
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.265,
+                                        controller: purchaseController.billNumberController,
+                                        width: MediaQuery.of(context).size.width * 0.265,
                                         height: 40,
                                         readOnly: false,
                                       ),
                                       SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.041,
+                                        width: MediaQuery.of(context).size.width * 0.041,
                                       ),
                                       purchaseTopText(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.06,
+                                        width: MediaQuery.of(context).size.width * 0.06,
                                         text: 'Date',
                                       ),
                                       Flexible(
                                         child: Container(
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.13,
+                                          width: MediaQuery.of(context).size.width * 0.13,
                                           height: 40,
                                           decoration: BoxDecoration(
-                                            border:
-                                                Border.all(color: Colors.black),
+                                            border: Border.all(color: Colors.black),
                                             color: Colors.white,
-                                            borderRadius:
-                                                BorderRadius.circular(0),
+                                            borderRadius: BorderRadius.circular(0),
                                           ),
                                           child: Padding(
-                                            padding: const EdgeInsets.only(
-                                                left: 8.0, bottom: 14.0),
+                                            padding: const EdgeInsets.only(left: 8.0, bottom: 14.0),
                                             child: TextFormField(
                                               focusNode: dateFocusNode2,
                                               onEditingComplete: () {
-                                                FocusScope.of(context)
-                                                    .requestFocus(remarksFocus);
+                                                FocusScope.of(context).requestFocus(remarksFocus);
                                                 setState(() {});
                                               },
                                               onSaved: (newValue) {
-                                                purchaseController
-                                                    .date2Controller
-                                                    .text = newValue!;
+                                                purchaseController.date2Controller.text = newValue!;
                                               },
-                                              controller: purchaseController
-                                                  .date2Controller,
+                                              controller: purchaseController.date2Controller,
                                               style: GoogleFonts.poppins(
                                                 fontSize: 15,
                                                 fontWeight: FontWeight.bold,
                                                 color: Colors.black,
                                               ),
                                               decoration: InputDecoration(
-                                                hintText:
-                                                    _pickedDateData == null
-                                                        ? '12/12/2023'
-                                                        : formatter.format(
-                                                            _pickedDateData!),
+                                                hintText: _pickedDateData == null ? '12/12/2023' : formatter.format(_pickedDateData!),
                                                 border: InputBorder.none,
-                                                contentPadding:
-                                                    const EdgeInsets.only(
-                                                        left: 1, bottom: 8),
+                                                contentPadding: const EdgeInsets.only(left: 1, bottom: 8),
                                               ),
                                             ),
                                           ),
                                         ),
                                       ),
                                       SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.03,
-                                        child: IconButton(
-                                            onPressed: _showDataPICKER,
-                                            icon: const Icon(
-                                                Icons.calendar_month)),
+                                        width: MediaQuery.of(context).size.width * 0.03,
+                                        child: IconButton(onPressed: _showDataPICKER, icon: const Icon(Icons.calendar_month)),
                                       ),
                                     ],
                                   ),
@@ -1329,34 +1260,27 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                               ],
                             ),
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 26.0),
+                              padding: const EdgeInsets.symmetric(horizontal: 26.0),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   SizedBox(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.12,
+                                    width: MediaQuery.of(context).size.width * 0.12,
                                     height: 30,
                                     child: SizedBox(
-                                      width:
-                                          MediaQuery.of(context).size.width * 0,
+                                      width: MediaQuery.of(context).size.width * 0,
                                       child: ElevatedButton(
                                         onPressed: () {
-                                          // showReturnInfoDialog();
+                                          showReturnInfoDialog();
                                         },
                                         style: ButtonStyle(
-                                          backgroundColor:
-                                              MaterialStateProperty.all<Color>(
+                                          backgroundColor: MaterialStateProperty.all<Color>(
                                             const Color(0xFFFFFACD),
                                           ),
-                                          shape: MaterialStateProperty.all<
-                                              OutlinedBorder>(
+                                          shape: MaterialStateProperty.all<OutlinedBorder>(
                                             RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(1.0),
-                                              side: const BorderSide(
-                                                  color: Colors.black),
+                                              borderRadius: BorderRadius.circular(1.0),
+                                              side: const BorderSide(color: Colors.black),
                                             ),
                                           ),
                                         ),
@@ -1375,28 +1299,22 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                     ),
                                   ),
                                   SizedBox(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.12,
+                                    width: MediaQuery.of(context).size.width * 0.12,
                                     height: 30,
                                     child: SizedBox(
-                                      width:
-                                          MediaQuery.of(context).size.width * 0,
+                                      width: MediaQuery.of(context).size.width * 0,
                                       child: ElevatedButton(
                                         onPressed: () {
-                                          // showGetItemDialog();
+                                          showGetItemDialog();
                                         },
                                         style: ButtonStyle(
-                                          backgroundColor:
-                                              MaterialStateProperty.all<Color>(
+                                          backgroundColor: MaterialStateProperty.all<Color>(
                                             const Color(0xFFFFFACD),
                                           ),
-                                          shape: MaterialStateProperty.all<
-                                              OutlinedBorder>(
+                                          shape: MaterialStateProperty.all<OutlinedBorder>(
                                             RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(1.0),
-                                              side: const BorderSide(
-                                                  color: Colors.black),
+                                              borderRadius: BorderRadius.circular(1.0),
+                                              side: const BorderSide(color: Colors.black),
                                             ),
                                           ),
                                         ),
@@ -1418,77 +1336,62 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                               ),
                             ),
 
-                            SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.02),
+                            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
 
                             //table header
                             Row(
                               children: [
                                 TableHeaderText(
                                   text: 'Sr',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.023,
+                                  width: MediaQuery.of(context).size.width * 0.023,
                                 ),
                                 TableHeaderText(
                                   text: '   Item Name',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.19,
+                                  width: MediaQuery.of(context).size.width * 0.19,
                                 ),
                                 TableHeaderText(
                                   text: 'Qty',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'Unit',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'Rate',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'Amount',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'Disc',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'Tax%',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'SGST',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'CGST',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'IGST',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'Net Amt.',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'Selling Amt.',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                   color: Colors.black,
                                 ),
                               ],
@@ -1497,13 +1400,16 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             //table body
                             isLoading
                                 ? const Padding(
-                                    padding:
-                                        EdgeInsets.symmetric(horizontal: 8.0),
+                                    padding: EdgeInsets.symmetric(horizontal: 8.0),
                                     child: TableExample(rows: 7, cols: 13),
                                   )
-                                : SingleChildScrollView(
-                                    child: Column(
-                                      children: _newWidget,
+                                : SizedBox(
+                                    height: 200,
+                                    width: MediaQuery.of(context).size.width,
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        children: _newWidget,
+                                      ),
                                     ),
                                   ),
                             // Table footer
@@ -1511,13 +1417,8 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                               children: [
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.023,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.023,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1533,29 +1434,18 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.19,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.19,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: const Text(
                                     '',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontWeight: FontWeight.bold),
                                     textAlign: TextAlign.start,
                                   ),
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1571,45 +1461,28 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: const Text(
                                     '',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontWeight: FontWeight.bold),
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: const Text(
                                     '',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontWeight: FontWeight.bold),
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1625,13 +1498,8 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1647,29 +1515,18 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: const Text(
                                     '',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontWeight: FontWeight.bold),
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1685,13 +1542,8 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1707,13 +1559,8 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1729,14 +1576,8 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide(),
-                                          right: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide(), right: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1752,28 +1593,18 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide(
-                                              color: Colors.transparent),
-                                          right: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide(color: Colors.transparent), right: BorderSide())),
                                   child: const Text(
                                     '',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontWeight: FontWeight.bold),
                                     textAlign: TextAlign.start,
                                   ),
                                 ),
                               ],
                             ),
 
-                            SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.04),
+                            SizedBox(height: MediaQuery.of(context).size.height * 0.04),
 
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1784,18 +1615,13 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                   children: [
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment: MainAxisAlignment.start,
                                         children: [
                                           Row(
                                             children: [
                                               purchaseTopText(
-                                                width: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.06,
+                                                width: MediaQuery.of(context).size.width * 0.06,
                                                 text: 'Remarks',
                                               ),
                                               PETextFields(
@@ -1809,16 +1635,10 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                                 //   setState(() {});
                                                 // },
                                                 onSaved: (newValue) {
-                                                  purchaseController
-                                                      .remarksController!
-                                                      .text = newValue!;
+                                                  purchaseController.remarksController!.text = newValue!;
                                                 },
-                                                controller: purchaseController
-                                                    .remarksController,
-                                                width: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.6,
+                                                controller: purchaseController.remarksController,
+                                                width: MediaQuery.of(context).size.width * 0.6,
                                                 height: 40,
                                               ),
                                             ],
@@ -1828,8 +1648,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                       ),
                                     ),
                                     Container(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.22,
+                                      width: MediaQuery.of(context).size.width * 0.22,
                                       height: 225,
                                       margin: EdgeInsets.only(right: 10),
                                       decoration: BoxDecoration(
@@ -1867,18 +1686,13 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                                     child: SizedBox(
                                                       width: 100,
                                                       child: Text(
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
+                                                        overflow: TextOverflow.ellipsis,
                                                         header2Titles[index],
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                        style:
-                                                            GoogleFonts.poppins(
+                                                        textAlign: TextAlign.center,
+                                                        style: GoogleFonts.poppins(
                                                           fontSize: 15,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: const Color(
-                                                              0xFF4B0082),
+                                                          fontWeight: FontWeight.bold,
+                                                          color: const Color(0xFF4B0082),
                                                         ),
                                                       ),
                                                     ),
@@ -1890,9 +1704,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
 
                                           SizedBox(
                                             height: 180,
-                                            width: MediaQuery.of(context)
-                                                .size
-                                                .width,
+                                            width: MediaQuery.of(context).size.width,
                                             child: SingleChildScrollView(
                                               child: Column(
                                                 children: _newSundry,
@@ -1913,36 +1725,28 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
                                 SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.14,
+                                  width: MediaQuery.of(context).size.width * 0.14,
                                   height: 30,
                                   child: SizedBox(
-                                    width:
-                                        MediaQuery.of(context).size.width * 0,
+                                    width: MediaQuery.of(context).size.width * 0,
                                     child: ElevatedButton(
                                       onPressed: () {
                                         openDialog1(
                                           context,
                                           selectedLedgerName!,
-                                          purchaseController
-                                              .partyController.text,
-                                          TnetAmount,
+                                          purchaseController.partyController.text,
+                                          TfinalAmt,
                                           updatePurchase,
                                         );
                                       },
                                       style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStateProperty.all<Color>(
-                                          const Color.fromARGB(
-                                              255, 255, 243, 132),
+                                        backgroundColor: MaterialStateProperty.all<Color>(
+                                          const Color.fromARGB(255, 255, 243, 132),
                                         ),
-                                        shape: MaterialStateProperty.all<
-                                            OutlinedBorder>(
+                                        shape: MaterialStateProperty.all<OutlinedBorder>(
                                           RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(1.0),
-                                            side: const BorderSide(
-                                                color: Colors.black),
+                                            borderRadius: BorderRadius.circular(1.0),
+                                            side: const BorderSide(color: Colors.black),
                                           ),
                                         ),
                                       ),
@@ -1961,33 +1765,25 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.002,
+                                  width: MediaQuery.of(context).size.width * 0.002,
                                 ),
                                 SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.14,
+                                  width: MediaQuery.of(context).size.width * 0.14,
                                   height: 30,
                                   child: SizedBox(
-                                    width:
-                                        MediaQuery.of(context).size.width * 0,
+                                    width: MediaQuery.of(context).size.width * 0,
                                     child: ElevatedButton(
                                       onPressed: () {
                                         Navigator.of(context).pop();
                                       },
                                       style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStateProperty.all<Color>(
-                                          const Color.fromARGB(
-                                              255, 255, 243, 132),
+                                        backgroundColor: MaterialStateProperty.all<Color>(
+                                          const Color.fromARGB(255, 255, 243, 132),
                                         ),
-                                        shape: MaterialStateProperty.all<
-                                            OutlinedBorder>(
+                                        shape: MaterialStateProperty.all<OutlinedBorder>(
                                           RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(1.0),
-                                            side: const BorderSide(
-                                                color: Colors.black),
+                                            borderRadius: BorderRadius.circular(1.0),
+                                            side: const BorderSide(color: Colors.black),
                                           ),
                                         ),
                                       ),
@@ -2006,35 +1802,26 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.002,
+                                  width: MediaQuery.of(context).size.width * 0.002,
                                 ),
                                 SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.14,
+                                  width: MediaQuery.of(context).size.width * 0.14,
                                   height: 30,
                                   child: SizedBox(
-                                    width:
-                                        MediaQuery.of(context).size.width * 0,
+                                    width: MediaQuery.of(context).size.width * 0,
                                     child: ElevatedButton(
                                       onPressed: () async {
-                                        await purchaseReturnService
-                                            .deletePurchaseReturn(widget.data);
+                                        await purchaseReturnService.deletePurchaseReturn(widget.data);
                                         Navigator.pop(context);
                                       },
                                       style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStateProperty.all<Color>(
-                                          const Color.fromARGB(
-                                              255, 255, 243, 132),
+                                        backgroundColor: MaterialStateProperty.all<Color>(
+                                          const Color.fromARGB(255, 255, 243, 132),
                                         ),
-                                        shape: MaterialStateProperty.all<
-                                            OutlinedBorder>(
+                                        shape: MaterialStateProperty.all<OutlinedBorder>(
                                           RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(1.0),
-                                            side: const BorderSide(
-                                                color: Colors.black),
+                                            borderRadius: BorderRadius.circular(1.0),
+                                            side: const BorderSide(color: Colors.black),
                                           ),
                                         ),
                                       ),
@@ -2052,9 +1839,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                     ),
                                   ),
                                 ),
-                                SizedBox(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.25),
+                                SizedBox(width: MediaQuery.of(context).size.width * 0.25),
                                 Column(
                                   crossAxisAlignment: CrossAxisAlignment.end,
                                   children: [
@@ -2064,10 +1849,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                           padding: const EdgeInsets.all(8.0),
                                           child: SizedBox(
                                             height: 20,
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.05,
+                                            width: MediaQuery.of(context).size.width * 0.05,
                                             child: Text(
                                               'Round-Off: ',
                                               style: GoogleFonts.poppins(
@@ -2082,10 +1864,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                           padding: const EdgeInsets.all(8.0),
                                           child: Container(
                                             height: 20,
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.1,
+                                            width: MediaQuery.of(context).size.width * 0.1,
                                             decoration: const BoxDecoration(
                                                 // border: Border(
                                                 //     bottom:
@@ -2093,27 +1872,17 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                                 ),
                                             child: TextFormField(
                                               decoration: const InputDecoration(
-                                                contentPadding:
-                                                    EdgeInsets.all(12.0),
-                                                focusedBorder:
-                                                    UnderlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                      color:
-                                                          Colors.transparent),
+                                                contentPadding: EdgeInsets.all(12.0),
+                                                focusedBorder: UnderlineInputBorder(
+                                                  borderSide: BorderSide(color: Colors.transparent),
                                                 ),
-                                                enabledBorder:
-                                                    UnderlineInputBorder(
-                                                  borderSide: BorderSide(
-                                                      color:
-                                                          Colors.transparent),
+                                                enabledBorder: UnderlineInputBorder(
+                                                  borderSide: BorderSide(color: Colors.transparent),
                                                 ),
                                               ),
-                                              controller: TextEditingController(
-                                                  text: '0.00'),
-                                              focusNode: FocusNode(),
-                                              keyboardType: const TextInputType
-                                                  .numberWithOptions(
-                                                  signed: true, decimal: true),
+                                              controller: roundOffController,
+                                              focusNode: roundOffFocusNode,
+                                              keyboardType: const TextInputType.numberWithOptions(signed: true, decimal: true),
                                               textAlign: TextAlign.center,
                                               style: GoogleFonts.poppins(
                                                 fontSize: 15,
@@ -2121,14 +1890,11 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                                 color: const Color(0xFF4B0082),
                                               ),
                                               onChanged: (value) {
-                                                // double newRoundOff =
-                                                //     double.tryParse(value) ??
-                                                //         0.00;
+                                                double newRoundOff = double.tryParse(value) ?? 0.00;
                                                 setState(() {
-                                                  // TRoundOff = newRoundOff;
-                                                  // TfinalAmt =
-                                                  //     TnetAmount + TRoundOff;
-                                                  // isManualRoundOffChange = true;
+                                                  TRoundOff = newRoundOff;
+                                                  TfinalAmt = TnetAmount + TRoundOff;
+                                                  isManualRoundOffChange = true;
                                                 });
                                               },
                                             ),
@@ -2142,10 +1908,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                           padding: const EdgeInsets.all(8.0),
                                           child: SizedBox(
                                             height: 20,
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.05,
+                                            width: MediaQuery.of(context).size.width * 0.05,
                                             child: Text(
                                               'Amount: ',
                                               style: GoogleFonts.poppins(
@@ -2160,17 +1923,14 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                           padding: const EdgeInsets.all(8.0),
                                           child: Container(
                                             height: 20,
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.1,
+                                            width: MediaQuery.of(context).size.width * 0.1,
                                             decoration: const BoxDecoration(
                                                 // border: Border(
                                                 //     bottom:
                                                 //         BorderSide(width: 1)),
                                                 ),
                                             child: Text(
-                                              TnetAmount.toStringAsFixed(2),
+                                              TfinalAmt.toStringAsFixed(2),
                                               textAlign: TextAlign.center,
                                               style: GoogleFonts.poppins(
                                                 fontSize: 15,
@@ -2201,8 +1961,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
-                                  builder: (context) =>
-                                      const ListOfPurchaseReturn(),
+                                  builder: (context) => const ListOfPurchaseReturn(),
                                 ),
                               );
                             },
@@ -2211,42 +1970,33 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Skey: "F4",
                             name: "Add Line",
                             onTap: () {
+                              clearAllControllers();
                               final entryId = UniqueKey().toString();
+                              final searchCtrl = TextEditingController();
+
                               setState(() {
                                 _newWidget.add(
                                   PurchaseReturnEditTable(
                                     key: ValueKey(entryId),
                                     serialNo: _newWidget.length + 1,
-                                    itemNameControllerP:
-                                        purchaseController.itemNameController,
-                                    qtyControllerP:
-                                        purchaseController.qtyController,
-                                    rateControllerP:
-                                        purchaseController.rateController,
-                                    unitControllerP:
-                                        purchaseController.unitController,
-                                    amountControllerP:
-                                        purchaseController.amountController,
-                                    taxControllerP:
-                                        purchaseController.taxController,
-                                    discountControllerP:
-                                        purchaseController.discountController,
-                                    sgstControllerP:
-                                        purchaseController.sgstController,
-                                    cgstControllerP:
-                                        purchaseController.cgstController,
-                                    igstControllerP:
-                                        purchaseController.igstController,
-                                    netAmountControllerP:
-                                        purchaseController.netAmountController,
-                                    sellingPriceControllerP: purchaseController
-                                        .sellingPriceController,
+                                    itemNameControllerP: purchaseController.itemNameController,
+                                    qtyControllerP: purchaseController.qtyController,
+                                    rateControllerP: purchaseController.rateController,
+                                    unitControllerP: purchaseController.unitController,
+                                    amountControllerP: purchaseController.amountController,
+                                    taxControllerP: purchaseController.taxController,
+                                    discountControllerP: purchaseController.discountController,
+                                    sgstControllerP: purchaseController.sgstController,
+                                    cgstControllerP: purchaseController.cgstController,
+                                    igstControllerP: purchaseController.igstController,
+                                    netAmountControllerP: purchaseController.netAmountController,
+                                    sellingPriceControllerP: purchaseController.sellingPriceController,
+                                    searchControllers: searchCtrl,
                                     onSaveValues: saveValues,
                                     onDelete: (String entryId) {
                                       setState(
                                         () {
-                                          _newWidget.removeWhere((widget) =>
-                                              widget.key == ValueKey(entryId));
+                                          _newWidget.removeWhere((widget) => widget.key == ValueKey(entryId));
 
                                           // Find the map in _allValues that contains the entry with the specified entryId
                                           Map<String, dynamic>? entryToRemove;
@@ -2522,8 +2272,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const ListOfPurchaseReturn(),
+                                builder: (context) => const ListOfPurchaseReturn(),
                               ),
                             );
                             break;
@@ -2535,36 +2284,23 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                   PurchaseReturnEditTable(
                                     key: ValueKey(entryId),
                                     serialNo: _newWidget.length + 1,
-                                    itemNameControllerP:
-                                        purchaseController.itemNameController,
-                                    qtyControllerP:
-                                        purchaseController.qtyController,
-                                    rateControllerP:
-                                        purchaseController.rateController,
-                                    unitControllerP:
-                                        purchaseController.unitController,
-                                    amountControllerP:
-                                        purchaseController.amountController,
-                                    taxControllerP:
-                                        purchaseController.taxController,
-                                    discountControllerP:
-                                        purchaseController.discountController,
-                                    sgstControllerP:
-                                        purchaseController.sgstController,
-                                    cgstControllerP:
-                                        purchaseController.cgstController,
-                                    igstControllerP:
-                                        purchaseController.igstController,
-                                    netAmountControllerP:
-                                        purchaseController.netAmountController,
-                                    sellingPriceControllerP: purchaseController
-                                        .sellingPriceController,
+                                    itemNameControllerP: purchaseController.itemNameController,
+                                    qtyControllerP: purchaseController.qtyController,
+                                    rateControllerP: purchaseController.rateController,
+                                    unitControllerP: purchaseController.unitController,
+                                    amountControllerP: purchaseController.amountController,
+                                    taxControllerP: purchaseController.taxController,
+                                    discountControllerP: purchaseController.discountController,
+                                    sgstControllerP: purchaseController.sgstController,
+                                    cgstControllerP: purchaseController.cgstController,
+                                    igstControllerP: purchaseController.igstController,
+                                    netAmountControllerP: purchaseController.netAmountController,
+                                    sellingPriceControllerP: purchaseController.sellingPriceController,
                                     onSaveValues: saveValues,
                                     onDelete: (String entryId) {
                                       setState(
                                         () {
-                                          _newWidget.removeWhere((widget) =>
-                                              widget.key == ValueKey(entryId));
+                                          _newWidget.removeWhere((widget) => widget.key == ValueKey(entryId));
 
                                           // Find the map in _allValues that contains the entry with the specified entryId
                                           Map<String, dynamic>? entryToRemove;
@@ -2657,8 +2393,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             color: Colors.white,
                           ),
                           child: Padding(
-                            padding:
-                                const EdgeInsets.only(left: 8.0, bottom: 14.0),
+                            padding: const EdgeInsets.only(left: 8.0, bottom: 14.0),
                             child: TextFormField(
                               focusNode: dateFocusNode1,
                               onEditingComplete: () {
@@ -2668,24 +2403,18 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                               },
                               controller: purchaseController.dateController,
                               onSaved: (newValue) {
-                                purchaseController.dateController.text =
-                                    newValue!;
+                                purchaseController.dateController.text = newValue!;
                               },
                               decoration: InputDecoration(
-                                hintText: _selectedDate == null
-                                    ? '12/12/2023'
-                                    : formatter.format(_selectedDate!),
-                                contentPadding:
-                                    const EdgeInsets.only(left: 1, bottom: 8),
+                                hintText: _selectedDate == null ? '12/12/2023' : formatter.format(_selectedDate!),
+                                contentPadding: const EdgeInsets.only(left: 1, bottom: 8),
                                 border: InputBorder.none,
                               ),
                               textAlign: TextAlign.start,
                               style: GoogleFonts.poppins(
                                 fontSize: 15,
                                 fontWeight: FontWeight.bold,
-                                color: dateFocusNode1.hasFocus
-                                    ? Colors.white
-                                    : Colors.black,
+                                color: dateFocusNode1.hasFocus ? Colors.white : Colors.black,
                                 // color: Colors.black,
                               ),
                             ),
@@ -2694,9 +2423,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                       ),
                       SizedBox(
                         width: 50,
-                        child: IconButton(
-                            onPressed: _presentDatePICKER,
-                            icon: const Icon(Icons.calendar_month)),
+                        child: IconButton(onPressed: _presentDatePICKER, icon: const Icon(Icons.calendar_month)),
                       ),
                     ],
                   ),
@@ -2721,9 +2448,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
 
                               requestFocusOnTap: true,
 
-                              initialSelection: selectedStatus!.isEmpty
-                                  ? status.first
-                                  : selectedStatus,
+                              initialSelection: selectedStatus!.isEmpty ? status.first : selectedStatus,
                               enableSearch: true,
                               // enableFilter: true,
                               // leadingIcon: const SizedBox.shrink(),
@@ -2738,8 +2463,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
 
                               inputDecorationTheme: InputDecorationTheme(
                                 border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 8),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                 isDense: true,
                                 activeIndicatorBorder: const BorderSide(
                                   color: Colors.transparent,
@@ -2755,14 +2479,11 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                 FocusScope.of(context).requestFocus(partyFocus);
                                 setState(() {
                                   selectedStatus = value!;
-                                  purchaseController.typeController.text =
-                                      selectedStatus!;
+                                  purchaseController.typeController.text = selectedStatus!;
                                   // Set Type
                                 });
                               },
-                              dropdownMenuEntries: status
-                                  .map<DropdownMenuEntry<String>>(
-                                      (String value) {
+                              dropdownMenuEntries: status.map<DropdownMenuEntry<String>>((String value) {
                                 return DropdownMenuEntry<String>(
                                     value: value,
                                     label: value,
@@ -2771,9 +2492,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                         GoogleFonts.poppins(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
-                                          color: typeFocus.hasFocus
-                                              ? Colors.white
-                                              : Colors.black,
+                                          color: typeFocus.hasFocus ? Colors.white : Colors.black,
                                           // color: Colors.black,
                                         ),
                                       ),
@@ -2804,11 +2523,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             child: DropdownMenu<Ledger>(
                               focusNode: partyFocus,
                               requestFocusOnTap: true,
-                              initialSelection: suggestionItems5.isEmpty ||
-                                      selectedLedgerName == null
-                                  ? null
-                                  : suggestionItems5.firstWhere((element) =>
-                                      element.id == selectedLedgerName),
+                              initialSelection: suggestionItems5.isEmpty || selectedLedgerName == null ? null : suggestionItems5.firstWhere((element) => element.id == selectedLedgerName),
                               enableSearch: true,
                               trailingIcon: const SizedBox.shrink(),
                               textStyle: GoogleFonts.poppins(
@@ -2819,11 +2534,8 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                               ),
                               menuHeight: 300,
                               enableFilter: true,
-                              filterCallback:
-                                  (List<DropdownMenuEntry<Ledger>> entries,
-                                      String filter) {
-                                final String trimmedFilter =
-                                    filter.trim().toLowerCase();
+                              filterCallback: (List<DropdownMenuEntry<Ledger>> entries, String filter) {
+                                final String trimmedFilter = filter.trim().toLowerCase();
 
                                 if (trimmedFilter.isEmpty) {
                                   return entries;
@@ -2831,16 +2543,13 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
 
                                 // Filter the entries based on the query
                                 return entries.where((entry) {
-                                  return entry.value.name
-                                      .toLowerCase()
-                                      .contains(trimmedFilter);
+                                  return entry.value.name.toLowerCase().contains(trimmedFilter);
                                 }).toList();
                               },
                               selectedTrailingIcon: const SizedBox.shrink(),
                               inputDecorationTheme: const InputDecorationTheme(
                                 border: InputBorder.none,
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 16),
+                                contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                                 isDense: true,
                                 activeIndicatorBorder: BorderSide(
                                   color: Colors.transparent,
@@ -2852,20 +2561,15 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                 setState(() {
                                   if (selectedLedgerName != null) {
                                     selectedLedgerName = value!.id;
-                                    purchaseController.ledgerController.text =
-                                        selectedLedgerName!;
+                                    purchaseController.ledgerController.text = selectedLedgerName!;
 
-                                    final selectedLedger =
-                                        suggestionItems5.firstWhere((element) =>
-                                            element.id == selectedLedgerName);
+                                    final selectedLedger = suggestionItems5.firstWhere((element) => element.id == selectedLedgerName);
 
                                     ledgerAmount = selectedLedger.debitBalance;
                                   }
                                 });
                               },
-                              dropdownMenuEntries: suggestionItems5
-                                  .map<DropdownMenuEntry<Ledger>>(
-                                      (Ledger value) {
+                              dropdownMenuEntries: suggestionItems5.map<DropdownMenuEntry<Ledger>>((Ledger value) {
                                 return DropdownMenuEntry<Ledger>(
                                   value: value,
                                   label: value.name,
@@ -2915,9 +2619,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
 
                               requestFocusOnTap: true,
 
-                              initialSelection: selectedState == null
-                                  ? indianStates.first
-                                  : null,
+                              initialSelection: selectedState == null ? indianStates.first : null,
                               enableSearch: true,
                               // enableFilter: true,
                               // leadingIcon: const SizedBox.shrink(),
@@ -2934,8 +2636,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
 
                               inputDecorationTheme: InputDecorationTheme(
                                 border: InputBorder.none,
-                                contentPadding: const EdgeInsets.symmetric(
-                                    horizontal: 8, vertical: 8),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                 isDense: true,
                                 activeIndicatorBorder: const BorderSide(
                                   color: Colors.transparent,
@@ -2952,13 +2653,10 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                 FocusScope.of(context).requestFocus(billFocus);
                                 setState(() {
                                   selectedState = value;
-                                  purchaseController.placeController.text =
-                                      selectedState!;
+                                  purchaseController.placeController.text = selectedState!;
                                 });
                               },
-                              dropdownMenuEntries: indianStates
-                                  .map<DropdownMenuEntry<String>>(
-                                      (String value) {
+                              dropdownMenuEntries: indianStates.map<DropdownMenuEntry<String>>((String value) {
                                 return DropdownMenuEntry<String>(
                                     value: value,
                                     label: value,
@@ -2996,8 +2694,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                         // },
                         // focusNode: billFocus,
                         onSaved: (newValue) {
-                          purchaseController.billNumberController.text =
-                              newValue!;
+                          purchaseController.billNumberController.text = newValue!;
                         },
                         controller: purchaseController.billNumberController,
                         width: s.width,
@@ -3022,18 +2719,15 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             borderRadius: BorderRadius.circular(0),
                           ),
                           child: Padding(
-                            padding:
-                                const EdgeInsets.only(left: 8.0, bottom: 14.0),
+                            padding: const EdgeInsets.only(left: 8.0, bottom: 14.0),
                             child: TextFormField(
                               focusNode: dateFocusNode2,
                               onEditingComplete: () {
-                                FocusScope.of(context)
-                                    .requestFocus(remarksFocus);
+                                FocusScope.of(context).requestFocus(remarksFocus);
                                 setState(() {});
                               },
                               onSaved: (newValue) {
-                                purchaseController.date2Controller.text =
-                                    newValue!;
+                                purchaseController.date2Controller.text = newValue!;
                               },
                               controller: purchaseController.date2Controller,
                               style: GoogleFonts.poppins(
@@ -3042,12 +2736,9 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                                 color: Colors.black,
                               ),
                               decoration: InputDecoration(
-                                hintText: _pickedDateData == null
-                                    ? '12/12/2023'
-                                    : formatter.format(_pickedDateData!),
+                                hintText: _pickedDateData == null ? '12/12/2023' : formatter.format(_pickedDateData!),
                                 border: InputBorder.none,
-                                contentPadding:
-                                    const EdgeInsets.only(left: 1, bottom: 8),
+                                contentPadding: const EdgeInsets.only(left: 1, bottom: 8),
                               ),
                             ),
                           ),
@@ -3055,9 +2746,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                       ),
                       SizedBox(
                         width: 50,
-                        child: IconButton(
-                            onPressed: _showDataPICKER,
-                            icon: const Icon(Icons.calendar_month)),
+                        child: IconButton(onPressed: _showDataPICKER, icon: const Icon(Icons.calendar_month)),
                       ),
                     ],
                   ),
@@ -3143,11 +2832,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Container(
                               height: 40,
                               width: 50,
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(),
-                                      top: BorderSide(),
-                                      left: BorderSide())),
+                              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                               child: Align(
                                 alignment: Alignment.center,
                                 child: Text(
@@ -3164,11 +2849,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Container(
                               height: 40,
                               width: 200,
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(),
-                                      top: BorderSide(),
-                                      left: BorderSide())),
+                              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                               child: const Text(
                                 '',
                                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -3178,11 +2859,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Container(
                               height: 40,
                               width: 70,
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(),
-                                      top: BorderSide(),
-                                      left: BorderSide())),
+                              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                               child: Align(
                                 alignment: Alignment.center,
                                 child: Text(
@@ -3199,11 +2876,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Container(
                               height: 40,
                               width: 70,
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(),
-                                      top: BorderSide(),
-                                      left: BorderSide())),
+                              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                               child: const Text(
                                 '',
                                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -3213,11 +2886,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Container(
                               height: 40,
                               width: 100,
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(),
-                                      top: BorderSide(),
-                                      left: BorderSide())),
+                              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                               child: const Text(
                                 '',
                                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -3227,11 +2896,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Container(
                               height: 40,
                               width: 180,
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(),
-                                      top: BorderSide(),
-                                      left: BorderSide())),
+                              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                               child: Align(
                                 alignment: Alignment.center,
                                 child: Text(
@@ -3248,11 +2913,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Container(
                               height: 40,
                               width: 70,
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(),
-                                      top: BorderSide(),
-                                      left: BorderSide())),
+                              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                               child: Align(
                                 alignment: Alignment.center,
                                 child: Text(
@@ -3269,11 +2930,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Container(
                               height: 40,
                               width: 70,
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(),
-                                      top: BorderSide(),
-                                      left: BorderSide())),
+                              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                               child: const Text(
                                 '',
                                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -3283,11 +2940,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Container(
                               height: 40,
                               width: 70,
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(),
-                                      top: BorderSide(),
-                                      left: BorderSide())),
+                              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                               child: Align(
                                 alignment: Alignment.center,
                                 child: Text(
@@ -3304,11 +2957,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Container(
                               height: 40,
                               width: 70,
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(),
-                                      top: BorderSide(),
-                                      left: BorderSide())),
+                              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                               child: Align(
                                 alignment: Alignment.center,
                                 child: Text(
@@ -3325,11 +2974,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Container(
                               height: 40,
                               width: 70,
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(),
-                                      top: BorderSide(),
-                                      left: BorderSide())),
+                              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                               child: Align(
                                 alignment: Alignment.center,
                                 child: Text(
@@ -3346,12 +2991,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Container(
                               height: 40,
                               width: 160,
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(),
-                                      top: BorderSide(),
-                                      left: BorderSide(),
-                                      right: BorderSide())),
+                              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide(), right: BorderSide())),
                               child: Align(
                                 alignment: Alignment.center,
                                 child: Text(
@@ -3368,13 +3008,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                             Container(
                               height: 40,
                               width: 160,
-                              decoration: const BoxDecoration(
-                                  border: Border(
-                                      bottom: BorderSide(),
-                                      top: BorderSide(),
-                                      left:
-                                          BorderSide(color: Colors.transparent),
-                                      right: BorderSide())),
+                              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide(color: Colors.transparent), right: BorderSide())),
                               child: const Text(
                                 '',
                                 style: TextStyle(fontWeight: FontWeight.bold),
@@ -3406,8 +3040,7 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                         //   setState(() {});
                         // },
                         onSaved: (newValue) {
-                          purchaseController.remarksController!.text =
-                              newValue!;
+                          purchaseController.remarksController!.text = newValue!;
                         },
                         controller: purchaseController.remarksController,
                         width: s.width,
@@ -3638,21 +3271,17 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
                           height: 40,
                           child: TextFormField(
                             decoration: const InputDecoration(
-                              contentPadding:
-                                  EdgeInsets.only(left: 12.0, bottom: 6),
+                              contentPadding: EdgeInsets.only(left: 12.0, bottom: 6),
                               focusedBorder: UnderlineInputBorder(
-                                borderSide:
-                                    BorderSide(color: Colors.transparent),
+                                borderSide: BorderSide(color: Colors.transparent),
                               ),
                               enabledBorder: UnderlineInputBorder(
-                                borderSide:
-                                    BorderSide(color: Colors.transparent),
+                                borderSide: BorderSide(color: Colors.transparent),
                               ),
                             ),
                             controller: TextEditingController(text: '0.00'),
                             focusNode: FocusNode(),
-                            keyboardType: const TextInputType.numberWithOptions(
-                                signed: true, decimal: true),
+                            keyboardType: const TextInputType.numberWithOptions(signed: true, decimal: true),
                             style: GoogleFonts.poppins(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
@@ -3901,6 +3530,1704 @@ class _PurchaseReturnEditPageState extends State<PurchaseReturnEditPage> {
       default:
         return '';
     }
+  }
+
+  void saveSelectedPurchaseEntries({required Purchase purchase, required List<bool> checkboxStates}) {
+    for (int i = 0; i < checkboxStates.length; i++) {
+      if (checkboxStates[i]) {
+        selectedEntries.add(purchase.entries[i]);
+      }
+    }
+    print('Selected Entries: $selectedEntries');
+  }
+
+  void getDetailsDialog({
+    required TextEditingController noController,
+    required Purchase purchase,
+  }) {
+    List<TableRow> purchaseEntries = [];
+
+    print('Purchase Entries: ${purchase.entries}');
+
+    List<bool> checkboxStates = List.generate(purchase.entries.length, (index) => true);
+    print("............1");
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (context) {
+        return Center(
+          child: Dialog(
+            alignment: AlignmentDirectional.center,
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(0),
+            ),
+            child: Container(
+              constraints: BoxConstraints(
+                // maxHeight: MediaQuery.of(context).size.height / 2,
+                maxWidth: MediaQuery.of(context).size.width / 1.5,
+              ),
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  print("............2");
+                  void deselectAll() {
+                    setState(() {
+                      for (int i = 0; i < checkboxStates.length; i++) {
+                        checkboxStates[i] = false;
+                      }
+                    });
+                  }
+
+                  print("............3");
+                  purchaseEntries = purchase.entries.asMap().entries.map((entry) {
+                    int index = entry.key;
+                    var entryValue = entry.value;
+                    print("............4");
+                    return TableRow(
+                      children: [
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: Text(
+                                purchase.date,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF4B0082),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: Text(
+                                purchase.no,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF4B0082),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                suggestionItems5.isNotEmpty
+                                    ? suggestionItems5
+                                        .firstWhere(
+                                          (element) => element.id == purchase.ledger,
+                                        )
+                                        .name
+                                    : '',
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF4B0082),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                itemsList
+                                    .firstWhere(
+                                      (element) => element.id == entryValue.itemName,
+                                    )
+                                    .itemName,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF4B0082),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: Text(
+                                entryValue.qty.toString(),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF4B0082),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Align(
+                              alignment: Alignment.center,
+                              child: Text(
+                                entryValue.netAmount.toStringAsFixed(2),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF4B0082),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        TableCell(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Checkbox(
+                              value: checkboxStates[index],
+                              onChanged: (value) {
+                                setState(() {
+                                  checkboxStates[index] = value ?? false;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList();
+
+                  print("............6");
+
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 50,
+                        color: const Color(0xFF4169E1),
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Text(
+                                'Get Details',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Positioned(
+                              right: 0,
+                              child: IconButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Expanded(
+                              flex: 2,
+                              child: SETopText(
+                                text: 'Purchase No',
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 4,
+                              child: SizedBox(
+                                height: 40,
+                                child: PRTopTextfield(
+                                  controller: noController,
+                                  onSaved: (newValue) {},
+                                  padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
+                                  hintText: '',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 2,
+                              child: InkWell(
+                                onTap: () {},
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFFACD),
+                                    border: Border.all(
+                                      color: const Color(0xFFFFFACD),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  height: 40,
+                                  padding: const EdgeInsets.all(2.0),
+                                  child: Center(
+                                    child: Text(
+                                      'Search',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.black,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const Spacer(),
+                            Expanded(
+                              flex: 2,
+                              child: InkWell(
+                                onTap: () {
+                                  deselectAll();
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFFACD),
+                                    border: Border.all(
+                                      color: const Color(0xFFFFFACD),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  height: 40,
+                                  padding: const EdgeInsets.all(2.0),
+                                  child: Center(
+                                    child: Text(
+                                      'Deselect All',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.black,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height / 1.5,
+                            maxWidth: MediaQuery.of(context).size.width / 1.5,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.black,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 10.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Table(
+                                  border: TableBorder.all(width: 1, color: Colors.black),
+                                  columnWidths: const {
+                                    0: FlexColumnWidth(3),
+                                    1: FlexColumnWidth(2),
+                                    2: FlexColumnWidth(5),
+                                    3: FlexColumnWidth(4),
+                                    4: FlexColumnWidth(3),
+                                    5: FlexColumnWidth(3),
+                                    6: FlexColumnWidth(2),
+                                    7: FlexColumnWidth(2),
+                                  },
+                                  children: [
+                                    TableRow(
+                                      children: [
+                                        TableCell(
+                                          child: SizedBox(
+                                            height: 40,
+                                            child: Align(
+                                              alignment: Alignment.center,
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(4.0),
+                                                child: Text(
+                                                  "Date",
+                                                  textAlign: TextAlign.end,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: const Color(0xff4B0082),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        TableCell(
+                                            child: SizedBox(
+                                          height: 40,
+                                          child: Align(
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                              "No",
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 20,
+                                                fontWeight: FontWeight.bold,
+                                                color: const Color(0xff4B0082),
+                                              ),
+                                            ),
+                                          ),
+                                        )),
+                                        TableCell(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                            child: SizedBox(
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: Text(
+                                                  "Particulars",
+                                                  textAlign: TextAlign.center,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: const Color(0xff4B0082),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        TableCell(
+                                          child: Padding(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                            child: SizedBox(
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.centerLeft,
+                                                child: Text(
+                                                  "Items Name",
+                                                  textAlign: TextAlign.center,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: const Color(0xff4B0082),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        TableCell(
+                                          child: SizedBox(
+                                            height: 40,
+                                            child: Align(
+                                              alignment: Alignment.center,
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(4.0),
+                                                child: Text(
+                                                  "Qty",
+                                                  textAlign: TextAlign.end,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: const Color(0xff4B0082),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        TableCell(
+                                          child: SizedBox(
+                                            height: 40,
+                                            child: Align(
+                                              alignment: Alignment.center,
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(4.0),
+                                                child: Text(
+                                                  "Amount",
+                                                  textAlign: TextAlign.end,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 20,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: const Color(0xff4B0082),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        TableCell(
+                                          child: SizedBox(
+                                            height: 40,
+                                            child: Align(
+                                              alignment: Alignment.center,
+                                              child: Padding(
+                                                padding: const EdgeInsets.all(4.0),
+                                                child: Text(
+                                                  "Select",
+                                                  textAlign: TextAlign.end,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: const Color(0xff4B0082),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        )
+                                      ],
+                                    ),
+                                    ...purchaseEntries,
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Buttons
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                saveSelectedPurchaseEntries(
+                                  purchase: purchase,
+                                  checkboxStates: checkboxStates,
+                                );
+
+                                selectedPurchase = purchase;
+
+                                // Close the dialog
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFFACD),
+                                  border: Border.all(
+                                    color: const Color(0xFFFFFACD),
+                                    width: 1,
+                                  ),
+                                ),
+                                height: 40,
+                                width: MediaQuery.of(context).size.width * 0.1,
+                                padding: const EdgeInsets.all(2.0),
+                                child: Center(
+                                  child: Text(
+                                    'Save[F4]',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            InkWell(
+                              onTap: () {
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFFACD),
+                                  border: Border.all(
+                                    color: const Color(0xFFFFFACD),
+                                    width: 1,
+                                  ),
+                                ),
+                                height: 40,
+                                width: MediaQuery.of(context).size.width * 0.1,
+                                padding: const EdgeInsets.all(2.0),
+                                child: Center(
+                                  child: Text(
+                                    'Cancel',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void showReturnInfoDialog() async {
+    List<Purchase>? purchase = await purchaseServices.fetchPurchaseByLedger(selectedLedgerName!);
+    print("purchase length : ${purchase!.length}");
+    TextEditingController originalInvoiceNoController = TextEditingController();
+    TextEditingController originalInvoiceDateController = TextEditingController();
+
+    List<String> reasons = [
+      '01-Sales Return',
+      '02-Post sales discount',
+      '03-Deficiency In services',
+      '04-Correction In invoice',
+      '05-Change In POS',
+      '06-Finilization Of Provisional Assessment',
+    ];
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Center(
+          child: Dialog(
+            alignment: AlignmentDirectional.center,
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(0),
+            ),
+            child: Container(
+              constraints: BoxConstraints(
+                // maxHeight: MediaQuery.of(context).size.height / 2,
+                maxWidth: MediaQuery.of(context).size.width / 2,
+              ),
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        height: 50,
+                        color: const Color(0xFF4169E1),
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Text(
+                                'Return Details',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Positioned(
+                              right: 0,
+                              child: IconButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Expanded(
+                              flex: 2,
+                              child: SETopText(
+                                text: 'Orig. Inv No',
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 4,
+                              child: SizedBox(
+                                height: 40,
+                                child: PRTopTextfield(
+                                  controller: originalInvoiceNoController,
+                                  onSaved: (newValue) {},
+                                  padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
+                                  hintText: '',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 2,
+                              child: InkWell(
+                                onTap: () async {
+                                  if (originalInvoiceNoController.text.isEmpty) {
+                                    PanaraConfirmDialog.showAnimatedGrow(
+                                      context,
+                                      title: "BillingSphere",
+                                      message: "Please enter the original invoice number",
+                                      confirmButtonText: "Confirm",
+                                      cancelButtonText: "Cancel",
+                                      onTapCancel: () {
+                                        Navigator.pop(context);
+                                      },
+                                      onTapConfirm: () {
+                                        // pop screen
+                                        Navigator.of(context).pop();
+                                      },
+                                      panaraDialogType: PanaraDialogType.warning,
+                                    );
+                                  } else {
+                                    final Purchase? purchase = await purchaseServices.fetchPurchaseByBillNumber(originalInvoiceNoController.text);
+                                    if (purchase == null) {
+                                      PanaraConfirmDialog.showAnimatedGrow(
+                                        context,
+                                        title: "BillingSphere",
+                                        message: "No purchase found with the given invoice number",
+                                        confirmButtonText: "Confirm",
+                                        cancelButtonText: "Cancel",
+                                        onTapCancel: () {
+                                          Navigator.pop(context);
+                                        },
+                                        onTapConfirm: () {
+                                          // pop screen
+                                          Navigator.of(context).pop();
+                                        },
+                                        panaraDialogType: PanaraDialogType.error,
+                                      );
+                                    } else {
+                                      print('Purchase: $purchase');
+                                      // Set the date
+                                      originalInvoiceDateController.text = purchase.date;
+                                      getDetailsDialog(
+                                        noController: originalInvoiceNoController,
+                                        purchase: purchase,
+                                      );
+                                    }
+                                  }
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFFACD),
+                                    border: Border.all(
+                                      color: const Color(0xFFFFFACD),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  height: 40,
+                                  padding: const EdgeInsets.all(2.0),
+                                  child: Center(
+                                    child: Text(
+                                      'Get Details',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.black,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SETopText(
+                              text: 'Orig. Inv Date',
+                              padding: EdgeInsets.zero,
+                              height: 40,
+                              width: MediaQuery.of(context).size.width * 0.12,
+                            ),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              height: 40,
+                              width: MediaQuery.of(context).size.width * 0.12,
+                              child: PRTopTextfield(
+                                controller: originalInvoiceDateController,
+                                onSaved: (newValue) {},
+                                padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
+                                hintText: '',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SETopText(
+                              text: 'Reason',
+                              padding: EdgeInsets.zero,
+                              height: 40,
+                              width: MediaQuery.of(context).size.width * 0.12,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 4,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                height: 40,
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownMenu<String>(
+                                    requestFocusOnTap: true,
+                                    initialSelection: null,
+                                    enableSearch: true,
+                                    trailingIcon: const SizedBox.shrink(),
+                                    textStyle: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xff000000),
+                                      decoration: TextDecoration.none,
+                                    ),
+                                    menuHeight: 300,
+                                    enableFilter: true,
+                                    width: MediaQuery.of(context).size.width * 0.19,
+                                    selectedTrailingIcon: const SizedBox.shrink(),
+                                    inputDecorationTheme: const InputDecorationTheme(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                                      isDense: true,
+                                      activeIndicatorBorder: BorderSide(
+                                        color: Colors.transparent,
+                                      ),
+                                    ),
+                                    expandedInsets: EdgeInsets.zero,
+                                    onSelected: (String? value) {},
+                                    dropdownMenuEntries: reasons.map<DropdownMenuEntry<String>>((String value) {
+                                      return DropdownMenuEntry<String>(
+                                        value: value,
+                                        label: value,
+                                        style: ButtonStyle(
+                                          textStyle: WidgetStateProperty.all(
+                                            GoogleFonts.poppins(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                _updateWidgetList(selectedEntries);
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFFACD),
+                                  border: Border.all(
+                                    color: const Color(0xFFFFFACD),
+                                    width: 1,
+                                  ),
+                                ),
+                                width: MediaQuery.of(context).size.width * 0.1,
+                                height: 40,
+                                padding: const EdgeInsets.all(2.0),
+                                child: Center(
+                                  child: Text(
+                                    'Save [F4]',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // const Spacer(),
+                            const SizedBox(width: 10),
+                            InkWell(
+                              onTap: () {},
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFFACD),
+                                  border: Border.all(
+                                    color: const Color(0xFFFFFACD),
+                                    width: 1,
+                                  ),
+                                ),
+                                width: MediaQuery.of(context).size.width * 0.1,
+                                height: 40,
+                                padding: const EdgeInsets.all(2.0),
+                                child: Center(
+                                  child: Text(
+                                    'Cancel',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text(
+                          'Recent Transactions [Press F12 for to Select Bill]',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF4B0082),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height / 2.5,
+                            maxWidth: MediaQuery.of(context).size.width / 2.5,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.black,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 10.0),
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Table(
+                                    border: TableBorder.all(width: 1, color: Colors.black),
+                                    columnWidths: const {
+                                      0: FlexColumnWidth(3),
+                                      1: FlexColumnWidth(3),
+                                      2: FlexColumnWidth(3),
+                                      3: FlexColumnWidth(3),
+                                      4: FlexColumnWidth(3),
+                                      5: FlexColumnWidth(3),
+                                      6: FlexColumnWidth(3),
+                                    },
+                                    children: [
+                                      TableRow(
+                                        children: [
+                                          TableCell(
+                                            child: SizedBox(
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(4.0),
+                                                  child: Text(
+                                                    "Voucher",
+                                                    textAlign: TextAlign.end,
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 15,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: const Color(0xff4B0082),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          TableCell(
+                                              child: SizedBox(
+                                            height: 40,
+                                            child: Align(
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                "Date",
+                                                textAlign: TextAlign.center,
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: const Color(0xff4B0082),
+                                                ),
+                                              ),
+                                            ),
+                                          )),
+                                          TableCell(
+                                            child: SizedBox(
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  "Time",
+                                                  textAlign: TextAlign.center,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: const Color(0xff4B0082),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          TableCell(
+                                            child: SizedBox(
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  "No",
+                                                  textAlign: TextAlign.center,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: const Color(0xff4B0082),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          TableCell(
+                                            child: SizedBox(
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: Padding(
+                                                  padding: const EdgeInsets.all(4.0),
+                                                  child: Text(
+                                                    "Amount",
+                                                    textAlign: TextAlign.end,
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 15,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: const Color(0xff4B0082),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      for (var entry in purchase)
+                                        TableRow(
+                                          children: [
+                                            TableCell(
+                                              child: SizedBox(
+                                                height: 40,
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    "Retail Purchase",
+                                                    textAlign: TextAlign.end,
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 15,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            TableCell(
+                                              child: SizedBox(
+                                                height: 40,
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    entry.date,
+                                                    textAlign: TextAlign.center,
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 15,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            TableCell(
+                                              child: SizedBox(
+                                                height: 40,
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    entry.date,
+                                                    textAlign: TextAlign.center,
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 15,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            TableCell(
+                                              child: SizedBox(
+                                                height: 40,
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Text(
+                                                    entry.billNumber,
+                                                    textAlign: TextAlign.center,
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 15,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            TableCell(
+                                              child: SizedBox(
+                                                height: 40,
+                                                child: Align(
+                                                  alignment: Alignment.center,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets.all(4.0),
+                                                    child: Text(
+                                                      entry.totalAmount,
+                                                      textAlign: TextAlign.end,
+                                                      style: GoogleFonts.poppins(
+                                                        fontSize: 15,
+                                                        color: Colors.black,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void showGetItemDialog() async {
+    TextEditingController originalInvoiceNoController = TextEditingController();
+    TextEditingController vchController = TextEditingController();
+
+    FocusNode originalInvoiceFocusNode = FocusNode();
+    FocusNode vchFocusNode = FocusNode();
+
+    List<String> reasons = [
+      'Bill OF SUPPLY',
+      'Credit Note',
+      'Debit Note',
+      'Delivery Challan',
+      'Inward Challan',
+      'Production',
+      'Proforma Invoice',
+      'Purchase Enquiry',
+      'Purchase Order',
+      'Purchase Return',
+      'Retail Purchase',
+      'Sales Order',
+      'Sales Quotation',
+      'Sales Return',
+      'Tax INVOICE',
+      'Tax Purchase',
+    ];
+
+    List<dynamic>? purchase;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Dialog(
+          alignment: AlignmentDirectional.center,
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(0),
+          ),
+          child: Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width / 2.5,
+            ),
+            child: StatefulBuilder(
+              builder: (context, setState) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      height: 50,
+                      color: const Color(0xFF4169E1),
+                      child: Stack(
+                        children: [
+                          Center(
+                            child: Text(
+                              'Import Items From Voucher',
+                              style: GoogleFonts.poppins(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          Positioned(
+                            right: 0,
+                            child: IconButton(
+                              onPressed: () {
+                                Navigator.pop(context);
+                              },
+                              icon: const Icon(
+                                Icons.close,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SETopText(
+                            text: 'From Voucher',
+                            padding: EdgeInsets.zero,
+                            height: 40,
+                            width: MediaQuery.of(context).size.width * 0.12,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            flex: 4,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                border: Border.all(
+                                  color: Colors.black,
+                                ),
+                              ),
+                              height: 40,
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownMenu<String>(
+                                  requestFocusOnTap: true,
+                                  initialSelection: null,
+                                  enableSearch: true,
+                                  trailingIcon: const SizedBox.shrink(),
+                                  textStyle: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xff000000),
+                                    decoration: TextDecoration.none,
+                                  ),
+                                  menuHeight: 300,
+                                  enableFilter: true,
+                                  width: MediaQuery.of(context).size.width * 0.19,
+                                  selectedTrailingIcon: const SizedBox.shrink(),
+                                  inputDecorationTheme: const InputDecorationTheme(
+                                    border: InputBorder.none,
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+                                    isDense: true,
+                                    activeIndicatorBorder: BorderSide(
+                                      color: Colors.transparent,
+                                    ),
+                                  ),
+                                  expandedInsets: EdgeInsets.zero,
+                                  onSelected: (String? value) async {
+                                    List<dynamic>? fetchedData;
+                                    if (value == "Retail Purchase") {
+                                      fetchedData = await purchaseServices.fetchPurchaseByLedger(selectedLedgerName!);
+                                    } else if (value == "Purchase Return") {
+                                      fetchedData = await purchaseReturnService.fetchPurchaseReturnByLedger(selectedLedgerName!);
+                                    }
+
+                                    setState(() {
+                                      purchase = fetchedData;
+                                    });
+                                  },
+                                  dropdownMenuEntries: reasons.map<DropdownMenuEntry<String>>((String value) {
+                                    return DropdownMenuEntry<String>(
+                                      value: value,
+                                      label: value,
+                                      style: ButtonStyle(
+                                        textStyle: WidgetStateProperty.all(
+                                          GoogleFonts.poppins(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.black,
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          SETopText(
+                            text: 'Vch No',
+                            padding: EdgeInsets.zero,
+                            height: 40,
+                            width: MediaQuery.of(context).size.width * 0.12,
+                            onTap: () => vchFocusNode.requestFocus(),
+                          ),
+                          const SizedBox(width: 10),
+                          SizedBox(
+                            height: 40,
+                            width: MediaQuery.of(context).size.width * 0.12,
+                            child: PRTopTextfield(
+                              controller: vchController,
+                              onSaved: (newValue) {},
+                              padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
+                              hintText: '',
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          InkWell(
+                            onTap: () async {
+                              if (vchController.text.isEmpty) {
+                                PanaraConfirmDialog.showAnimatedGrow(
+                                  context,
+                                  title: "BillingSphere",
+                                  message: "From Voucher is Empty",
+                                  confirmButtonText: "Confirm",
+                                  cancelButtonText: "Cancel",
+                                  onTapCancel: () {
+                                    Navigator.pop(context);
+                                  },
+                                  onTapConfirm: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                  panaraDialogType: PanaraDialogType.warning,
+                                );
+                              } else {
+                                var matchingPurchase = purchase?.firstWhere(
+                                  (entry) => entry.billNumber == vchController.text,
+                                );
+
+                                if (matchingPurchase == null) {
+                                  PanaraConfirmDialog.showAnimatedGrow(
+                                    context,
+                                    title: "BillingSphere",
+                                    message: "No purchase found with the given invoice number",
+                                    confirmButtonText: "Confirm",
+                                    cancelButtonText: "Cancel",
+                                    onTapCancel: () {
+                                      Navigator.pop(context);
+                                    },
+                                    onTapConfirm: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    panaraDialogType: PanaraDialogType.error,
+                                  );
+                                } else {
+                                  print(matchingPurchase.entries);
+                                  List<PurchaseEntry> entries = (matchingPurchase.entries as List<dynamic>)
+                                      .map((entry) => PurchaseEntry(
+                                            itemName: entry.itemName,
+                                            qty: entry.qty,
+                                            rate: entry.rate,
+                                            unit: entry.unit,
+                                            amount: entry.amount,
+                                            tax: entry.tax,
+                                            sgst: entry.sgst,
+                                            discount: entry.discount,
+                                            cgst: entry.cgst,
+                                            igst: entry.igst,
+                                            netAmount: entry.netAmount,
+                                            sellingPrice: entry.sellingPrice,
+                                          ))
+                                      .toList();
+
+                                  _updateWidgetList(entries);
+                                }
+                              }
+                              Navigator.pop(context);
+                            },
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFFACD),
+                                border: Border.all(
+                                  color: const Color(0xFFFFFACD),
+                                  width: 1,
+                                ),
+                              ),
+                              width: MediaQuery.of(context).size.width * 0.1,
+                              height: 40,
+                              padding: const EdgeInsets.all(2.0),
+                              child: Center(
+                                child: Text(
+                                  'Import [F4]',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.black,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          // const Spacer(),
+                          const SizedBox(width: 10),
+                          InkWell(
+                            onTap: () {},
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFFFACD),
+                                border: Border.all(
+                                  color: const Color(0xFFFFFACD),
+                                  width: 1,
+                                ),
+                              ),
+                              width: MediaQuery.of(context).size.width * 0.1,
+                              height: 40,
+                              padding: const EdgeInsets.all(2.0),
+                              child: Center(
+                                child: Text(
+                                  'Cancel',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.black,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
+                      child: Container(
+                        constraints: BoxConstraints(
+                          maxHeight: MediaQuery.of(context).size.height / 2.5,
+                          maxWidth: MediaQuery.of(context).size.width / 2.5,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: Colors.black,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 10.0),
+                          child: SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                if (purchase != null)
+                                  Table(
+                                    border: TableBorder.all(width: 1, color: Colors.black),
+                                    columnWidths: const {
+                                      0: FlexColumnWidth(3),
+                                      1: FlexColumnWidth(3),
+                                      2: FlexColumnWidth(3),
+                                      3: FlexColumnWidth(3),
+                                    },
+                                    children: [
+                                      TableRow(
+                                        children: [
+                                          buildTableCell(
+                                            text: "Date",
+                                            isHeader: true,
+                                          ),
+                                          buildTableCell(
+                                            text: "No",
+                                            isHeader: true,
+                                          ),
+                                          buildTableCell(
+                                            text: "Particular",
+                                            isHeader: true,
+                                          ),
+                                          buildTableCell(
+                                            text: "Amount",
+                                            isHeader: true,
+                                          ),
+                                        ],
+                                      ),
+                                      for (var entry in purchase!)
+                                        TableRow(
+                                          children: [
+                                            buildTableCell(
+                                              text: entry.date,
+                                            ),
+                                            buildTableCell(
+                                              text: entry.billNumber,
+                                            ),
+                                            buildTableCell(
+                                              text: purchaseController.partyController.text,
+                                            ),
+                                            buildTableCell(
+                                              text: entry.totalAmount,
+                                            ),
+                                          ],
+                                        ),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget buildTableCell({
+    required String text,
+    Alignment alignment = Alignment.center,
+    TextAlign textAlign = TextAlign.center,
+    bool isHeader = false,
+    EdgeInsets padding = const EdgeInsets.all(4.0),
+  }) {
+    return TableCell(
+      child: SizedBox(
+        height: 40,
+        child: Align(
+          alignment: alignment,
+          child: Padding(
+            padding: padding,
+            child: Text(
+              text,
+              textAlign: textAlign,
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+                color: isHeader ? const Color(0xff4B0082) : Colors.black,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _updateWidgetList(List<PurchaseEntry> selectedEntries) {
+    setState(() {
+      _newWidget.clear();
+      print("Entering....updateWidget");
+
+      for (var i = 0; i < selectedEntries.length; i++) {
+        final entry = selectedEntries[i];
+        print("Add all values");
+
+        _allValues.add({
+          'uniqueKey': entry.itemName,
+          'itemName': entry.itemName,
+          'qty': entry.qty.toString(),
+          'rate': entry.rate.toString(),
+          'unit': entry.unit,
+          'amount': entry.amount.toString(),
+          'tax': entry.tax,
+          'sgst': entry.sgst.toString(),
+          'cgst': entry.cgst.toString(),
+          'igst': entry.igst.toString(),
+          'discount': entry.discount.toString(),
+          'netAmount': entry.netAmount.toString(),
+          'sellingPrice': entry.sellingPrice.toString(),
+        });
+        print("added");
+      }
+
+      for (var i = 0; i < _allValues.length; i++) {
+        final entry = _allValues[i];
+        print(entry);
+
+        for (var key in entry.keys) {
+          print("Key: $key, Value: ${entry[key]}, Type: ${entry[key].runtimeType}");
+        }
+
+        final itemNameController = TextEditingController(text: entry['itemName']);
+        final searchController = TextEditingController(text: itemsList.firstWhere((element) => element.id == entry['itemName']).itemName);
+        final qtyController = TextEditingController(text: entry['qty']);
+        final rateController = TextEditingController(text: entry['rate']);
+        final unitController = TextEditingController(text: entry['unit']);
+        final amountController = TextEditingController(text: entry['amount']);
+        final taxController = TextEditingController(text: entry['tax']);
+        final sgstController = TextEditingController(text: entry['sgst']);
+        final cgstController = TextEditingController(text: entry['cgst']);
+        final igstController = TextEditingController(text: entry['igst']);
+        final netAmountController = TextEditingController(text: entry['netAmount']);
+        final discountController = TextEditingController(text: entry['discount']);
+        final sellingPriceController = TextEditingController(text: entry['sellingPrice']);
+        print("new.......");
+        _newWidget.add(
+          PurchaseReturnEditTable(
+            key: ValueKey(entry['uniqueKey']),
+            entryId: entry['uniqueKey'],
+            serialNo: i + 1,
+            itemNameControllerP: itemNameController,
+            qtyControllerP: qtyController,
+            rateControllerP: rateController,
+            unitControllerP: unitController,
+            amountControllerP: amountController,
+            taxControllerP: taxController,
+            sgstControllerP: sgstController,
+            cgstControllerP: cgstController,
+            igstControllerP: igstController,
+            netAmountControllerP: netAmountController,
+            discountControllerP: discountController,
+            sellingPriceControllerP: sellingPriceController,
+            searchControllers: searchController,
+            onSaveValues: saveValues,
+            onDelete: (p0) {},
+            itemsList: itemsList,
+            measurement: measurement,
+            taxLists: taxLists,
+          ),
+        );
+      }
+      clearAllControllers();
+
+      while (_newWidget.length < 5) {
+        final entryId = UniqueKey().toString();
+
+        final searchController = TextEditingController();
+
+        _newWidget.add(
+          PurchaseReturnEditTable(
+            key: ValueKey(entryId),
+            entryId: entryId,
+            serialNo: _newWidget.length + 1,
+            itemNameControllerP: purchaseController.itemNameController,
+            qtyControllerP: purchaseController.qtyController,
+            rateControllerP: purchaseController.rateController,
+            unitControllerP: purchaseController.unitController,
+            amountControllerP: purchaseController.amountController,
+            taxControllerP: purchaseController.taxController,
+            sgstControllerP: purchaseController.sgstController,
+            cgstControllerP: purchaseController.cgstController,
+            igstControllerP: purchaseController.igstController,
+            netAmountControllerP: purchaseController.netAmountController,
+            discountControllerP: purchaseController.discountController,
+            sellingPriceControllerP: purchaseController.sellingPriceController,
+            searchControllers: searchController,
+            onSaveValues: saveValues,
+            onDelete: (String entryId) {
+              setState(() {
+                _newWidget.removeWhere((widget) => widget.key == ValueKey(entryId));
+                Map<String, dynamic>? entryToRemove;
+                for (final entry in _allValues) {
+                  if (entry['uniqueKey'] == entryId) {
+                    entryToRemove = entry;
+                    break;
+                  }
+                }
+                if (entryToRemove != null) {
+                  _allValues.remove(entryToRemove);
+                }
+                calculateTotal();
+              });
+            },
+            itemsList: itemsList,
+            measurement: measurement,
+            taxLists: taxLists,
+          ),
+        );
+      }
+
+      selectedEntries.clear();
+    });
+
+    print("Done updating widget list");
+  }
+
+  void clearAllControllers() {
+    purchaseController.itemNameController.clear();
+    purchaseController.qtyController.clear();
+    purchaseController.rateController.clear();
+    purchaseController.unitController.clear();
+    purchaseController.amountController.clear();
+    purchaseController.taxController.clear();
+    purchaseController.sgstController.clear();
+    purchaseController.cgstController.clear();
+    purchaseController.igstController.clear();
+    purchaseController.netAmountController.clear();
+    purchaseController.discountController.clear();
+    purchaseController.sellingPriceController.clear();
   }
 }
 

@@ -25,7 +25,6 @@ class SalesEntry {
   SalesEntry({
     required this.id,
     required this.companyCode,
-    required this.dispatch,
     required this.no,
     required this.date,
     required this.type,
@@ -39,46 +38,52 @@ class SalesEntry {
     required this.roundoffDiff,
     required this.entries,
     required this.sundry,
+    required this.dispatch,
     required this.multimode,
     required this.moredetails,
     required this.remark,
   });
 
-  factory SalesEntry.fromJson(Map<String, dynamic> json) {
+  factory SalesEntry.fromMap(Map<String, dynamic> map) {
     return SalesEntry(
-      companyCode: json['companyCode'],
-      id: json['_id'],
-      no: json['no'],
-      date: json['date'],
-      type: json['type'],
-      party: json['party'],
-      place: json['place'],
-      dcNo: json['dcNo'],
-      date2: json['date'],
-      totalamount: json['totalamount'],
-      dueAmount: json['dueAmount'],
-      cashAmount: json['cashAmount'],
-      roundoffDiff: json['roundoffDiff'],
-      entries: (json['entries'] as List<dynamic>)
-          .map((entryJson) => Entry.fromJson(entryJson))
-          .toList(),
-      sundry: (json['sundry'] as List<dynamic>)
-          .map((sundryJson) => Sundry2.fromJson(sundryJson))
-          .toList(),
-      dispatch: (json['dispatch'] as List<dynamic>)
-          .map((dispatchJson) => Dispatch.fromMap(dispatchJson))
-          .toList(),
-      multimode: (json['multimode'] as List<dynamic>)
-          .map((multimodeJson) => Multimode.fromMap(multimodeJson))
-          .toList(),
-      moredetails: (json['moredetails'] as List<dynamic>)
-          .map((moredetailsJson) => MoreDetails.fromMap(moredetailsJson))
-          .toList(),
-      remark: json['remark'],
+      id: map['_id'] as String,
+      companyCode: map['companyCode'] as String,
+      no: map['no'] as int,
+      date: map['date'] as String,
+      type: map['type'] as String,
+      party: map['party'] as String,
+      place: map['place'] as String,
+      dcNo: map['dcNo'] as String,
+      date2: map['date2'] as String,
+      totalamount: map['totalamount'] as String,
+      dueAmount: map['dueAmount'] as String,
+      cashAmount: map['cashAmount'] as String,
+      roundoffDiff: map['roundoffDiff'] as double,
+      entries: List<Entry>.from(
+        (map['entries'] as List<dynamic>).map<Entry>(
+            (entry) => Entry.fromMap(entry as Map<String, dynamic>)),
+      ),
+      sundry: List<Sundry2>.from(
+        (map['sundry'] as List<dynamic>).map<Sundry2>(
+            (sundry) => Sundry2.fromMap(sundry as Map<String, dynamic>)),
+      ),
+      dispatch: List<Dispatch>.from(
+        (map['dispatch'] as List<dynamic>).map<Dispatch>(
+            (dispatch) => Dispatch.fromMap(dispatch as Map<String, dynamic>)),
+      ),
+      multimode: List<Multimode>.from(
+        (map['multimode'] as List<dynamic>).map<Multimode>(
+            (multi) => Multimode.fromMap(multi as Map<String, dynamic>)),
+      ),
+      moredetails: List<MoreDetails>.from(
+        (map['moredetails'] as List<dynamic>).map<MoreDetails>(
+            (details) => MoreDetails.fromMap(details as Map<String, dynamic>)),
+      ),
+      remark: map['remark'] as String,
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
       'id': id,
       'companyCode': companyCode,
@@ -93,47 +98,13 @@ class SalesEntry {
       'dueAmount': dueAmount,
       'cashAmount': cashAmount,
       'roundoffDiff': roundoffDiff,
-      'entries': entries.map((entry) => entry.toJson()).toList(),
-      'sundry': sundry.map((sundry) => sundry.toJson()).toList(),
+      'entries': entries.map((entry) => entry.toMap()).toList(),
+      'sundry': sundry.map((sundry) => sundry.toMap()).toList(),
       'dispatch': dispatch.map((dispatch) => dispatch.toMap()).toList(),
-      'multimode': multimode.map((multimode) => multimode.toMap()).toList(),
-      'moredetails': moredetails.map((multimode) => multimode.toMap()).toList(),
+      'multimode': multimode.map((multi) => multi.toMap()).toList(),
+      'moredetails': moredetails.map((details) => details.toMap()).toList(),
       'remark': remark,
     };
-  }
-
-  factory SalesEntry.fromMap(Map<String, dynamic> map) {
-    return SalesEntry(
-      dispatch: (map['dispatch'] as List<dynamic>)
-          .map((dispatchJson) => Dispatch.fromMap(dispatchJson))
-          .toList(),
-      multimode: (map['multimode'] as List<dynamic>)
-          .map((multimodeJson) => Multimode.fromMap(multimodeJson))
-          .toList(),
-      moredetails: (map['moredetails'] as List<dynamic>)
-          .map((moredetailsJson) => MoreDetails.fromMap(moredetailsJson))
-          .toList(),
-      id: map['_id'] as String,
-      companyCode: map['companyCode'] as String,
-      no: map['no'] as int,
-      date: map['date'] as String,
-      type: map['type'] as String,
-      party: map['party'] as String,
-      place: map['place'] as String,
-      dcNo: map['dcNo'] as String,
-      date2: map['date2'] as String,
-      totalamount: map['totalamount'] as String,
-      dueAmount: map['dueAmount'] as String,
-      cashAmount: map['cashAmount'] as String,
-      roundoffDiff: map['roundoffDiff'] as double,
-      entries: (map['entries'] as List<dynamic>)
-          .map((entryJson) => Entry.fromJson(entryJson))
-          .toList(),
-      sundry: (map['sundry'] as List<dynamic>)
-          .map((sundryJson) => Sundry2.fromJson(sundryJson))
-          .toList(),
-      remark: map['remark'] as String,
-    );
   }
 }
 
@@ -170,44 +141,26 @@ class Entry {
     required this.netAmount,
   });
 
-  factory Entry.fromJson(Map<String, dynamic> json) {
+  factory Entry.fromMap(Map<String, dynamic> map) {
     return Entry(
-      itemName: json['itemName'],
-      additionalInfo: json['additionalInfo'],
-      qty: json['qty'],
-      rate: json['rate'],
-      baseRate: json['baseRate'],
-      unit: json['unit'],
-      amount: json['amount'],
-      tax: json['tax'],
-      discount: json['discount'],
-      originaldiscount: json['originaldiscount'],
-      sgst: json['sgst'],
-      cgst: json['cgst'],
-      igst: json['igst'],
-      netAmount: json['netAmount'],
+      itemName: map['itemName'],
+      additionalInfo: map['additionalInfo'],
+      qty: map['qty'],
+      rate: map['rate'],
+      baseRate: map['baseRate'],
+      unit: map['unit'],
+      amount: map['amount'],
+      tax: map['tax'],
+      discount: map['discount'],
+      originaldiscount: map['originaldiscount'],
+      sgst: map['sgst'],
+      cgst: map['cgst'],
+      igst: map['igst'],
+      netAmount: map['netAmount'],
     );
   }
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'itemName': itemName,
-      'additionalInfo': additionalInfo,
-      'qty': qty,
-      'rate': rate,
-      'baseRate': baseRate,
-      'unit': unit,
-      'amount': amount,
-      'tax': tax,
-      'discount': discount,
-      'originaldiscount': originaldiscount,
-      'sgst': sgst,
-      'cgst': cgst,
-      'igst': igst,
-      'netAmount': netAmount,
-    };
-  }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
       'itemName': itemName,
       'additionalInfo': additionalInfo,
@@ -236,21 +189,14 @@ class Sundry2 {
     required this.amount,
   });
 
-  Map<String, dynamic> toMap() {
-    return <String, dynamic>{
-      'sundryName': sundryName,
-      'amount': amount,
-    };
-  }
-
-  factory Sundry2.fromJson(Map<String, dynamic> json) {
+  factory Sundry2.fromMap(Map<String, dynamic> map) {
     return Sundry2(
-      sundryName: json['sundryName'],
-      amount: json['amount'],
+      sundryName: map['sundryName'],
+      amount: map['amount'],
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toMap() {
     return {
       'sundryName': sundryName,
       'amount': amount,

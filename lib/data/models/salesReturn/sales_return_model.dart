@@ -11,7 +11,7 @@ class SalesReturn {
   final String? remarks;
   final String totalAmount;
   final String? cashAmount;
-  final List<SalesEntry> entries;
+  final List<SalesEntries> entries;
   final List<Billwise> billwise;
   final List<Sundry> sundry;
 
@@ -48,7 +48,7 @@ class SalesReturn {
       totalAmount: json['totalAmount'],
       cashAmount: json['cashAmount'],
       entries: (json['entries'] as List)
-          .map((entry) => SalesEntry.fromJson(entry))
+          .map((entry) => SalesEntries.fromJson(entry))
           .toList(),
       billwise:
           (json['billwise'] as List).map((b) => Billwise.fromJson(b)).toList(),
@@ -76,7 +76,7 @@ class SalesReturn {
   }
 }
 
-class SalesEntry {
+class SalesEntries {
   final String itemName;
   final int qty;
   final double rate;
@@ -90,7 +90,7 @@ class SalesEntry {
   final double netAmount;
   final double sellingPrice;
 
-  SalesEntry({
+  SalesEntries({
     required this.itemName,
     required this.qty,
     required this.rate,
@@ -105,8 +105,8 @@ class SalesEntry {
     required this.sellingPrice,
   });
 
-  factory SalesEntry.fromJson(Map<String, dynamic> json) {
-    return SalesEntry(
+  factory SalesEntries.fromJson(Map<String, dynamic> json) {
+    return SalesEntries(
       itemName: json['itemName'],
       qty: json['qty'],
       rate: json['rate'],

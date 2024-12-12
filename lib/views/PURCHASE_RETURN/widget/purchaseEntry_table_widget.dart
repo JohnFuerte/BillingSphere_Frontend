@@ -1,3 +1,4 @@
+import 'package:billingsphere/auth/providers/itemSearch_provider.dart';
 import 'package:billingsphere/data/repository/item_repository.dart';
 import 'package:billingsphere/data/repository/measurement_limit_repository.dart';
 import 'package:billingsphere/data/repository/tax_category_repository.dart';
@@ -147,8 +148,7 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
   @override
   Widget build(BuildContext context) {
     Screen s = Screen(context);
-    final itemProvider =
-        Provider.of<OnChangeItenProvider>(context, listen: false);
+    final itemProvider = Provider.of<OnChangeItenProvider>(context, listen: false);
     return Form(
       key: formKey,
       child: Padding(
@@ -160,9 +160,7 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
               children: [
                 Container(
                   height: 40,
-                  width: s.width < 1000
-                      ? 50
-                      : MediaQuery.of(context).size.width * 0.023,
+                  width: s.width < 1000 ? 50 : MediaQuery.of(context).size.width * 0.023,
                   decoration: const BoxDecoration(
                     border: Border(
                       bottom: BorderSide(),
@@ -184,23 +182,15 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                 ),
                 Container(
                   height: 40,
-                  width: s.width < 1000
-                      ? 200
-                      : MediaQuery.of(context).size.width * 0.20,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  width: s.width < 1000 ? 200 : MediaQuery.of(context).size.width * 0.20,
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: DropdownButtonHideUnderline(
                     child: DropdownMenu<Item>(
                       requestFocusOnTap: true,
-                      initialSelection: widget.item.isEmpty ||
-                              widget.itemNameControllerP.text.isEmpty
+                      initialSelection: widget.item.isEmpty || widget.itemNameControllerP.text.isEmpty
                           ? null
                           : widget.item.firstWhere(
-                              (element) =>
-                                  element.id == widget.itemNameControllerP.text,
+                              (element) => element.id == widget.itemNameControllerP.text,
                             ),
                       enableSearch: true,
                       trailingIcon: const SizedBox.shrink(),
@@ -212,10 +202,8 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                       ),
                       menuHeight: 300,
                       enableFilter: true,
-                      filterCallback: (List<DropdownMenuEntry<Item>> entries,
-                          String filter) {
-                        final String trimmedFilter =
-                            filter.trim().toLowerCase();
+                      filterCallback: (List<DropdownMenuEntry<Item>> entries, String filter) {
+                        final String trimmedFilter = filter.trim().toLowerCase();
 
                         if (trimmedFilter.isEmpty) {
                           return entries;
@@ -223,17 +211,14 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
 
                         // Filter the entries based on the query
                         return entries.where((entry) {
-                          return entry.value.itemName
-                              .toLowerCase()
-                              .contains(trimmedFilter);
+                          return entry.value.itemName.toLowerCase().contains(trimmedFilter);
                         }).toList();
                       },
                       width: MediaQuery.of(context).size.width * 0.19,
                       selectedTrailingIcon: const SizedBox.shrink(),
                       inputDecorationTheme: const InputDecorationTheme(
                         border: InputBorder.none,
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                         isDense: true,
                         activeIndicatorBorder: BorderSide(
                           color: Colors.transparent,
@@ -246,8 +231,7 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                           selectedmeasurementId = value.id;
 
                           itemNameController.text = selectedItemId!;
-                          widget.itemNameControllerP.text =
-                              itemNameController.text;
+                          widget.itemNameControllerP.text = itemNameController.text;
                           igstController.text = '0.00';
                           discountController.text = '0.00';
 
@@ -269,20 +253,16 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                           for (TaxRate tax in widget.taxCategory) {
                             if (tax.id == newId) {
                               setState(() {
-                                taxController.text =
-                                    items.isNotEmpty ? tax.rate : '0';
+                                taxController.text = items.isNotEmpty ? tax.rate : '0';
                                 widget.taxControllerP.text = taxController.text;
                               });
                             }
                           }
-                          for (MeasurementLimit meu
-                              in widget.measurementLimit) {
+                          for (MeasurementLimit meu in widget.measurementLimit) {
                             if (meu.id == newId2) {
                               setState(() {
-                                unitController.text =
-                                    items.isNotEmpty ? meu.measurement : '0';
-                                widget.unitControllerP.text =
-                                    unitController.text;
+                                unitController.text = items.isNotEmpty ? meu.measurement : '0';
+                                widget.unitControllerP.text = unitController.text;
                               });
                             }
                           }
@@ -290,8 +270,7 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                           itemProvider.updateItemID(selectedItemId!);
                         });
                       },
-                      dropdownMenuEntries: widget.item
-                          .map<DropdownMenuEntry<Item>>((Item value) {
+                      dropdownMenuEntries: widget.item.map<DropdownMenuEntry<Item>>((Item value) {
                         return DropdownMenuEntry<Item>(
                           value: value,
                           label: value.itemName,
@@ -319,14 +298,8 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                 ),
                 Container(
                   height: 40,
-                  width: s.width < 1000
-                      ? 70
-                      : MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  width: s.width < 1000 ? 70 : MediaQuery.of(context).size.width * 0.061,
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     controller: qtyController,
                     validator: (value) {
@@ -344,22 +317,18 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                       setState(() {
                         discountController.text = '0.00';
 
-                        int amount = (int.tryParse(rateController.text) ?? 0) *
-                            int.parse(value);
+                        int amount = (int.tryParse(rateController.text) ?? 0) * int.parse(value);
 
                         amountController.text = amount.toString();
 
-                        double amountValue =
-                            double.tryParse(amountController.text) ?? 0.0;
-                        double taxValue =
-                            double.tryParse(taxController.text) ?? 0.0;
+                        double amountValue = double.tryParse(amountController.text) ?? 0.0;
+                        double taxValue = double.tryParse(taxController.text) ?? 0.0;
 
                         if (taxValue != 0) {
                           double gsts = (amountValue * taxValue) / 100;
                           sgstController.text = (gsts / 2).toString();
                           cgstController.text = (gsts / 2).toString();
-                          netAmountController.text =
-                              (amountValue + gsts).toString();
+                          netAmountController.text = (amountValue + gsts).toString();
                         } else {
                           // Handle division by zero scenario
                           sgstController.text = '0';
@@ -369,10 +338,8 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                         // Update persistent controllers if needed
                         widget.sgstControllerP.text = sgstController.text;
                         widget.cgstControllerP.text = cgstController.text;
-                        widget.netAmountControllerP.text =
-                            netAmountController.text;
-                        persistentTotal =
-                            double.tryParse(netAmountController.text) ?? 0.0;
+                        widget.netAmountControllerP.text = netAmountController.text;
+                        persistentTotal = double.tryParse(netAmountController.text) ?? 0.0;
                         widget.qtyControllerP.text = qtyController.text;
 
                         _saveValues();
@@ -384,21 +351,14 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                     ),
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
+                    inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                   ),
                 ),
                 Container(
                   height: 40,
-                  width: s.width < 1000
-                      ? 70
-                      : MediaQuery.of(context).size.width * 0.061,
+                  width: s.width < 1000 ? 70 : MediaQuery.of(context).size.width * 0.061,
                   decoration: const BoxDecoration(
-                    border: Border(
-                        bottom: BorderSide(),
-                        top: BorderSide(),
-                        left: BorderSide()),
+                    border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide()),
                   ),
                   child: TextFormField(
                     cursorHeight: 18,
@@ -419,22 +379,14 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                     ),
-                    inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.digitsOnly
-                    ],
+                    inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                     readOnly: true,
                   ),
                 ),
                 Container(
                   height: 40,
-                  width: s.width < 1000
-                      ? 100
-                      : MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  width: s.width < 1000 ? 100 : MediaQuery.of(context).size.width * 0.061,
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     // itemRate.toString(),
                     cursorHeight: 18,
@@ -469,15 +421,12 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
 
                         sgstController.text = (gsts / 2).toStringAsFixed(2);
                         cgstController.text = (gsts / 2).toStringAsFixed(2);
-                        netAmountController.text =
-                            (amount + gsts).toStringAsFixed(2);
+                        netAmountController.text = (amount + gsts).toStringAsFixed(2);
 
                         widget.sgstControllerP.text = sgstController.text;
                         widget.cgstControllerP.text = cgstController.text;
-                        widget.netAmountControllerP.text =
-                            netAmountController.text;
-                        persistentTotal =
-                            double.parse(netAmountController.text);
+                        widget.netAmountControllerP.text = netAmountController.text;
+                        persistentTotal = double.parse(netAmountController.text);
                         originalNetAmount = persistentTotal;
 
                         widget.qtyControllerP.text = qtyController.text;
@@ -495,14 +444,8 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                 ),
                 Container(
                   height: 40,
-                  width: s.width < 1000
-                      ? 180
-                      : MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  width: s.width < 1000 ? 180 : MediaQuery.of(context).size.width * 0.061,
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -525,14 +468,8 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                 ),
                 Container(
                   height: 40,
-                  width: s.width < 1000
-                      ? 70
-                      : MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  width: s.width < 1000 ? 70 : MediaQuery.of(context).size.width * 0.061,
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -547,8 +484,7 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                       double qty = double.tryParse(qtyController.text) ?? 0;
                       double rate = double.tryParse(rateController.text) ?? 0;
 
-                      double discount =
-                          double.tryParse(discountController.text) ?? 0;
+                      double discount = double.tryParse(discountController.text) ?? 0;
                       double taxRate = double.tryParse(taxController.text) ?? 0;
                       double amount = qty * rate;
                       double taxableAmount = amount - discount;
@@ -577,14 +513,8 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                 ),
                 Container(
                   height: 40,
-                  width: s.width < 1000
-                      ? 70
-                      : MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  width: s.width < 1000 ? 70 : MediaQuery.of(context).size.width * 0.061,
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -610,14 +540,8 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                 ),
                 Container(
                   height: 40,
-                  width: s.width < 1000
-                      ? 70
-                      : MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  width: s.width < 1000 ? 70 : MediaQuery.of(context).size.width * 0.061,
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -639,14 +563,8 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                 ),
                 Container(
                   height: 40,
-                  width: s.width < 1000
-                      ? 70
-                      : MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  width: s.width < 1000 ? 70 : MediaQuery.of(context).size.width * 0.061,
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -668,14 +586,8 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                 ),
                 Container(
                   height: 40,
-                  width: s.width < 1000
-                      ? 70
-                      : MediaQuery.of(context).size.width * 0.061,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          top: BorderSide(),
-                          left: BorderSide())),
+                  width: s.width < 1000 ? 70 : MediaQuery.of(context).size.width * 0.061,
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -696,22 +608,14 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                       fontWeight: FontWeight.bold,
                     ),
                     inputFormatters: <TextInputFormatter>[
-                      FilteringTextInputFormatter.allow(RegExp(
-                          r'^\d*\.?\d*$')), // Allow digits and a single decimal point
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')), // Allow digits and a single decimal point
                     ],
                   ),
                 ),
                 Container(
                   height: 40,
-                  width: s.width < 1000
-                      ? 160
-                      : MediaQuery.of(context).size.width * 0.055,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          left: BorderSide(),
-                          top: BorderSide(),
-                          right: BorderSide())),
+                  width: s.width < 1000 ? 160 : MediaQuery.of(context).size.width * 0.055,
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), left: BorderSide(), top: BorderSide(), right: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -733,15 +637,8 @@ class _PurchaseReturnTableState extends State<PurchaseReturnTable> {
                 ),
                 Container(
                   height: 40,
-                  width: s.width < 1000
-                      ? 160
-                      : MediaQuery.of(context).size.width * 0.055,
-                  decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(),
-                          left: BorderSide(color: Colors.transparent),
-                          top: BorderSide(),
-                          right: BorderSide())),
+                  width: s.width < 1000 ? 160 : MediaQuery.of(context).size.width * 0.055,
+                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), left: BorderSide(color: Colors.transparent), top: BorderSide(), right: BorderSide())),
                   child: TextFormField(
                     cursorHeight: 18,
                     decoration: const InputDecoration(
@@ -792,9 +689,10 @@ class PurchaseReturnEditTable extends StatefulWidget {
     required this.onSaveValues,
     required this.onDelete,
     required this.serialNo,
-    this.itemsList,
-    this.taxLists,
-    this.measurement,
+    required this.itemsList,
+    required this.taxLists,
+    required this.measurement,
+    this.searchControllers,
   });
 
   final TextEditingController itemNameControllerP;
@@ -813,13 +711,13 @@ class PurchaseReturnEditTable extends StatefulWidget {
   final Function(String) onDelete;
   final String entryId;
   final int serialNo;
-  final List<Item>? itemsList;
-  final List<MeasurementLimit>? measurement;
-  final List<TaxRate>? taxLists;
+  final List<Item> itemsList;
+  final List<MeasurementLimit> measurement;
+  final List<TaxRate> taxLists;
+  final TextEditingController? searchControllers;
 
   @override
-  State<PurchaseReturnEditTable> createState() =>
-      _PurchaseReturnEditTableState();
+  State<PurchaseReturnEditTable> createState() => _PurchaseReturnEditTableState();
 }
 
 class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
@@ -900,7 +798,17 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
       discountController.text = widget.discountControllerP.text;
     });
 
-    print('unitController: ${widget.unitControllerP.text}');
+    context.read<ItemSearchProvider>().itemsListInitial = widget.itemsList;
+
+    if (widget.searchControllers != null) {
+      final searchController = widget.searchControllers!;
+      searchController.addListener(() {
+        final searchQuery = searchController.text.trim();
+        context.read<ItemSearchProvider>().fetchItemsWithSearch(searchQuery);
+      });
+    } else {
+      print("Search Controller is Null");
+    }
   }
 
   @override
@@ -930,6 +838,8 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
   @override
   Widget build(BuildContext context) {
     Screen s = Screen(context);
+    final itemProvider = Provider.of<OnChangeItenProvider>(context, listen: false);
+
     return Column(
       children: [
         Row(
@@ -937,14 +847,8 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
           children: [
             Container(
               height: 40,
-              width: s.width < 1000
-                  ? 50
-                  : MediaQuery.of(context).size.width * 0.023,
-              decoration: const BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(),
-                      top: BorderSide(),
-                      left: BorderSide())),
+              width: s.width < 1000 ? 50 : MediaQuery.of(context).size.width * 0.023,
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
               child: Align(
                 alignment: Alignment.center,
                 child: Text(
@@ -959,156 +863,186 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
             ),
             Container(
               height: 40,
-              width: s.width < 1000
-                  ? 200
-                  : MediaQuery.of(context).size.width * 0.19,
-              decoration: const BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(),
-                      top: BorderSide(),
-                      left: BorderSide())),
-              child: DropdownButtonHideUnderline(
-                child: DropdownMenu<Item>(
-                  requestFocusOnTap: true,
-                  initialSelection: itemNameController.text.isNotEmpty &&
-                          widget.itemsList!.isNotEmpty
-                      ? widget.itemsList!.firstWhere(
-                          (element) => element.id == itemNameController.text,
-                          orElse: () => widget.itemsList!.first)
-                      : null,
-                  enableSearch: true,
-                  enableFilter: true,
-                  searchCallback:
-                      (List<DropdownMenuEntry<Item>> entries, String query) {
-                    if (query.isEmpty) {
-                      return null;
-                    }
+              width: s.width < 1000 ? 200 : MediaQuery.of(context).size.width * 0.19,
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
+              child: Consumer<ItemSearchProvider>(
+                builder: (context, itemSearchProvider, child) {
+                  // final itemSearchList =
+                  //     itemSearchProvider.itemsListInitial;
+                  // TextEditingController? searchController =
+                  //     (widget.searchControllers != null &&
+                  //             widget.serialNumber <
+                  //                 widget.searchControllers!.length)
+                  //         ? widget.searchControllers![widget.serialNumber]
+                  //         : null;
+                  final itemSearchList = itemSearchProvider.itemsListInitial;
+                  final TextEditingController? searchController = widget.searchControllers;
+                  return DropdownButtonHideUnderline(
+                    child: DropdownMenu<Item>(
+                      controller: searchController,
+                      requestFocusOnTap: true,
+                      // initialSelection: widget.item.isEmpty || widget.itemNameControllerP.text.isEmpty
+                      //     ? null
+                      //     : widget.item.firstWhere(
+                      //         (element) => element.id == widget.itemNameControllerP.text,
+                      //       ),
+                      enableSearch: true,
+                      trailingIcon: const SizedBox.shrink(),
+                      textStyle: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xff000000),
+                        decoration: TextDecoration.none,
+                      ),
+                      menuHeight: 300,
+                      enableFilter: true,
+                      filterCallback: (List<DropdownMenuEntry<Item>> entries, String filter) {
+                        final String trimmedFilter = filter.trim().toLowerCase();
 
-                    final int index =
-                        entries.indexWhere((DropdownMenuEntry<Item> entry) {
-                      return entry.label.toLowerCase() == query.toLowerCase();
-                    });
-
-                    return index != -1 ? index : null;
-                  },
-                  filterCallback:
-                      (List<DropdownMenuEntry<Item>> entries, String filter) {
-                    final String trimmedFilter = filter.trim().toLowerCase();
-
-                    if (trimmedFilter.isEmpty) {
-                      return entries;
-                    }
-
-                    // Filter the entries based on the query
-                    return entries.where((entry) {
-                      return entry.value.itemName
-                          .toLowerCase()
-                          .contains(trimmedFilter);
-                    }).toList();
-                  },
-                  trailingIcon: const SizedBox.shrink(),
-                  textStyle: GoogleFonts.poppins(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: const Color(0xff000000),
-                    decoration: TextDecoration.none,
-                  ),
-                  menuHeight: 300,
-                  width: MediaQuery.of(context).size.width * 0.19,
-                  selectedTrailingIcon: const SizedBox.shrink(),
-                  inputDecorationTheme: const InputDecorationTheme(
-                    border: InputBorder.none,
-                    contentPadding:
-                        EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                    isDense: true,
-                    activeIndicatorBorder: BorderSide(
-                      color: Colors.transparent,
-                    ),
-                  ),
-                  expandedInsets: EdgeInsets.zero,
-                  onSelected: (Item? newValue) {
-                    setState(() {
-                      selectedItemId = newValue!.id;
-                      selectedmeasurementId = newValue.id;
-
-                      setState(() {
-                        itemNameController.text = selectedItemId!;
-                        widget.itemNameControllerP.text =
-                            itemNameController.text;
-                      });
-
-                      String newId = '';
-                      String newId2 = '';
-
-                      for (Item item in widget.itemsList!) {
-                        if (item.id == selectedItemId) {
-                          newId = item.taxCategory;
+                        if (trimmedFilter.isEmpty) {
+                          return entries;
                         }
-                      }
 
-                      for (Item item in widget.itemsList!) {
-                        if (item.id == selectedmeasurementId) {
-                          newId2 = item.measurementUnit;
-                        }
-                      }
+                        final filteredEntries = entries.where((entry) {
+                          return entry.value.itemName.toLowerCase().contains(trimmedFilter);
+                        }).toList();
 
-                      for (TaxRate tax in widget.taxLists!) {
-                        if (tax.id == newId) {
-                          setState(() {
-                            taxController.text =
-                                items.isNotEmpty ? tax.rate : '0';
-                            widget.taxControllerP.text = taxController.text;
-                          });
+                        if (filteredEntries.isEmpty) {
+                          final noEntryFoundItem = Item(
+                            openingBalance: [],
+                            openingBalanceAmt: 0,
+                            openingBalanceQty: 0,
+                            id: "-1",
+                            itemGroup: "No Entry",
+                            itemBrand: "No Entry",
+                            itemName: "No Entry",
+                            printName: "No Entry",
+                            codeNo: "No Entry",
+                            barcode: "No Entry",
+                            taxCategory: "No Entry",
+                            hsnCode: "No Entry",
+                            storeLocation: "No Entry",
+                            measurementUnit: "No Entry",
+                            secondaryUnit: "No Entry",
+                            minimumStock: 0,
+                            maximumStock: 0,
+                            monthlySalesQty: 0,
+                            date: "No Entry",
+                            dealer: 0,
+                            subDealer: 0,
+                            retail: 0,
+                            mrp: 0,
+                            openingStock: "No Entry",
+                            status: "No Entry",
+                            price: 0,
+                          );
+                          return [
+                            DropdownMenuEntry<Item>(
+                                value: noEntryFoundItem,
+                                label: "",
+                                enabled: false,
+                                labelWidget: const Center(
+                                    child: Padding(
+                                  padding: EdgeInsets.all(8.0),
+                                  child: CircularProgressIndicator(),
+                                )))
+                          ];
                         }
-                      }
-                      for (MeasurementLimit meu in widget.measurement!) {
-                        if (meu.id == newId2) {
-                          setState(() {
-                            unitController.text =
-                                items.isNotEmpty ? meu.measurement : '0';
-                            widget.unitControllerP.text = unitController.text;
-                          });
-                        }
-                      }
-                    });
-                  },
-                  dropdownMenuEntries: widget.itemsList!
-                      .map<DropdownMenuEntry<Item>>((Item value) {
-                    return DropdownMenuEntry<Item>(
-                      value: value,
-                      label: value.itemName,
-                      trailingIcon: Text(
-                        'Qty: ${value.maximumStock}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
+
+                        return filteredEntries;
+                      },
+                      width: MediaQuery.of(context).size.width * 0.19,
+                      selectedTrailingIcon: const SizedBox.shrink(),
+                      inputDecorationTheme: const InputDecorationTheme(
+                        border: InputBorder.none,
+                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                        isDense: true,
+                        activeIndicatorBorder: BorderSide(
+                          color: Colors.transparent,
                         ),
                       ),
-                      style: ButtonStyle(
-                        textStyle: WidgetStateProperty.all(
-                          GoogleFonts.poppins(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black,
+                      expandedInsets: EdgeInsets.zero,
+                      onSelected: (Item? value) {
+                        setState(() {
+                          selectedItemId = value!.id;
+                          selectedmeasurementId = value.id;
+
+                          itemNameController.text = selectedItemId!;
+                          widget.itemNameControllerP.text = itemNameController.text;
+                          igstController.text = '0.00';
+                          discountController.text = '0.00';
+
+                          String newId = '';
+                          String newId2 = '';
+
+                          for (Item item in itemSearchList) {
+                            if (item.id == selectedItemId) {
+                              newId = item.taxCategory;
+                            }
+                          }
+
+                          for (Item item in itemSearchList) {
+                            if (item.id == selectedmeasurementId) {
+                              newId2 = item.measurementUnit;
+                            }
+                          }
+
+                          for (TaxRate tax in widget.taxLists) {
+                            print("These is Inside Tax Category..........................");
+                            if (tax.id == newId) {
+                              setState(() {
+                                taxController.text = itemSearchList.isNotEmpty ? tax.rate : '0';
+                                widget.taxControllerP.text = taxController.text;
+                              });
+                              print("These Is Tax Controller Text ................${widget.taxControllerP.text}");
+                            }
+                          }
+                          for (MeasurementLimit meu in widget.measurement) {
+                            print("These is Inside Measurement-Unit..........................");
+                            if (meu.id == newId2) {
+                              setState(() {
+                                unitController.text = itemSearchList.isNotEmpty ? meu.measurement : '0';
+                                widget.unitControllerP.text = unitController.text;
+                              });
+                              print("These Is Measurment Unit Text ................${widget.unitControllerP.text}");
+                            }
+                          }
+
+                          itemProvider.updateItemID(selectedItemId!);
+                        });
+                      },
+                      dropdownMenuEntries: itemSearchList.map<DropdownMenuEntry<Item>>((Item value) {
+                        return DropdownMenuEntry<Item>(
+                          value: value,
+                          label: value.itemName,
+                          trailingIcon: Text(
+                            'Qty: ${value.maximumStock}',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black,
+                            ),
                           ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
+                          style: ButtonStyle(
+                            textStyle: WidgetStateProperty.all(
+                              GoogleFonts.poppins(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  );
+                },
               ),
             ),
             Container(
               height: 40,
-              width: s.width < 1000
-                  ? 70
-                  : MediaQuery.of(context).size.width * 0.061,
-              decoration: const BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(),
-                      top: BorderSide(),
-                      left: BorderSide())),
+              width: s.width < 1000 ? 70 : MediaQuery.of(context).size.width * 0.061,
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
               child: TextFormField(
                 controller: qtyController,
                 validator: (value) {
@@ -1124,23 +1058,19 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
                 ),
                 onChanged: (value) {
                   setState(() {
-                    int amount = (int.tryParse(rateController.text) ?? 0) *
-                        int.parse(value);
+                    int amount = (int.tryParse(rateController.text) ?? 0) * int.parse(value);
                     discountController.text = '0.00';
 
                     amountController.text = amount.toString();
 
-                    double amountValue =
-                        double.tryParse(amountController.text) ?? 0.0;
-                    double taxValue =
-                        double.tryParse(taxController.text) ?? 0.0;
+                    double amountValue = double.tryParse(amountController.text) ?? 0.0;
+                    double taxValue = double.tryParse(taxController.text) ?? 0.0;
 
                     if (taxValue != 0) {
                       double gsts = (amountValue * taxValue) / 100;
                       sgstController.text = (gsts / 2).toString();
                       cgstController.text = (gsts / 2).toString();
-                      netAmountController.text =
-                          (amountValue + gsts).toString();
+                      netAmountController.text = (amountValue + gsts).toString();
                     } else {
                       // Handle division by zero scenario
                       sgstController.text = '0';
@@ -1152,8 +1082,7 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
                     widget.sgstControllerP.text = sgstController.text;
                     widget.cgstControllerP.text = cgstController.text;
                     widget.netAmountControllerP.text = netAmountController.text;
-                    persistentTotal =
-                        double.tryParse(netAmountController.text) ?? 0.0;
+                    persistentTotal = double.tryParse(netAmountController.text) ?? 0.0;
                     originalNetAmount = persistentTotal;
                     widget.qtyControllerP.text = qtyController.text;
 
@@ -1166,21 +1095,14 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                 ),
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.digitsOnly
-                ],
+                inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
               ),
             ),
             Container(
               height: 40,
-              width: s.width < 1000
-                  ? 70
-                  : MediaQuery.of(context).size.width * 0.061,
+              width: s.width < 1000 ? 70 : MediaQuery.of(context).size.width * 0.061,
               decoration: const BoxDecoration(
-                border: Border(
-                    bottom: BorderSide(),
-                    top: BorderSide(),
-                    left: BorderSide()),
+                border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide()),
               ),
               child: TextFormField(
                 cursorHeight: 18,
@@ -1201,22 +1123,14 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                 ),
-                inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.digitsOnly
-                ],
+                inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                 readOnly: true,
               ),
             ),
             Container(
               height: 40,
-              width: s.width < 1000
-                  ? 100
-                  : MediaQuery.of(context).size.width * 0.061,
-              decoration: const BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(),
-                      top: BorderSide(),
-                      left: BorderSide())),
+              width: s.width < 1000 ? 100 : MediaQuery.of(context).size.width * 0.061,
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
               child: TextFormField(
                 // itemRate.toString(),
                 cursorHeight: 18,
@@ -1251,8 +1165,7 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
 
                     sgstController.text = (gsts / 2).toStringAsFixed(2);
                     cgstController.text = (gsts / 2).toStringAsFixed(2);
-                    netAmountController.text =
-                        (amount + gsts).toStringAsFixed(2);
+                    netAmountController.text = (amount + gsts).toStringAsFixed(2);
 
                     widget.sgstControllerP.text = sgstController.text;
                     widget.cgstControllerP.text = cgstController.text;
@@ -1275,14 +1188,8 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
             ),
             Container(
               height: 40,
-              width: s.width < 1000
-                  ? 180
-                  : MediaQuery.of(context).size.width * 0.061,
-              decoration: const BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(),
-                      top: BorderSide(),
-                      left: BorderSide())),
+              width: s.width < 1000 ? 180 : MediaQuery.of(context).size.width * 0.061,
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
               child: TextFormField(
                 cursorHeight: 18,
                 decoration: const InputDecoration(
@@ -1305,14 +1212,8 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
             ),
             Container(
               height: 40,
-              width: s.width < 1000
-                  ? 70
-                  : MediaQuery.of(context).size.width * 0.061,
-              decoration: const BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(),
-                      top: BorderSide(),
-                      left: BorderSide())),
+              width: s.width < 1000 ? 70 : MediaQuery.of(context).size.width * 0.061,
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
               child: TextFormField(
                 cursorHeight: 18,
                 decoration: const InputDecoration(
@@ -1327,8 +1228,7 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
                   double qty = double.tryParse(qtyController.text) ?? 0;
                   double rate = double.tryParse(rateController.text) ?? 0;
 
-                  double discount =
-                      double.tryParse(discountController.text) ?? 0;
+                  double discount = double.tryParse(discountController.text) ?? 0;
                   double taxRate = double.tryParse(taxController.text) ?? 0;
                   double amount = qty * rate;
                   double taxableAmount = amount - discount;
@@ -1357,14 +1257,8 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
             ),
             Container(
               height: 40,
-              width: s.width < 1000
-                  ? 70
-                  : MediaQuery.of(context).size.width * 0.061,
-              decoration: const BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(),
-                      top: BorderSide(),
-                      left: BorderSide())),
+              width: s.width < 1000 ? 70 : MediaQuery.of(context).size.width * 0.061,
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
               child: TextFormField(
                 cursorHeight: 18,
                 decoration: const InputDecoration(
@@ -1390,14 +1284,8 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
             ),
             Container(
               height: 40,
-              width: s.width < 1000
-                  ? 70
-                  : MediaQuery.of(context).size.width * 0.061,
-              decoration: const BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(),
-                      top: BorderSide(),
-                      left: BorderSide())),
+              width: s.width < 1000 ? 70 : MediaQuery.of(context).size.width * 0.061,
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
               child: TextFormField(
                 cursorHeight: 18,
                 decoration: const InputDecoration(
@@ -1419,14 +1307,8 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
             ),
             Container(
               height: 40,
-              width: s.width < 1000
-                  ? 70
-                  : MediaQuery.of(context).size.width * 0.061,
-              decoration: const BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(),
-                      top: BorderSide(),
-                      left: BorderSide())),
+              width: s.width < 1000 ? 70 : MediaQuery.of(context).size.width * 0.061,
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
               child: TextFormField(
                 cursorHeight: 18,
                 decoration: const InputDecoration(
@@ -1448,14 +1330,8 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
             ),
             Container(
               height: 40,
-              width: s.width < 1000
-                  ? 70
-                  : MediaQuery.of(context).size.width * 0.061,
-              decoration: const BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(),
-                      top: BorderSide(),
-                      left: BorderSide())),
+              width: s.width < 1000 ? 70 : MediaQuery.of(context).size.width * 0.061,
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
               child: TextFormField(
                 cursorHeight: 18,
                 decoration: const InputDecoration(
@@ -1476,22 +1352,14 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
                   fontWeight: FontWeight.bold,
                 ),
                 inputFormatters: <TextInputFormatter>[
-                  FilteringTextInputFormatter.allow(RegExp(
-                      r'^\d*\.?\d*$')), // Allow digits and a single decimal point
+                  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')), // Allow digits and a single decimal point
                 ],
               ),
             ),
             Container(
               height: 40,
-              width: s.width < 1000
-                  ? 160
-                  : MediaQuery.of(context).size.width * 0.061,
-              decoration: const BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(),
-                      left: BorderSide(),
-                      top: BorderSide(),
-                      right: BorderSide())),
+              width: s.width < 1000 ? 160 : MediaQuery.of(context).size.width * 0.061,
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), left: BorderSide(), top: BorderSide(), right: BorderSide())),
               child: TextFormField(
                 cursorHeight: 18,
                 decoration: const InputDecoration(
@@ -1513,15 +1381,8 @@ class _PurchaseReturnEditTableState extends State<PurchaseReturnEditTable> {
             ),
             Container(
               height: 40,
-              width: s.width < 1000
-                  ? 160
-                  : MediaQuery.of(context).size.width * 0.061,
-              decoration: const BoxDecoration(
-                  border: Border(
-                      bottom: BorderSide(),
-                      left: BorderSide(color: Colors.transparent),
-                      top: BorderSide(),
-                      right: BorderSide())),
+              width: s.width < 1000 ? 160 : MediaQuery.of(context).size.width * 0.061,
+              decoration: const BoxDecoration(border: Border(bottom: BorderSide(), left: BorderSide(color: Colors.transparent), top: BorderSide(), right: BorderSide())),
               child: TextFormField(
                 cursorHeight: 18,
                 decoration: const InputDecoration(

@@ -5,7 +5,9 @@ import 'package:billingsphere/data/models/purchaseReturn/purchase_return_model.d
 import 'package:billingsphere/data/repository/purchase_return_repository.dart';
 import 'package:billingsphere/views/PEresponsive/PE_receipt_print.dart';
 import 'package:billingsphere/views/PM_responsive/payment_billwise.dart';
+import 'package:billingsphere/views/PURCHASE_RETURN/PR_receipt_print.dart';
 import 'package:billingsphere/views/PURCHASE_RETURN/purchase_return_List.dart';
+import 'package:billingsphere/views/PURCHASE_RETURN/widget/purchaseEntry_table_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:panara_dialogs/panara_dialogs.dart';
@@ -54,7 +56,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
   List<String> status = ['Cash', 'Debit'];
   String selectedStatus = 'Debit';
   String? selectedState = 'Gujarat';
-  List<PEntriesT> _newWidget = [];
+  final List<PEntriesT> _newWidget = [];
   final List<PEntriesM> _newWidget2 = [];
   final List<SundryRow> _newSundry = [];
   final List<Map<String, dynamic>> _allValues = [];
@@ -102,6 +104,8 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
 
   //fetch ledger
   List<Ledger> suggestionItems5 = [];
+  List<TextEditingController> searchController = [];
+
   List<Item> itemsList = [];
   List<TaxRate> taxLists = [];
   List<MeasurementLimit> measurement = [];
@@ -154,6 +158,10 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
   Future<void> setEntriesTables() async {
     for (int i = 0; i < 5; i++) {
       final entryId = UniqueKey().toString();
+
+      final searchCtrl = TextEditingController();
+      searchController.add(searchCtrl);
+
       setState(() {
         _newWidget.add(
           PEntriesT(
@@ -172,12 +180,12 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
             netAmountControllerP: purchaseController.netAmountController,
             discountControllerP: purchaseController.discountController,
             sellingPriceControllerP: purchaseController.sellingPriceController,
+            searchControllers: searchCtrl,
             onSaveValues: saveValues,
             onDelete: (String entryId) {
               setState(
                 () {
-                  _newWidget
-                      .removeWhere((widget) => widget.key == ValueKey(entryId));
+                  _newWidget.removeWhere((widget) => widget.key == ValueKey(entryId));
                   Map<String, dynamic>? entryToRemove;
                   for (final entry in _allValues) {
                     if (entry['uniqueKey'] == entryId) {
@@ -197,49 +205,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
             taxCategory: taxLists,
           ),
         );
-
-        // _newWidget2.add(
-        //   PEntriesM(
-        //     key: ValueKey(entryId),
-        //     entryId: entryId,
-        //     serialNumber: i + 1,
-        //     itemNameControllerP: purchaseController.itemNameController,
-        //     qtyControllerP: purchaseController.qtyController,
-        //     rateControllerP: purchaseController.rateController,
-        //     unitControllerP: purchaseController.unitController,
-        //     amountControllerP: purchaseController.amountController,
-        //     taxControllerP: purchaseController.taxController,
-        //     sgstControllerP: purchaseController.sgstController,
-        //     cgstControllerP: purchaseController.cgstController,
-        //     igstControllerP: purchaseController.igstController,
-        //     netAmountControllerP: purchaseController.netAmountController,
-        //     discountControllerP: purchaseController.discountController,
-        //     sellingPriceControllerP: purchaseController.sellingPriceController,
-        //     onSaveValues: saveValues,
-        //     onDelete: (String entryId) {
-        //       setState(
-        //         () {
-        //           _newWidget
-        //               .removeWhere((widget) => widget.key == ValueKey(entryId));
-        //           Map<String, dynamic>? entryToRemove;
-        //           for (final entry in _allValues) {
-        //             if (entry['uniqueKey'] == entryId) {
-        //               entryToRemove = entry;
-        //               break;
-        //             }
-        //           }
-        //           if (entryToRemove != null) {
-        //             _allValues.remove(entryToRemove);
-        //           }
-        //           calculateTotal();
-        //         },
-        //       );
-        //     },
-        //     item: itemsList,
-        //     measurementLimit: measurement,
-        //     taxCategory: taxLists,
-        //   ),
-        // );
       });
     }
 
@@ -257,8 +222,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
             onDelete: (String entryId) {
               setState(
                 () {
-                  _newSundry
-                      .removeWhere((widget) => widget.key == ValueKey(entryId));
+                  _newSundry.removeWhere((widget) => widget.key == ValueKey(entryId));
                   Map<String, dynamic>? entryToRemove;
                   for (final entry in _allValuesSundry) {
                     if (entry['uniqueKey'] == entryId) {
@@ -352,8 +316,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                   crossAxisAlignment: CrossAxisAlignment.center,
                                   children: [
                                     purchaseTopText(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.06,
+                                      width: MediaQuery.of(context).size.width * 0.06,
                                       text: 'No',
                                     ),
                                     PETextFieldsNo(
@@ -366,36 +329,27 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                       // focusNode: noFocusNode,
 
                                       onSaved: (newValue) {
-                                        purchaseController.noController.text =
-                                            newValue!;
+                                        purchaseController.noController.text = newValue!;
                                       },
-                                      width: MediaQuery.of(context).size.width *
-                                          0.1,
+                                      width: MediaQuery.of(context).size.width * 0.1,
                                       height: 40,
-                                      controller:
-                                          purchaseController.noController,
+                                      controller: purchaseController.noController,
                                     ),
                                     purchaseTopText(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.06,
+                                      width: MediaQuery.of(context).size.width * 0.06,
                                       text: 'Date',
                                     ),
                                     Flexible(
                                       child: Container(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.075,
+                                        width: MediaQuery.of(context).size.width * 0.075,
                                         height: 40,
                                         decoration: BoxDecoration(
-                                          border:
-                                              Border.all(color: Colors.black),
-                                          borderRadius:
-                                              BorderRadius.circular(0),
+                                          border: Border.all(color: Colors.black),
+                                          borderRadius: BorderRadius.circular(0),
                                           color: Colors.white,
                                         ),
                                         child: Padding(
-                                          padding: const EdgeInsets.only(
-                                              left: 8.0, bottom: 14.0),
+                                          padding: const EdgeInsets.only(left: 8.0, bottom: 14.0),
                                           child: TextFormField(
                                             // focusNode: dateFocusNode1,
                                             // onEditingComplete: () {
@@ -405,20 +359,13 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
 
                                             //   setState(() {});
                                             // },
-                                            controller: purchaseController
-                                                .dateController,
+                                            controller: purchaseController.dateController,
                                             onSaved: (newValue) {
-                                              purchaseController.dateController
-                                                  .text = newValue!;
+                                              purchaseController.dateController.text = newValue!;
                                             },
                                             decoration: InputDecoration(
-                                              hintText: _selectedDate == null
-                                                  ? '12/12/2023'
-                                                  : formatter
-                                                      .format(_selectedDate!),
-                                              contentPadding:
-                                                  const EdgeInsets.only(
-                                                      left: 1, bottom: 8),
+                                              hintText: _selectedDate == null ? '12/12/2023' : formatter.format(_selectedDate!),
+                                              contentPadding: const EdgeInsets.only(left: 1, bottom: 8),
                                               border: InputBorder.none,
                                             ),
                                             textAlign: TextAlign.start,
@@ -432,17 +379,12 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                       ),
                                     ),
                                     SizedBox(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.035,
-                                      child: IconButton(
-                                          onPressed: _presentDatePICKER,
-                                          icon:
-                                              const Icon(Icons.calendar_month)),
+                                      width: MediaQuery.of(context).size.width * 0.035,
+                                      child: IconButton(onPressed: _presentDatePICKER, icon: const Icon(Icons.calendar_month)),
                                     ),
                                     const SizedBox(width: 50),
                                     purchaseTopText(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.06,
+                                      width: MediaQuery.of(context).size.width * 0.06,
                                       text: 'Type',
                                     ),
                                     Container(
@@ -450,8 +392,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                         border: Border.all(),
                                         color: Colors.white,
                                       ),
-                                      width: MediaQuery.of(context).size.width *
-                                          0.15,
+                                      width: MediaQuery.of(context).size.width * 0.15,
                                       height: 40,
                                       padding: const EdgeInsets.all(2.0),
                                       child: DropdownButtonHideUnderline(
@@ -461,8 +402,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                           requestFocusOnTap: true,
 
                                           initialSelection: status.firstWhere(
-                                            (element) =>
-                                                element == selectedStatus,
+                                            (element) => element == selectedStatus,
                                           ),
                                           enableSearch: true,
                                           // enableFilter: true,
@@ -474,18 +414,13 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                             color: Colors.black,
                                             decoration: TextDecoration.none,
                                           ),
-                                          selectedTrailingIcon:
-                                              const SizedBox.shrink(),
+                                          selectedTrailingIcon: const SizedBox.shrink(),
 
-                                          inputDecorationTheme:
-                                              InputDecorationTheme(
+                                          inputDecorationTheme: InputDecorationTheme(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 8, vertical: 8),
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                             isDense: true,
-                                            activeIndicatorBorder:
-                                                const BorderSide(
+                                            activeIndicatorBorder: const BorderSide(
                                               color: Colors.transparent,
                                             ),
                                             counterStyle: GoogleFonts.poppins(
@@ -500,24 +435,19 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                             //     .requestFocus(partyFocus);
                                             setState(() {
                                               selectedStatus = value!;
-                                              purchaseController.typeController
-                                                  .text = selectedStatus;
+                                              purchaseController.typeController.text = selectedStatus;
                                               // Set Type
                                             });
                                           },
-                                          dropdownMenuEntries: status
-                                              .map<DropdownMenuEntry<String>>(
-                                                  (String value) {
+                                          dropdownMenuEntries: status.map<DropdownMenuEntry<String>>((String value) {
                                             return DropdownMenuEntry<String>(
                                                 value: value,
                                                 label: value,
                                                 style: ButtonStyle(
-                                                  textStyle:
-                                                      WidgetStateProperty.all(
+                                                  textStyle: WidgetStateProperty.all(
                                                     GoogleFonts.poppins(
                                                       fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                                                      fontWeight: FontWeight.bold,
                                                       // color: typeFocus.hasFocus
                                                       //     ? Colors.white
                                                       //     : Colors.black,
@@ -543,8 +473,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     purchaseTopText(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.06,
+                                      width: MediaQuery.of(context).size.width * 0.06,
                                       text: 'Party',
                                     ),
                                     Container(
@@ -552,20 +481,15 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                         border: Border.all(),
                                         color: Colors.white,
                                       ),
-                                      width: MediaQuery.of(context).size.width *
-                                          0.265,
+                                      width: MediaQuery.of(context).size.width * 0.265,
                                       height: 40,
                                       padding: const EdgeInsets.all(2.0),
                                       child: DropdownButtonHideUnderline(
                                         child: DropdownMenu<Ledger>(
-                                          controller: purchaseController
-                                              .partyController,
+                                          controller: purchaseController.partyController,
                                           // focusNode: partyFocus,
                                           requestFocusOnTap: true,
-                                          initialSelection:
-                                              suggestionItems5.isNotEmpty
-                                                  ? suggestionItems5.first
-                                                  : null,
+                                          initialSelection: suggestionItems5.isNotEmpty ? suggestionItems5.first : null,
                                           enableSearch: true,
                                           trailingIcon: const SizedBox.shrink(),
                                           textStyle: GoogleFonts.poppins(
@@ -576,32 +500,21 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                           ),
                                           menuHeight: 300,
                                           enableFilter: true,
-                                          filterCallback:
-                                              (List<DropdownMenuEntry<Ledger>>
-                                                      entries,
-                                                  String filter) {
-                                            final String trimmedFilter =
-                                                filter.trim().toLowerCase();
+                                          filterCallback: (List<DropdownMenuEntry<Ledger>> entries, String filter) {
+                                            final String trimmedFilter = filter.trim().toLowerCase();
 
                                             if (trimmedFilter.isEmpty) {
                                               return entries;
                                             }
 
-                                            // Filter the entries based on the query
                                             return entries.where((entry) {
-                                              return entry.value.name
-                                                  .toLowerCase()
-                                                  .contains(trimmedFilter);
+                                              return entry.value.name.toLowerCase().contains(trimmedFilter);
                                             }).toList();
                                           },
-                                          selectedTrailingIcon:
-                                              const SizedBox.shrink(),
-                                          inputDecorationTheme:
-                                              const InputDecorationTheme(
+                                          selectedTrailingIcon: const SizedBox.shrink(),
+                                          inputDecorationTheme: const InputDecorationTheme(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                EdgeInsets.symmetric(
-                                                    horizontal: 8, vertical: 8),
+                                            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                             isDense: true,
                                             activeIndicatorBorder: BorderSide(
                                               color: Colors.transparent,
@@ -613,32 +526,20 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                             setState(() {
                                               if (selectedLedgerName != null) {
                                                 selectedLedgerName = value!.id;
-                                                purchaseController
-                                                    .ledgerController
-                                                    .text = selectedLedgerName!;
-                                                purchaseController
-                                                    .partyController
-                                                    .text = value.name;
-                                                final selectedLedger =
-                                                    suggestionItems5.firstWhere(
-                                                        (element) =>
-                                                            element.id ==
-                                                            selectedLedgerName);
+                                                purchaseController.ledgerController.text = selectedLedgerName!;
+                                                purchaseController.partyController.text = value.name;
+                                                final selectedLedger = suggestionItems5.firstWhere((element) => element.id == selectedLedgerName);
 
-                                                ledgerAmount =
-                                                    selectedLedger.debitBalance;
+                                                ledgerAmount = selectedLedger.debitBalance;
                                               }
                                             });
                                           },
-                                          dropdownMenuEntries: suggestionItems5
-                                              .map<DropdownMenuEntry<Ledger>>(
-                                                  (Ledger value) {
+                                          dropdownMenuEntries: suggestionItems5.map<DropdownMenuEntry<Ledger>>((Ledger value) {
                                             return DropdownMenuEntry<Ledger>(
                                               value: value,
                                               label: value.name,
                                               trailingIcon: Text(
-                                                value.debitBalance
-                                                    .toStringAsFixed(2),
+                                                value.debitBalance.toStringAsFixed(2),
                                                 style: GoogleFonts.poppins(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold,
@@ -646,8 +547,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                 ),
                                               ),
                                               style: ButtonStyle(
-                                                textStyle:
-                                                    WidgetStateProperty.all(
+                                                textStyle: WidgetStateProperty.all(
                                                   GoogleFonts.poppins(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.bold,
@@ -660,13 +560,9 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                         ),
                                       ),
                                     ),
-                                    SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.041),
+                                    SizedBox(width: MediaQuery.of(context).size.width * 0.041),
                                     purchaseTopText(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.06,
+                                      width: MediaQuery.of(context).size.width * 0.06,
                                       text: 'Place',
                                     ),
                                     Container(
@@ -674,8 +570,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                         border: Border.all(),
                                         color: Colors.white,
                                       ),
-                                      width: MediaQuery.of(context).size.width *
-                                          0.15,
+                                      width: MediaQuery.of(context).size.width * 0.15,
                                       height: 40,
                                       padding: const EdgeInsets.all(2.0),
                                       child: DropdownButtonHideUnderline(
@@ -684,10 +579,8 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
 
                                           requestFocusOnTap: true,
 
-                                          initialSelection:
-                                              indianStates.firstWhere(
-                                            (element) =>
-                                                element == selectedState,
+                                          initialSelection: indianStates.firstWhere(
+                                            (element) => element == selectedState,
                                           ),
                                           enableSearch: true,
                                           // enableFilter: true,
@@ -701,18 +594,13 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                             color: Colors.black,
                                             decoration: TextDecoration.none,
                                           ),
-                                          selectedTrailingIcon:
-                                              const SizedBox.shrink(),
+                                          selectedTrailingIcon: const SizedBox.shrink(),
 
-                                          inputDecorationTheme:
-                                              InputDecorationTheme(
+                                          inputDecorationTheme: InputDecorationTheme(
                                             border: InputBorder.none,
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                    horizontal: 8, vertical: 8),
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                             isDense: true,
-                                            activeIndicatorBorder:
-                                                const BorderSide(
+                                            activeIndicatorBorder: const BorderSide(
                                               color: Colors.transparent,
                                             ),
                                             counterStyle: GoogleFonts.poppins(
@@ -728,23 +616,18 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                             //     .requestFocus(billFocus);
                                             setState(() {
                                               selectedState = value;
-                                              purchaseController.placeController
-                                                  .text = selectedState!;
+                                              purchaseController.placeController.text = selectedState!;
                                             });
                                           },
-                                          dropdownMenuEntries: indianStates
-                                              .map<DropdownMenuEntry<String>>(
-                                                  (String value) {
+                                          dropdownMenuEntries: indianStates.map<DropdownMenuEntry<String>>((String value) {
                                             return DropdownMenuEntry<String>(
                                                 value: value,
                                                 label: value,
                                                 style: ButtonStyle(
-                                                  textStyle:
-                                                      WidgetStateProperty.all(
+                                                  textStyle: WidgetStateProperty.all(
                                                     GoogleFonts.poppins(
                                                       fontSize: 16,
-                                                      fontWeight:
-                                                          FontWeight.bold,
+                                                      fontWeight: FontWeight.bold,
                                                       color: Colors.black,
                                                       // color:
                                                       //     Colors.black,
@@ -768,8 +651,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     purchaseTopText(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.06,
+                                      width: MediaQuery.of(context).size.width * 0.06,
                                       text: 'Bill No',
                                     ),
                                     PETextFields(
@@ -781,41 +663,31 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                       // },
                                       // focusNode: billFocus,
                                       onSaved: (newValue) {
-                                        purchaseController.billNumberController
-                                            .text = newValue!;
+                                        purchaseController.billNumberController.text = newValue!;
                                       },
-                                      controller: purchaseController
-                                          .billNumberController,
-                                      width: MediaQuery.of(context).size.width *
-                                          0.265,
+                                      controller: purchaseController.billNumberController,
+                                      width: MediaQuery.of(context).size.width * 0.265,
                                       height: 40,
                                       readOnly: false,
                                     ),
                                     SizedBox(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.041,
+                                      width: MediaQuery.of(context).size.width * 0.041,
                                     ),
                                     purchaseTopText(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.06,
+                                      width: MediaQuery.of(context).size.width * 0.06,
                                       text: 'Date',
                                     ),
                                     Flexible(
                                       child: Container(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.13,
+                                        width: MediaQuery.of(context).size.width * 0.13,
                                         height: 40,
                                         decoration: BoxDecoration(
-                                          border:
-                                              Border.all(color: Colors.black),
+                                          border: Border.all(color: Colors.black),
                                           color: Colors.white,
-                                          borderRadius:
-                                              BorderRadius.circular(0),
+                                          borderRadius: BorderRadius.circular(0),
                                         ),
                                         child: Padding(
-                                          padding: const EdgeInsets.only(
-                                              left: 8.0, bottom: 14.0),
+                                          padding: const EdgeInsets.only(left: 8.0, bottom: 14.0),
                                           child: TextFormField(
                                             // focusNode: dateFocusNode2,
                                             // onEditingComplete: () {
@@ -825,37 +697,26 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                             //   setState(() {});
                                             // },
                                             onSaved: (newValue) {
-                                              purchaseController.date2Controller
-                                                  .text = newValue!;
+                                              purchaseController.date2Controller.text = newValue!;
                                             },
-                                            controller: purchaseController
-                                                .date2Controller,
+                                            controller: purchaseController.date2Controller,
                                             style: GoogleFonts.poppins(
                                               fontSize: 15,
                                               fontWeight: FontWeight.bold,
                                               color: Colors.black,
                                             ),
                                             decoration: InputDecoration(
-                                              hintText: _pickedDateData == null
-                                                  ? '12/12/2023'
-                                                  : formatter
-                                                      .format(_pickedDateData!),
+                                              hintText: _pickedDateData == null ? '12/12/2023' : formatter.format(_pickedDateData!),
                                               border: InputBorder.none,
-                                              contentPadding:
-                                                  const EdgeInsets.only(
-                                                      left: 1, bottom: 8),
+                                              contentPadding: const EdgeInsets.only(left: 1, bottom: 8),
                                             ),
                                           ),
                                         ),
                                       ),
                                     ),
                                     SizedBox(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.03,
-                                      child: IconButton(
-                                          onPressed: _showDataPICKER,
-                                          icon:
-                                              const Icon(Icons.calendar_month)),
+                                      width: MediaQuery.of(context).size.width * 0.03,
+                                      child: IconButton(onPressed: _showDataPICKER, icon: const Icon(Icons.calendar_month)),
                                     ),
                                   ],
                                 ),
@@ -863,34 +724,27 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                             ],
                           ),
                           Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 26.0),
+                            padding: const EdgeInsets.symmetric(horizontal: 26.0),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.end,
                               children: [
                                 SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.12,
+                                  width: MediaQuery.of(context).size.width * 0.12,
                                   height: 30,
                                   child: SizedBox(
-                                    width:
-                                        MediaQuery.of(context).size.width * 0,
+                                    width: MediaQuery.of(context).size.width * 0,
                                     child: ElevatedButton(
                                       onPressed: () {
                                         showReturnInfoDialog();
                                       },
                                       style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStateProperty.all<Color>(
+                                        backgroundColor: MaterialStateProperty.all<Color>(
                                           const Color(0xFFFFFACD),
                                         ),
-                                        shape: MaterialStateProperty.all<
-                                            OutlinedBorder>(
+                                        shape: MaterialStateProperty.all<OutlinedBorder>(
                                           RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(1.0),
-                                            side: const BorderSide(
-                                                color: Colors.black),
+                                            borderRadius: BorderRadius.circular(1.0),
+                                            side: const BorderSide(color: Colors.black),
                                           ),
                                         ),
                                       ),
@@ -909,28 +763,22 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                   ),
                                 ),
                                 SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.12,
+                                  width: MediaQuery.of(context).size.width * 0.12,
                                   height: 30,
                                   child: SizedBox(
-                                    width:
-                                        MediaQuery.of(context).size.width * 0,
+                                    width: MediaQuery.of(context).size.width * 0,
                                     child: ElevatedButton(
                                       onPressed: () {
                                         showGetItemDialog();
                                       },
                                       style: ButtonStyle(
-                                        backgroundColor:
-                                            MaterialStateProperty.all<Color>(
+                                        backgroundColor: MaterialStateProperty.all<Color>(
                                           const Color(0xFFFFFACD),
                                         ),
-                                        shape: MaterialStateProperty.all<
-                                            OutlinedBorder>(
+                                        shape: MaterialStateProperty.all<OutlinedBorder>(
                                           RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(1.0),
-                                            side: const BorderSide(
-                                                color: Colors.black),
+                                            borderRadius: BorderRadius.circular(1.0),
+                                            side: const BorderSide(color: Colors.black),
                                           ),
                                         ),
                                       ),
@@ -951,80 +799,64 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                               ],
                             ),
                           ),
-                          SizedBox(
-                              height:
-                                  MediaQuery.of(context).size.height * 0.02),
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.02),
 
                           //table header
                           Padding(
-                            padding:
-                                const EdgeInsets.only(left: 8.0, right: 8.0),
+                            padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                             child: Row(
                               children: [
                                 TableHeaderText(
                                   text: 'Sr',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.023,
+                                  width: MediaQuery.of(context).size.width * 0.023,
                                 ),
                                 TableHeaderText(
                                   text: '   Item Name',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.20,
+                                  width: MediaQuery.of(context).size.width * 0.20,
                                 ),
                                 TableHeaderText(
                                   text: 'Qty',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'Unit',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'Rate',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'Amount',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'Disc',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'Tax%',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'SGST',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'CGST',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'IGST',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
+                                  width: MediaQuery.of(context).size.width * 0.061,
                                 ),
                                 TableHeaderText(
                                   text: 'Net Amt.',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.055,
+                                  width: MediaQuery.of(context).size.width * 0.055,
                                 ),
                                 TableHeaderText(
                                   text: 'Selling Amt.',
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.055,
+                                  width: MediaQuery.of(context).size.width * 0.055,
                                   color: Colors.black,
                                 ),
                               ],
@@ -1032,10 +864,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                           ),
 
                           isLoading
-                              ? const Padding(
-                                  padding:
-                                      EdgeInsets.symmetric(horizontal: 7.0),
-                                  child: TableExample(rows: 7, cols: 13))
+                              ? const Padding(padding: EdgeInsets.symmetric(horizontal: 7.0), child: TableExample(rows: 7, cols: 13))
                               :
                               //table body
                               Column(
@@ -1053,19 +882,13 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 ),
                           // Table footer
                           Padding(
-                            padding:
-                                const EdgeInsets.only(left: 8.0, right: 8.0),
+                            padding: const EdgeInsets.only(left: 8.0, right: 8.0),
                             child: Row(
                               children: [
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.023,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.023,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1081,29 +904,18 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.20,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.20,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: const Text(
                                     '',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontWeight: FontWeight.bold),
                                     textAlign: TextAlign.start,
                                   ),
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1119,45 +931,28 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: const Text(
                                     '',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontWeight: FontWeight.bold),
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: const Text(
                                     '',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontWeight: FontWeight.bold),
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1173,13 +968,8 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1195,29 +985,18 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: const Text(
                                     '',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontWeight: FontWeight.bold),
                                     textAlign: TextAlign.center,
                                   ),
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1233,13 +1012,8 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1255,13 +1029,8 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.061,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.061,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1277,14 +1046,8 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.055,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide(),
-                                          right: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.055,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide(), right: BorderSide())),
                                   child: Align(
                                     alignment: Alignment.center,
                                     child: Text(
@@ -1300,19 +1063,11 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 ),
                                 Container(
                                   height: 40,
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.055,
-                                  decoration: const BoxDecoration(
-                                      border: Border(
-                                          bottom: BorderSide(),
-                                          top: BorderSide(),
-                                          left: BorderSide(
-                                              color: Colors.transparent),
-                                          right: BorderSide())),
+                                  width: MediaQuery.of(context).size.width * 0.055,
+                                  decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide(color: Colors.transparent), right: BorderSide())),
                                   child: const Text(
                                     '',
-                                    style:
-                                        TextStyle(fontWeight: FontWeight.bold),
+                                    style: TextStyle(fontWeight: FontWeight.bold),
                                     textAlign: TextAlign.start,
                                   ),
                                 ),
@@ -1320,9 +1075,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                             ),
                           ),
 
-                          SizedBox(
-                              height:
-                                  MediaQuery.of(context).size.height * 0.04),
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.04),
                           Column(
                             children: [
                               Row(
@@ -1337,11 +1090,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                               Row(
                                                 children: [
                                                   purchaseTopText(
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.06,
+                                                    width: MediaQuery.of(context).size.width * 0.06,
                                                     text: 'Remarks',
                                                   ),
                                                   PETextFields(
@@ -1357,66 +1106,38 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                     //   setState(() {});
                                                     // },
                                                     onSaved: (newValue) {
-                                                      purchaseController
-                                                          .remarksController!
-                                                          .text = newValue!;
+                                                      purchaseController.remarksController!.text = newValue!;
                                                     },
-                                                    controller:
-                                                        purchaseController
-                                                            .remarksController,
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.6,
+                                                    controller: purchaseController.remarksController,
+                                                    width: MediaQuery.of(context).size.width * 0.6,
                                                     height: 40,
                                                   ),
                                                 ],
                                               ),
                                               const SizedBox(height: 10),
                                               Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        horizontal: 8.0),
+                                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                                 child: Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
                                                     Container(
-                                                      width:
-                                                          MediaQuery.of(context)
-                                                                  .size
-                                                                  .width *
-                                                              0.25,
+                                                      width: MediaQuery.of(context).size.width * 0.25,
                                                       height: 170,
                                                       decoration: BoxDecoration(
                                                         border: Border.all(
-                                                          color: const Color
-                                                              .fromARGB(
-                                                              255, 44, 43, 43),
+                                                          color: const Color.fromARGB(255, 44, 43, 43),
                                                           width: 2,
                                                         ),
                                                       ),
                                                       child: Column(
                                                         children: [
                                                           Container(
-                                                            width: MediaQuery.of(
-                                                                        context)
-                                                                    .size
-                                                                    .width *
-                                                                0.4,
+                                                            width: MediaQuery.of(context).size.width * 0.4,
                                                             height: 30,
-                                                            decoration:
-                                                                const BoxDecoration(
+                                                            decoration: const BoxDecoration(
                                                               border: Border(
-                                                                bottom:
-                                                                    BorderSide(
-                                                                  color: Color
-                                                                      .fromARGB(
-                                                                          255,
-                                                                          44,
-                                                                          43,
-                                                                          43),
+                                                                bottom: BorderSide(
+                                                                  color: Color.fromARGB(255, 44, 43, 43),
                                                                   width: 2,
                                                                 ),
                                                               ),
@@ -1424,66 +1145,39 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                             child: Center(
                                                               child: Text(
                                                                 'Ledger Information',
-                                                                textAlign:
-                                                                    TextAlign
-                                                                        .center,
-                                                                style:
-                                                                    GoogleFonts
-                                                                        .poppins(
+                                                                textAlign: TextAlign.center,
+                                                                style: GoogleFonts.poppins(
                                                                   fontSize: 15,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color: const Color(
-                                                                      0xFF4B0082),
+                                                                  fontWeight: FontWeight.bold,
+                                                                  color: const Color(0xFF4B0082),
                                                                 ),
                                                               ),
                                                             ),
                                                           ),
                                                           SizedBox(
-                                                            width: MediaQuery.of(
-                                                                        context)
-                                                                    .size
-                                                                    .width *
-                                                                0.3,
+                                                            width: MediaQuery.of(context).size.width * 0.3,
                                                             child: Column(
                                                               children: [
                                                                 Container(
-                                                                  width: MediaQuery.of(
-                                                                              context)
-                                                                          .size
-                                                                          .width *
-                                                                      0.3,
-                                                                  decoration:
-                                                                      const BoxDecoration(
-                                                                    border:
-                                                                        Border(
-                                                                      bottom:
-                                                                          BorderSide(
-                                                                        color: Colors
-                                                                            .black,
-                                                                        width:
-                                                                            1,
+                                                                  width: MediaQuery.of(context).size.width * 0.3,
+                                                                  decoration: const BoxDecoration(
+                                                                    border: Border(
+                                                                      bottom: BorderSide(
+                                                                        color: Colors.black,
+                                                                        width: 1,
                                                                       ),
                                                                     ),
                                                                   ),
-                                                                  child:
-                                                                      SizedBox(
-                                                                    width: MediaQuery.of(context)
-                                                                            .size
-                                                                            .width *
-                                                                        0.5,
+                                                                  child: SizedBox(
+                                                                    width: MediaQuery.of(context).size.width * 0.5,
                                                                     height: 30,
                                                                     child: Row(
                                                                       children: [
                                                                         Expanded(
-                                                                          child:
-                                                                              Text(
+                                                                          child: Text(
                                                                             'Limit',
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            style:
-                                                                                GoogleFonts.poppins(
+                                                                            textAlign: TextAlign.center,
+                                                                            style: GoogleFonts.poppins(
                                                                               fontSize: 15,
                                                                               fontWeight: FontWeight.bold,
                                                                               color: const Color(0xFF4B0082),
@@ -1491,25 +1185,15 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                                           ),
                                                                         ),
                                                                         Container(
-                                                                          width:
-                                                                              2,
-                                                                          height:
-                                                                              30,
-                                                                          color: const Color
-                                                                              .fromARGB(
-                                                                              255,
-                                                                              44,
-                                                                              43,
-                                                                              43),
+                                                                          width: 2,
+                                                                          height: 30,
+                                                                          color: const Color.fromARGB(255, 44, 43, 43),
                                                                         ),
                                                                         // Change Ledger Amount
                                                                         Expanded(
-                                                                          child:
-                                                                              Container(
-                                                                            color:
-                                                                                const Color(0xFFA0522D),
-                                                                            child:
-                                                                                Center(
+                                                                          child: Container(
+                                                                            color: const Color(0xFFA0522D),
+                                                                            child: Center(
                                                                               child: Text(
                                                                                 (ledgerAmount + (TnetAmount + Ttotal)).toStringAsFixed(2),
                                                                                 textAlign: TextAlign.center,
@@ -1525,25 +1209,15 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                                           ),
                                                                         ),
                                                                         Container(
-                                                                          width:
-                                                                              2,
-                                                                          height:
-                                                                              30,
-                                                                          color: const Color
-                                                                              .fromARGB(
-                                                                              255,
-                                                                              44,
-                                                                              43,
-                                                                              43),
+                                                                          width: 2,
+                                                                          height: 30,
+                                                                          color: const Color.fromARGB(255, 44, 43, 43),
                                                                         ),
                                                                         Expanded(
-                                                                          child:
-                                                                              Text(
+                                                                          child: Text(
                                                                             'Bal',
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            style:
-                                                                                GoogleFonts.poppins(
+                                                                            textAlign: TextAlign.center,
+                                                                            style: GoogleFonts.poppins(
                                                                               fontSize: 15,
                                                                               fontWeight: FontWeight.bold,
                                                                               color: const Color(0xFF4B0082),
@@ -1551,24 +1225,14 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                                           ),
                                                                         ),
                                                                         Container(
-                                                                          width:
-                                                                              2,
-                                                                          height:
-                                                                              30,
-                                                                          color: const Color
-                                                                              .fromARGB(
-                                                                              255,
-                                                                              44,
-                                                                              43,
-                                                                              43),
+                                                                          width: 2,
+                                                                          height: 30,
+                                                                          color: const Color.fromARGB(255, 44, 43, 43),
                                                                         ),
                                                                         Expanded(
-                                                                          child:
-                                                                              Container(
-                                                                            color:
-                                                                                const Color(0xFFA0522D),
-                                                                            child:
-                                                                                Center(
+                                                                          child: Container(
+                                                                            color: const Color(0xFFA0522D),
+                                                                            child: Center(
                                                                               child: Text(
                                                                                 '0.00 Dr',
                                                                                 textAlign: TextAlign.center,
@@ -1592,19 +1256,11 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                       ),
                                                     ),
                                                     const SizedBox(width: 5),
-                                                    Consumer<
-                                                            OnChangeItenProvider>(
-                                                        builder: (context,
-                                                            itemID, _) {
+                                                    Consumer<OnChangeItenProvider>(builder: (context, itemID, _) {
                                                       return Container(
-                                                        width: MediaQuery.of(
-                                                                    context)
-                                                                .size
-                                                                .width *
-                                                            0.38,
+                                                        width: MediaQuery.of(context).size.width * 0.38,
                                                         height: 170,
-                                                        decoration:
-                                                            BoxDecoration(
+                                                        decoration: BoxDecoration(
                                                           border: Border.all(
                                                             color: Colors.black,
                                                             width: 1,
@@ -1616,51 +1272,32 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                               children: [
                                                                 Expanded(
                                                                   flex: 4,
-                                                                  child:
-                                                                      Container(
-                                                                    decoration:
-                                                                        const BoxDecoration(
-                                                                            border:
-                                                                                Border(
-                                                                      right:
-                                                                          BorderSide(
-                                                                        color: Colors
-                                                                            .black,
+                                                                  child: Container(
+                                                                    decoration: const BoxDecoration(
+                                                                        border: Border(
+                                                                      right: BorderSide(
+                                                                        color: Colors.black,
                                                                       ),
                                                                     )),
                                                                     height: 30,
-                                                                    child:
-                                                                        ElevatedButton(
-                                                                      onPressed:
-                                                                          () {},
-                                                                      style: ElevatedButton
-                                                                          .styleFrom(
-                                                                        shape:
-                                                                            RoundedRectangleBorder(
-                                                                          borderRadius:
-                                                                              BorderRadius.circular(0),
+                                                                    child: ElevatedButton(
+                                                                      onPressed: () {},
+                                                                      style: ElevatedButton.styleFrom(
+                                                                        shape: RoundedRectangleBorder(
+                                                                          borderRadius: BorderRadius.circular(0),
                                                                         ),
-                                                                        backgroundColor:
-                                                                            const Color(0xFFDAA520),
+                                                                        backgroundColor: const Color(0xFFDAA520),
                                                                       ),
-                                                                      child:
-                                                                          Text(
+                                                                      child: Text(
                                                                         'Statements',
-                                                                        style: GoogleFonts
-                                                                            .poppins(
-                                                                          fontSize:
-                                                                              15,
-                                                                          fontWeight:
-                                                                              FontWeight.bold,
-                                                                          color:
-                                                                              Colors.white,
+                                                                        style: GoogleFonts.poppins(
+                                                                          fontSize: 15,
+                                                                          fontWeight: FontWeight.bold,
+                                                                          color: Colors.white,
                                                                         ),
-                                                                        softWrap:
-                                                                            false,
-                                                                        maxLines:
-                                                                            1,
-                                                                        overflow:
-                                                                            TextOverflow.ellipsis,
+                                                                        softWrap: false,
+                                                                        maxLines: 1,
+                                                                        overflow: TextOverflow.ellipsis,
                                                                       ),
                                                                     ),
                                                                   ),
@@ -1669,61 +1306,38 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                                   flex: 6,
                                                                   child: Text(
                                                                     'Recent Transaction for the item',
-                                                                    textAlign:
-                                                                        TextAlign
-                                                                            .center,
-                                                                    style: GoogleFonts
-                                                                        .poppins(
-                                                                      fontSize:
-                                                                          15,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .bold,
-                                                                      color: const Color(
-                                                                          0xFF4B0082),
+                                                                    textAlign: TextAlign.center,
+                                                                    style: GoogleFonts.poppins(
+                                                                      fontSize: 15,
+                                                                      fontWeight: FontWeight.bold,
+                                                                      color: const Color(0xFF4B0082),
                                                                     ),
                                                                   ),
                                                                 ),
                                                                 Expanded(
                                                                   flex: 4,
-                                                                  child:
-                                                                      Container(
-                                                                    decoration:
-                                                                        const BoxDecoration(
-                                                                            border:
-                                                                                Border(
-                                                                      left:
-                                                                          BorderSide(
-                                                                        color: Colors
-                                                                            .black,
+                                                                  child: Container(
+                                                                    decoration: const BoxDecoration(
+                                                                        border: Border(
+                                                                      left: BorderSide(
+                                                                        color: Colors.black,
                                                                       ),
                                                                     )),
                                                                     height: 30,
-                                                                    child:
-                                                                        ElevatedButton(
-                                                                      onPressed:
-                                                                          () {},
-                                                                      style: ElevatedButton
-                                                                          .styleFrom(
-                                                                        shape:
-                                                                            RoundedRectangleBorder(
-                                                                          borderRadius:
-                                                                              BorderRadius.circular(0),
+                                                                    child: ElevatedButton(
+                                                                      onPressed: () {},
+                                                                      style: ElevatedButton.styleFrom(
+                                                                        shape: RoundedRectangleBorder(
+                                                                          borderRadius: BorderRadius.circular(0),
                                                                         ),
-                                                                        backgroundColor:
-                                                                            const Color(0xFFDAA520),
+                                                                        backgroundColor: const Color(0xFFDAA520),
                                                                       ),
-                                                                      child:
-                                                                          Text(
+                                                                      child: Text(
                                                                         'Purchase',
-                                                                        style: GoogleFonts
-                                                                            .poppins(
-                                                                          fontSize:
-                                                                              15,
-                                                                          fontWeight:
-                                                                              FontWeight.bold,
-                                                                          color:
-                                                                              Colors.white,
+                                                                        style: GoogleFonts.poppins(
+                                                                          fontSize: 15,
+                                                                          fontWeight: FontWeight.bold,
+                                                                          color: Colors.white,
                                                                         ),
                                                                       ),
                                                                     ),
@@ -1734,54 +1348,33 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
 
                                                             // Table Starts Here
                                                             Container(
-                                                              padding:
-                                                                  const EdgeInsets
-                                                                      .all(4.0),
-                                                              decoration:
-                                                                  const BoxDecoration(
-                                                                      border:
-                                                                          Border(
-                                                                right:
-                                                                    BorderSide(
-                                                                  color: Colors
-                                                                      .transparent,
+                                                              padding: const EdgeInsets.all(4.0),
+                                                              decoration: const BoxDecoration(
+                                                                  border: Border(
+                                                                right: BorderSide(
+                                                                  color: Colors.transparent,
                                                                 ),
-                                                                bottom:
-                                                                    BorderSide(
-                                                                  color: Colors
-                                                                      .black,
+                                                                bottom: BorderSide(
+                                                                  color: Colors.black,
                                                                 ),
-                                                                left:
-                                                                    BorderSide(
-                                                                  color: Colors
-                                                                      .transparent,
+                                                                left: BorderSide(
+                                                                  color: Colors.transparent,
                                                                 ),
                                                                 top: BorderSide(
-                                                                  color: Colors
-                                                                      .black,
+                                                                  color: Colors.black,
                                                                 ),
                                                               )),
                                                               child: Row(
-                                                                children: List
-                                                                    .generate(
-                                                                  headerTitles
-                                                                      .length,
-                                                                  (index) =>
-                                                                      Expanded(
+                                                                children: List.generate(
+                                                                  headerTitles.length,
+                                                                  (index) => Expanded(
                                                                     child: Text(
-                                                                      headerTitles[
-                                                                          index],
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .start,
-                                                                      style: GoogleFonts
-                                                                          .poppins(
-                                                                        fontSize:
-                                                                            15,
-                                                                        fontWeight:
-                                                                            FontWeight.bold,
-                                                                        color: const Color(
-                                                                            0xFF4B0082),
+                                                                      headerTitles[index],
+                                                                      textAlign: TextAlign.start,
+                                                                      style: GoogleFonts.poppins(
+                                                                        fontSize: 15,
+                                                                        fontWeight: FontWeight.bold,
+                                                                        color: const Color(0xFF4B0082),
                                                                       ),
                                                                     ),
                                                                   ),
@@ -1792,44 +1385,20 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                             // Table Body
 
                                                             Expanded(
-                                                              child:
-                                                                  SingleChildScrollView(
-                                                                scrollDirection:
-                                                                    Axis.vertical,
+                                                              child: SingleChildScrollView(
+                                                                scrollDirection: Axis.vertical,
                                                                 child: Table(
-                                                                  border: TableBorder.all(
-                                                                      width:
-                                                                          1.0,
-                                                                      color: Colors
-                                                                          .black),
+                                                                  border: TableBorder.all(width: 1.0, color: Colors.black),
                                                                   children: [
                                                                     // Iterate over all purchases' entries
-                                                                    for (int i =
-                                                                            0;
-                                                                        i <
-                                                                            fetchedPurchaseReturn
-                                                                                .length;
-                                                                        i++)
-                                                                      ...fetchedPurchaseReturn[
-                                                                              i]
-                                                                          .entries
-                                                                          .where((entry) =>
-                                                                              entry.itemName ==
-                                                                              itemID.itemID)
-                                                                          .map((entry) {
+                                                                    for (int i = 0; i < fetchedPurchaseReturn.length; i++)
+                                                                      ...fetchedPurchaseReturn[i].entries.where((entry) => entry.itemName == itemID.itemID).map((entry) {
                                                                         // Find the corresponding ledger for the current entry
-                                                                        String
-                                                                            ledgerName =
-                                                                            '';
-                                                                        if (suggestionItems5
-                                                                            .isNotEmpty) {
-                                                                          final ledger =
-                                                                              suggestionItems5.firstWhere(
-                                                                            (ledger) =>
-                                                                                ledger.id ==
-                                                                                fetchedPurchaseReturn[i].ledger,
-                                                                            orElse: () =>
-                                                                                Ledger(
+                                                                        String ledgerName = '';
+                                                                        if (suggestionItems5.isNotEmpty) {
+                                                                          final ledger = suggestionItems5.firstWhere(
+                                                                            (ledger) => ledger.id == fetchedPurchaseReturn[i].ledger,
+                                                                            orElse: () => Ledger(
                                                                               id: '',
                                                                               name: '',
                                                                               printName: '',
@@ -1875,8 +1444,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                                               registrationTypeDated: '',
                                                                             ),
                                                                           );
-                                                                          ledgerName =
-                                                                              ledger.name;
+                                                                          ledgerName = ledger.name;
                                                                         }
 
                                                                         return TableRow(
@@ -1926,11 +1494,9 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                     ),
                                   ),
                                   Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8.0),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                     child: Container(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.22,
+                                      width: MediaQuery.of(context).size.width * 0.22,
                                       height: 225,
                                       decoration: BoxDecoration(
                                         border: Border.all(
@@ -1967,18 +1533,13 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                     child: SizedBox(
                                                       width: 100,
                                                       child: Text(
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
+                                                        overflow: TextOverflow.ellipsis,
                                                         header2Titles[index],
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                        style:
-                                                            GoogleFonts.poppins(
+                                                        textAlign: TextAlign.center,
+                                                        style: GoogleFonts.poppins(
                                                           fontSize: 15,
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          color: const Color(
-                                                              0xFF4B0082),
+                                                          fontWeight: FontWeight.bold,
+                                                          color: const Color(0xFF4B0082),
                                                         ),
                                                       ),
                                                     ),
@@ -1989,9 +1550,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                           ),
                                           SizedBox(
                                             height: 180,
-                                            width: MediaQuery.of(context)
-                                                .size
-                                                .width,
+                                            width: MediaQuery.of(context).size.width,
                                             child: SingleChildScrollView(
                                               child: Column(
                                                 children: _newSundry,
@@ -2015,35 +1574,28 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                               Column(
                                 children: [
                                   SizedBox(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.14,
+                                    width: MediaQuery.of(context).size.width * 0.14,
                                     height: 30,
                                     child: SizedBox(
-                                      width:
-                                          MediaQuery.of(context).size.width * 0,
+                                      width: MediaQuery.of(context).size.width * 0,
                                       child: ElevatedButton(
                                         onPressed: () {
                                           openDialog1(
                                             context,
                                             selectedLedgerName!,
-                                            purchaseController
-                                                .partyController.text,
+                                            purchaseController.partyController.text,
                                             TfinalAmt,
                                             createPurchaseReturn,
                                           );
                                         },
                                         style: ButtonStyle(
-                                          backgroundColor:
-                                              MaterialStateProperty.all<Color>(
+                                          backgroundColor: MaterialStateProperty.all<Color>(
                                             const Color(0xFFFFFACD),
                                           ),
-                                          shape: MaterialStateProperty.all<
-                                              OutlinedBorder>(
+                                          shape: MaterialStateProperty.all<OutlinedBorder>(
                                             RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(1.0),
-                                              side: const BorderSide(
-                                                  color: Colors.black),
+                                              borderRadius: BorderRadius.circular(1.0),
+                                              side: const BorderSide(color: Colors.black),
                                             ),
                                           ),
                                         ),
@@ -2064,34 +1616,27 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 ],
                               ),
                               SizedBox(
-                                width:
-                                    MediaQuery.of(context).size.width * 0.002,
+                                width: MediaQuery.of(context).size.width * 0.002,
                               ),
                               Column(
                                 children: [
                                   SizedBox(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.14,
+                                    width: MediaQuery.of(context).size.width * 0.14,
                                     height: 30,
                                     child: SizedBox(
-                                      width:
-                                          MediaQuery.of(context).size.width * 0,
+                                      width: MediaQuery.of(context).size.width * 0,
                                       child: ElevatedButton(
                                         onPressed: () {
                                           Navigator.of(context).pop();
                                         },
                                         style: ButtonStyle(
-                                          backgroundColor:
-                                              MaterialStateProperty.all<Color>(
+                                          backgroundColor: MaterialStateProperty.all<Color>(
                                             const Color(0xFFFFFACD),
                                           ),
-                                          shape: MaterialStateProperty.all<
-                                              OutlinedBorder>(
+                                          shape: MaterialStateProperty.all<OutlinedBorder>(
                                             RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(1.0),
-                                              side: const BorderSide(
-                                                  color: Colors.black),
+                                              borderRadius: BorderRadius.circular(1.0),
+                                              side: const BorderSide(color: Colors.black),
                                             ),
                                           ),
                                         ),
@@ -2112,34 +1657,27 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 ],
                               ),
                               SizedBox(
-                                width:
-                                    MediaQuery.of(context).size.width * 0.002,
+                                width: MediaQuery.of(context).size.width * 0.002,
                               ),
                               Column(
                                 children: [
                                   SizedBox(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.14,
+                                    width: MediaQuery.of(context).size.width * 0.14,
                                     height: 30,
                                     child: SizedBox(
-                                      width:
-                                          MediaQuery.of(context).size.width * 0,
+                                      width: MediaQuery.of(context).size.width * 0,
                                       child: ElevatedButton(
                                         onPressed: () {
                                           // Clear All
                                         },
                                         style: ButtonStyle(
-                                          backgroundColor:
-                                              MaterialStateProperty.all<Color>(
+                                          backgroundColor: MaterialStateProperty.all<Color>(
                                             const Color(0xFFFFFACD),
                                           ),
-                                          shape: MaterialStateProperty.all<
-                                              OutlinedBorder>(
+                                          shape: MaterialStateProperty.all<OutlinedBorder>(
                                             RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(1.0),
-                                              side: const BorderSide(
-                                                  color: Colors.black),
+                                              borderRadius: BorderRadius.circular(1.0),
+                                              side: const BorderSide(color: Colors.black),
                                             ),
                                           ),
                                         ),
@@ -2159,9 +1697,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                   ),
                                 ],
                               ),
-                              SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.20),
+                              SizedBox(width: MediaQuery.of(context).size.width * 0.20),
                               // Round off area...
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -2172,10 +1708,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                         padding: const EdgeInsets.all(8.0),
                                         child: SizedBox(
                                           height: 20,
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.05,
+                                          width: MediaQuery.of(context).size.width * 0.05,
                                           child: Text(
                                             'Round-Off: ',
                                             style: GoogleFonts.poppins(
@@ -2190,10 +1723,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                         padding: const EdgeInsets.all(8.0),
                                         child: Container(
                                           height: 20,
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.1,
+                                          width: MediaQuery.of(context).size.width * 0.1,
                                           decoration: const BoxDecoration(
                                               // border: Border(
                                               //     bottom:
@@ -2201,24 +1731,17 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                               ),
                                           child: TextFormField(
                                             decoration: const InputDecoration(
-                                              contentPadding:
-                                                  EdgeInsets.all(12.0),
-                                              focusedBorder:
-                                                  UnderlineInputBorder(
-                                                borderSide: BorderSide(
-                                                    color: Colors.transparent),
+                                              contentPadding: EdgeInsets.all(12.0),
+                                              focusedBorder: UnderlineInputBorder(
+                                                borderSide: BorderSide(color: Colors.transparent),
                                               ),
-                                              enabledBorder:
-                                                  UnderlineInputBorder(
-                                                borderSide: BorderSide(
-                                                    color: Colors.transparent),
+                                              enabledBorder: UnderlineInputBorder(
+                                                borderSide: BorderSide(color: Colors.transparent),
                                               ),
                                             ),
                                             controller: roundOffController,
                                             focusNode: roundOffFocusNode,
-                                            keyboardType: const TextInputType
-                                                .numberWithOptions(
-                                                signed: true, decimal: true),
+                                            keyboardType: const TextInputType.numberWithOptions(signed: true, decimal: true),
                                             textAlign: TextAlign.center,
                                             style: GoogleFonts.poppins(
                                               fontSize: 15,
@@ -2226,13 +1749,10 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                               color: const Color(0xFF4B0082),
                                             ),
                                             onChanged: (value) {
-                                              double newRoundOff =
-                                                  double.tryParse(value) ??
-                                                      0.00;
+                                              double newRoundOff = double.tryParse(value) ?? 0.00;
                                               setState(() {
                                                 TRoundOff = newRoundOff;
-                                                TfinalAmt =
-                                                    TnetAmount + TRoundOff;
+                                                TfinalAmt = TnetAmount + TRoundOff;
                                                 isManualRoundOffChange = true;
                                               });
                                             },
@@ -2247,10 +1767,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                         padding: const EdgeInsets.all(8.0),
                                         child: SizedBox(
                                           height: 20,
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.05,
+                                          width: MediaQuery.of(context).size.width * 0.05,
                                           child: Text(
                                             'Amount: ',
                                             style: GoogleFonts.poppins(
@@ -2265,10 +1782,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                         padding: const EdgeInsets.all(8.0),
                                         child: Container(
                                           height: 20,
-                                          width: MediaQuery.of(context)
-                                                  .size
-                                                  .width *
-                                              0.1,
+                                          width: MediaQuery.of(context).size.width * 0.1,
                                           decoration: const BoxDecoration(
                                               // border: Border(
                                               //     bottom:
@@ -2310,53 +1824,43 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) =>
-                                    const ListOfPurchaseReturn(),
+                                builder: (context) => const ListOfPurchaseReturn(),
                               ),
                             );
                           },
                         ),
                         CustomList(
                           Skey: "F4",
-                          name: "Create New",
+                          name: "Add Line",
                           onTap: () {
+                            clearAllControllers();
                             final entryId = UniqueKey().toString();
+                            final searchCtrl = TextEditingController();
+                            searchController.add(searchCtrl);
                             setState(() {
                               _newWidget.add(
                                 PEntriesT(
                                   key: ValueKey(entryId),
                                   entryId: entryId,
                                   serialNumber: _newWidget.length + 1,
-                                  itemNameControllerP:
-                                      purchaseController.itemNameController,
-                                  qtyControllerP:
-                                      purchaseController.qtyController,
-                                  rateControllerP:
-                                      purchaseController.rateController,
-                                  unitControllerP:
-                                      purchaseController.unitController,
-                                  amountControllerP:
-                                      purchaseController.amountController,
-                                  taxControllerP:
-                                      purchaseController.taxController,
-                                  sgstControllerP:
-                                      purchaseController.sgstController,
-                                  cgstControllerP:
-                                      purchaseController.cgstController,
-                                  igstControllerP:
-                                      purchaseController.igstController,
-                                  netAmountControllerP:
-                                      purchaseController.netAmountController,
-                                  discountControllerP:
-                                      purchaseController.discountController,
-                                  sellingPriceControllerP:
-                                      purchaseController.sellingPriceController,
+                                  itemNameControllerP: purchaseController.itemNameController,
+                                  qtyControllerP: purchaseController.qtyController,
+                                  rateControllerP: purchaseController.rateController,
+                                  unitControllerP: purchaseController.unitController,
+                                  amountControllerP: purchaseController.amountController,
+                                  taxControllerP: purchaseController.taxController,
+                                  sgstControllerP: purchaseController.sgstController,
+                                  cgstControllerP: purchaseController.cgstController,
+                                  igstControllerP: purchaseController.igstController,
+                                  netAmountControllerP: purchaseController.netAmountController,
+                                  discountControllerP: purchaseController.discountController,
+                                  searchControllers: searchCtrl,
+                                  sellingPriceControllerP: purchaseController.sellingPriceController,
                                   onSaveValues: saveValues,
                                   onDelete: (String entryId) {
                                     setState(
                                       () {
-                                        _newWidget.removeWhere((widget) =>
-                                            widget.key == ValueKey(entryId));
+                                        _newWidget.removeWhere((widget) => widget.key == ValueKey(entryId));
                                         Map<String, dynamic>? entryToRemove;
                                         for (final entry in _allValues) {
                                           if (entry['uniqueKey'] == entryId) {
@@ -2650,8 +2154,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
       ledger: selectedLedgerName!,
       place: selectedState!,
       billNumber: purchaseController.billNumberController.text,
-      remarks:
-          purchaseController.remarksController?.text ?? 'No remark available',
+      remarks: purchaseController.remarksController?.text ?? 'No remark available',
       totalAmount: TfinalAmt.toStringAsFixed(2),
       entries: _allValues.map((entry) {
         return Entry(
@@ -2676,9 +2179,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
         );
       }).toList(),
       billwise: billwise,
-      cashAmount: purchaseController.cashAmountController.text.isEmpty
-          ? '0'
-          : purchaseController.cashAmountController.text,
+      cashAmount: purchaseController.cashAmountController.text.isEmpty ? '0' : purchaseController.cashAmountController.text,
     );
     await purchaseReturnService
         .createPurchaseReturn(
@@ -2687,8 +2188,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
         .then((value) async {
       clearAll();
       fetchPurchaseReturnEntries().then((_) {
-        final newPurchaseReturnEntry = fetchedPurchaseReturn.firstWhere(
-            (element) => element.no == purchaseReturn.no,
+        final newPurchaseReturnEntry = fetchedPurchaseReturn.firstWhere((element) => element.no == purchaseReturn.no,
             orElse: () => PurchaseReturn(
                   id: '',
                   companyCode: '',
@@ -2721,22 +2221,19 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
               content: Text(
                 'Do you want to print the receipt?',
                 textAlign: TextAlign.center,
-                style: GoogleFonts.poppins(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black),
+                style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black),
               ),
               actions: <Widget>[
                 TextButton(
                   onPressed: () {
-                    // Navigator.of(context).pushReplacement(
-                    //   MaterialPageRoute(
-                    //     builder: (context) => PurchasePrintBigReceipt(
-                    //       'Purchase Receipt',
-                    //       purchaseID: newPurchaseReturnEntry.id,
-                    //     ),
-                    //   ),
-                    // );
+                    Navigator.of(context).pushReplacement(
+                      MaterialPageRoute(
+                        builder: (context) => PurchaseReturnPrint(
+                          'Purchase Receipt',
+                          purchaseID: newPurchaseReturnEntry.id!,
+                        ),
+                      ),
+                    );
                   },
                   child: const Text(
                     'YES',
@@ -2774,8 +2271,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
   void saveValues(Map<String, dynamic> values) {
     final String uniqueKey = values['uniqueKey'];
 
-    final existingEntryIndex =
-        _allValues.indexWhere((entry) => entry['uniqueKey'] == uniqueKey);
+    final existingEntryIndex = _allValues.indexWhere((entry) => entry['uniqueKey'] == uniqueKey);
 
     setState(() {
       if (existingEntryIndex != -1) {
@@ -2804,10 +2300,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
       discount += double.tryParse(values['discount']) ?? 0;
     }
     double originalTotalAmount = netAmount + Ttotal;
-    double roundedTotalAmount =
-        (originalTotalAmount - originalTotalAmount.floor()) >= 0.50
-            ? originalTotalAmount.ceil().toDouble()
-            : originalTotalAmount.floor().toDouble();
+    double roundedTotalAmount = (originalTotalAmount - originalTotalAmount.floor()) >= 0.50 ? originalTotalAmount.ceil().toDouble() : originalTotalAmount.floor().toDouble();
     double roundOffAmount = roundedTotalAmount - originalTotalAmount;
 
     setState(() {
@@ -2823,8 +2316,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
         TfinalAmt = TnetAmount + TRoundOff;
         roundOffController.text = TRoundOff.toStringAsFixed(2);
       } else {
-        TfinalAmt =
-            TnetAmount + (double.tryParse(roundOffController.text) ?? 0.00);
+        TfinalAmt = TnetAmount + (double.tryParse(roundOffController.text) ?? 0.00);
       }
     });
   }
@@ -2842,11 +2334,10 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
 
   Future<void> fetchItems() async {
     try {
-      final List<Item> items = await itemsService.fetchItems();
+      final List<Item> items = await itemsService.fetchItemsWithPagination(1);
 
       itemsList = items;
     } catch (error) {
-      // ignore: avoid_print
       print('Failed to fetch ledger name: $error');
     }
   }
@@ -2863,8 +2354,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
 
   Future<void> fetchMeasurementLimit() async {
     try {
-      final List<MeasurementLimit> measurements =
-          await measurementService.fetchMeasurementLimits();
+      final List<MeasurementLimit> measurements = await measurementService.fetchMeasurementLimits();
 
       measurement = measurements;
     } catch (error) {
@@ -2876,18 +2366,10 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
     try {
       final List<Ledger> ledger = await ledgerService.fetchLedgers();
       // Filter ledgers by multiple ledgerGroup IDs and status
-      suggestionItems5 = ledger
-          .where((element) =>
-              element.status == 'Yes' &&
-              (element.ledgerGroup == '662f97d2a07ec73369c237b0' ||
-                  element.ledgerGroup == '662f9832a07ec73369c237c2' ||
-                  element.ledgerGroup == '662f97caa07ec73369c237ae' ||
-                  element.ledgerGroup == '662f9863a07ec73369c237cc'))
-          .toList();
+      suggestionItems5 = ledger.where((element) => element.status == 'Yes' && (element.ledgerGroup == '662f97d2a07ec73369c237b0' || element.ledgerGroup == '662f9832a07ec73369c237c2' || element.ledgerGroup == '662f97caa07ec73369c237ae' || element.ledgerGroup == '662f9863a07ec73369c237cc')).toList();
 
       if (suggestionItems5.isNotEmpty) {
-        selectedLedgerName =
-            suggestionItems5.isNotEmpty ? suggestionItems5.first.id : null;
+        selectedLedgerName = suggestionItems5.isNotEmpty ? suggestionItems5.first.id : null;
         ledgerAmount = suggestionItems5.first.debitBalance;
       }
     } catch (error) {
@@ -2897,8 +2379,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
 
   Future<void> fetchPurchaseReturnEntries() async {
     try {
-      final List<PurchaseReturn> purchaseReturn =
-          await purchaseReturnService.fetchAllPurchaseReturns();
+      final List<PurchaseReturn> purchaseReturn = await purchaseReturnService.fetchAllPurchaseReturns();
       setState(() {
         fetchedPurchaseReturn = purchaseReturn;
       });
@@ -2930,8 +2411,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
     String? length = await getNumberOfPurchaseReturn();
     setState(() {
       purchaseLength = length;
-      purchaseController.noController.text =
-          (int.parse(purchaseLength!) + 1).toString();
+      purchaseController.noController.text = (int.parse(purchaseLength!) + 1).toString();
     });
   }
 
@@ -2982,8 +2462,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
     }
   }
 
-  void saveSelectedPurchaseEntries(
-      {required Purchase purchase, required List<bool> checkboxStates}) {
+  void saveSelectedPurchaseEntries({required Purchase purchase, required List<bool> checkboxStates}) {
     for (int i = 0; i < checkboxStates.length; i++) {
       if (checkboxStates[i]) {
         selectedEntries.add(purchase.entries[i]);
@@ -3000,8 +2479,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
 
     print('Purchase Entries: ${purchase.entries}');
 
-    List<bool> checkboxStates =
-        List.generate(purchase.entries.length, (index) => true);
+    List<bool> checkboxStates = List.generate(purchase.entries.length, (index) => true);
     print("............1");
     showDialog(
       barrierDismissible: false,
@@ -3031,8 +2509,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                   }
 
                   print("............3");
-                  purchaseEntries =
-                      purchase.entries.asMap().entries.map((entry) {
+                  purchaseEntries = purchase.entries.asMap().entries.map((entry) {
                     int index = entry.key;
                     var entryValue = entry.value;
                     print("............4");
@@ -3079,8 +2556,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 suggestionItems5.isNotEmpty
                                     ? suggestionItems5
                                         .firstWhere(
-                                          (element) =>
-                                              element.id == purchase.ledger,
+                                          (element) => element.id == purchase.ledger,
                                         )
                                         .name
                                     : '',
@@ -3102,8 +2578,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                               child: Text(
                                 itemsList
                                     .firstWhere(
-                                      (element) =>
-                                          element.id == entryValue.itemName,
+                                      (element) => element.id == entryValue.itemName,
                                     )
                                     .itemName,
                                 overflow: TextOverflow.ellipsis,
@@ -3222,8 +2697,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 child: PRTopTextfield(
                                   controller: noController,
                                   onSaved: (newValue) {},
-                                  padding: const EdgeInsets.only(
-                                      left: 8.0, bottom: 16.0),
+                                  padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
                                   hintText: '',
                                 ),
                               ),
@@ -3291,8 +2765,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                       ),
                       const SizedBox(height: 10),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8.0, vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
                         child: Container(
                           constraints: BoxConstraints(
                             maxHeight: MediaQuery.of(context).size.height / 1.5,
@@ -3309,8 +2782,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Table(
-                                  border: TableBorder.all(
-                                      width: 1, color: Colors.black),
+                                  border: TableBorder.all(width: 1, color: Colors.black),
                                   columnWidths: const {
                                     0: FlexColumnWidth(3),
                                     1: FlexColumnWidth(2),
@@ -3330,16 +2802,14 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                             child: Align(
                                               alignment: Alignment.center,
                                               child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(4.0),
+                                                padding: const EdgeInsets.all(4.0),
                                                 child: Text(
                                                   "Date",
                                                   textAlign: TextAlign.end,
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 20,
                                                     fontWeight: FontWeight.bold,
-                                                    color:
-                                                        const Color(0xff4B0082),
+                                                    color: const Color(0xff4B0082),
                                                   ),
                                                 ),
                                               ),
@@ -3364,8 +2834,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                         )),
                                         TableCell(
                                           child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8.0),
+                                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                             child: SizedBox(
                                               height: 40,
                                               child: Align(
@@ -3376,8 +2845,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 20,
                                                     fontWeight: FontWeight.bold,
-                                                    color:
-                                                        const Color(0xff4B0082),
+                                                    color: const Color(0xff4B0082),
                                                   ),
                                                 ),
                                               ),
@@ -3386,8 +2854,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                         ),
                                         TableCell(
                                           child: Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8.0),
+                                            padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                             child: SizedBox(
                                               height: 40,
                                               child: Align(
@@ -3398,8 +2865,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 20,
                                                     fontWeight: FontWeight.bold,
-                                                    color:
-                                                        const Color(0xff4B0082),
+                                                    color: const Color(0xff4B0082),
                                                   ),
                                                 ),
                                               ),
@@ -3412,16 +2878,14 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                             child: Align(
                                               alignment: Alignment.center,
                                               child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(4.0),
+                                                padding: const EdgeInsets.all(4.0),
                                                 child: Text(
                                                   "Qty",
                                                   textAlign: TextAlign.end,
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 20,
                                                     fontWeight: FontWeight.bold,
-                                                    color:
-                                                        const Color(0xff4B0082),
+                                                    color: const Color(0xff4B0082),
                                                   ),
                                                 ),
                                               ),
@@ -3434,16 +2898,14 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                             child: Align(
                                               alignment: Alignment.center,
                                               child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(4.0),
+                                                padding: const EdgeInsets.all(4.0),
                                                 child: Text(
                                                   "Amount",
                                                   textAlign: TextAlign.end,
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 20,
                                                     fontWeight: FontWeight.bold,
-                                                    color:
-                                                        const Color(0xff4B0082),
+                                                    color: const Color(0xff4B0082),
                                                   ),
                                                 ),
                                               ),
@@ -3456,16 +2918,14 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                             child: Align(
                                               alignment: Alignment.center,
                                               child: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(4.0),
+                                                padding: const EdgeInsets.all(4.0),
                                                 child: Text(
                                                   "Select",
                                                   textAlign: TextAlign.end,
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 15,
                                                     fontWeight: FontWeight.bold,
-                                                    color:
-                                                        const Color(0xff4B0082),
+                                                    color: const Color(0xff4B0082),
                                                   ),
                                                 ),
                                               ),
@@ -3485,8 +2945,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
 
                       // Buttons
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.end,
@@ -3569,12 +3028,10 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
   }
 
   void showReturnInfoDialog() async {
-    List<Purchase>? purchase =
-        await purchaseServices.fetchPurchaseByLedger(selectedLedgerName!);
+    List<Purchase>? purchase = await purchaseServices.fetchPurchaseByLedger(selectedLedgerName!);
     print("purchase length : ${purchase!.length}");
     TextEditingController originalInvoiceNoController = TextEditingController();
-    TextEditingController originalInvoiceDateController =
-        TextEditingController();
+    TextEditingController originalInvoiceDateController = TextEditingController();
 
     List<String> reasons = [
       '01-Sales Return',
@@ -3658,8 +3115,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 child: PRTopTextfield(
                                   controller: originalInvoiceNoController,
                                   onSaved: (newValue) {},
-                                  padding: const EdgeInsets.only(
-                                      left: 8.0, bottom: 16.0),
+                                  padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
                                   hintText: '',
                                 ),
                               ),
@@ -3669,13 +3125,11 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                               flex: 2,
                               child: InkWell(
                                 onTap: () async {
-                                  if (originalInvoiceNoController
-                                      .text.isEmpty) {
+                                  if (originalInvoiceNoController.text.isEmpty) {
                                     PanaraConfirmDialog.showAnimatedGrow(
                                       context,
                                       title: "BillingSphere",
-                                      message:
-                                          "Please enter the original invoice number",
+                                      message: "Please enter the original invoice number",
                                       confirmButtonText: "Confirm",
                                       cancelButtonText: "Cancel",
                                       onTapCancel: () {
@@ -3685,21 +3139,15 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                         // pop screen
                                         Navigator.of(context).pop();
                                       },
-                                      panaraDialogType:
-                                          PanaraDialogType.warning,
+                                      panaraDialogType: PanaraDialogType.warning,
                                     );
                                   } else {
-                                    final Purchase? purchase =
-                                        await purchaseServices
-                                            .fetchPurchaseByBillNumber(
-                                                originalInvoiceNoController
-                                                    .text);
+                                    final Purchase? purchase = await purchaseServices.fetchPurchaseByBillNumber(originalInvoiceNoController.text);
                                     if (purchase == null) {
                                       PanaraConfirmDialog.showAnimatedGrow(
                                         context,
                                         title: "BillingSphere",
-                                        message:
-                                            "No purchase found with the given invoice number",
+                                        message: "No purchase found with the given invoice number",
                                         confirmButtonText: "Confirm",
                                         cancelButtonText: "Cancel",
                                         onTapCancel: () {
@@ -3709,17 +3157,14 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                           // pop screen
                                           Navigator.of(context).pop();
                                         },
-                                        panaraDialogType:
-                                            PanaraDialogType.error,
+                                        panaraDialogType: PanaraDialogType.error,
                                       );
                                     } else {
                                       print('Purchase: $purchase');
                                       // Set the date
-                                      originalInvoiceDateController.text =
-                                          purchase.date;
+                                      originalInvoiceDateController.text = purchase.date;
                                       getDetailsDialog(
-                                        noController:
-                                            originalInvoiceNoController,
+                                        noController: originalInvoiceNoController,
                                         purchase: purchase,
                                       );
                                     }
@@ -3752,8 +3197,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -3770,8 +3214,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                               child: PRTopTextfield(
                                 controller: originalInvoiceDateController,
                                 onSaved: (newValue) {},
-                                padding: const EdgeInsets.only(
-                                    left: 8.0, bottom: 16.0),
+                                padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
                                 hintText: '',
                               ),
                             ),
@@ -3779,8 +3222,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -3814,15 +3256,11 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                     ),
                                     menuHeight: 300,
                                     enableFilter: true,
-                                    width: MediaQuery.of(context).size.width *
-                                        0.19,
-                                    selectedTrailingIcon:
-                                        const SizedBox.shrink(),
-                                    inputDecorationTheme:
-                                        const InputDecorationTheme(
+                                    width: MediaQuery.of(context).size.width * 0.19,
+                                    selectedTrailingIcon: const SizedBox.shrink(),
+                                    inputDecorationTheme: const InputDecorationTheme(
                                       border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 16),
+                                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                                       isDense: true,
                                       activeIndicatorBorder: BorderSide(
                                         color: Colors.transparent,
@@ -3830,9 +3268,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                     ),
                                     expandedInsets: EdgeInsets.zero,
                                     onSelected: (String? value) {},
-                                    dropdownMenuEntries: reasons
-                                        .map<DropdownMenuEntry<String>>(
-                                            (String value) {
+                                    dropdownMenuEntries: reasons.map<DropdownMenuEntry<String>>((String value) {
                                       return DropdownMenuEntry<String>(
                                         value: value,
                                         label: value,
@@ -3855,8 +3291,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.end,
@@ -3932,8 +3367,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8.0, vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
                         child: Container(
                           constraints: BoxConstraints(
                             maxHeight: MediaQuery.of(context).size.height / 2.5,
@@ -3951,8 +3385,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Table(
-                                    border: TableBorder.all(
-                                        width: 1, color: Colors.black),
+                                    border: TableBorder.all(width: 1, color: Colors.black),
                                     columnWidths: const {
                                       0: FlexColumnWidth(3),
                                       1: FlexColumnWidth(3),
@@ -3971,17 +3404,14 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                               child: Align(
                                                 alignment: Alignment.center,
                                                 child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(4.0),
+                                                  padding: const EdgeInsets.all(4.0),
                                                   child: Text(
                                                     "Voucher",
                                                     textAlign: TextAlign.end,
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 15,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: const Color(
-                                                          0xff4B0082),
+                                                      fontWeight: FontWeight.bold,
+                                                      color: const Color(0xff4B0082),
                                                     ),
                                                   ),
                                                 ),
@@ -3999,8 +3429,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                 style: GoogleFonts.poppins(
                                                   fontSize: 15,
                                                   fontWeight: FontWeight.bold,
-                                                  color:
-                                                      const Color(0xff4B0082),
+                                                  color: const Color(0xff4B0082),
                                                 ),
                                               ),
                                             ),
@@ -4016,8 +3445,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 15,
                                                     fontWeight: FontWeight.bold,
-                                                    color:
-                                                        const Color(0xff4B0082),
+                                                    color: const Color(0xff4B0082),
                                                   ),
                                                 ),
                                               ),
@@ -4034,8 +3462,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 15,
                                                     fontWeight: FontWeight.bold,
-                                                    color:
-                                                        const Color(0xff4B0082),
+                                                    color: const Color(0xff4B0082),
                                                   ),
                                                 ),
                                               ),
@@ -4047,17 +3474,14 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                               child: Align(
                                                 alignment: Alignment.center,
                                                 child: Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(4.0),
+                                                  padding: const EdgeInsets.all(4.0),
                                                   child: Text(
                                                     "Amount",
                                                     textAlign: TextAlign.end,
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 15,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: const Color(
-                                                          0xff4B0082),
+                                                      fontWeight: FontWeight.bold,
+                                                      color: const Color(0xff4B0082),
                                                     ),
                                                   ),
                                                 ),
@@ -4139,14 +3563,11 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                 child: Align(
                                                   alignment: Alignment.center,
                                                   child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            4.0),
+                                                    padding: const EdgeInsets.all(4.0),
                                                     child: Text(
                                                       entry.totalAmount,
                                                       textAlign: TextAlign.end,
-                                                      style:
-                                                          GoogleFonts.poppins(
+                                                      style: GoogleFonts.poppins(
                                                         fontSize: 15,
                                                         color: Colors.black,
                                                       ),
@@ -4254,8 +3675,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                       ),
                       const SizedBox(height: 10),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -4289,15 +3709,11 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                     ),
                                     menuHeight: 300,
                                     enableFilter: true,
-                                    width: MediaQuery.of(context).size.width *
-                                        0.19,
-                                    selectedTrailingIcon:
-                                        const SizedBox.shrink(),
-                                    inputDecorationTheme:
-                                        const InputDecorationTheme(
+                                    width: MediaQuery.of(context).size.width * 0.19,
+                                    selectedTrailingIcon: const SizedBox.shrink(),
+                                    inputDecorationTheme: const InputDecorationTheme(
                                       border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                          horizontal: 8, vertical: 16),
+                                      contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                                       isDense: true,
                                       activeIndicatorBorder: BorderSide(
                                         color: Colors.transparent,
@@ -4307,23 +3723,16 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                     onSelected: (String? value) async {
                                       List<dynamic>? fetchedData;
                                       if (value == "Retail Purchase") {
-                                        fetchedData = await purchaseServices
-                                            .fetchPurchaseByLedger(
-                                                selectedLedgerName!);
+                                        fetchedData = await purchaseServices.fetchPurchaseByLedger(selectedLedgerName!);
                                       } else if (value == "Purchase Return") {
-                                        fetchedData =
-                                            await purchaseReturnService
-                                                .fetchPurchaseReturnByLedger(
-                                                    selectedLedgerName!);
+                                        fetchedData = await purchaseReturnService.fetchPurchaseReturnByLedger(selectedLedgerName!);
                                       }
 
                                       setState(() {
                                         purchase = fetchedData;
                                       });
                                     },
-                                    dropdownMenuEntries: reasons
-                                        .map<DropdownMenuEntry<String>>(
-                                            (String value) {
+                                    dropdownMenuEntries: reasons.map<DropdownMenuEntry<String>>((String value) {
                                       return DropdownMenuEntry<String>(
                                         value: value,
                                         label: value,
@@ -4346,8 +3755,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -4364,8 +3772,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                               child: PRTopTextfield(
                                 controller: vchController,
                                 onSaved: (newValue) {},
-                                padding: const EdgeInsets.only(
-                                    left: 8.0, bottom: 16.0),
+                                padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
                                 hintText: '',
                               ),
                             ),
@@ -4373,8 +3780,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisAlignment: MainAxisAlignment.end,
@@ -4398,16 +3804,14 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                   );
                                 } else {
                                   var matchingPurchase = purchase?.firstWhere(
-                                    (entry) =>
-                                        entry.billNumber == vchController.text,
+                                    (entry) => entry.billNumber == vchController.text,
                                   );
 
                                   if (matchingPurchase == null) {
                                     PanaraConfirmDialog.showAnimatedGrow(
                                       context,
                                       title: "BillingSphere",
-                                      message:
-                                          "No purchase found with the given invoice number",
+                                      message: "No purchase found with the given invoice number",
                                       confirmButtonText: "Confirm",
                                       cancelButtonText: "Cancel",
                                       onTapCancel: () {
@@ -4420,25 +3824,22 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                     );
                                   } else {
                                     print(matchingPurchase.entries);
-                                    List<PurchaseEntry> entries =
-                                        (matchingPurchase.entries
-                                                as List<dynamic>)
-                                            .map((entry) => PurchaseEntry(
-                                                  itemName: entry.itemName,
-                                                  qty: entry.qty,
-                                                  rate: entry.rate,
-                                                  unit: entry.unit,
-                                                  amount: entry.amount,
-                                                  tax: entry.tax,
-                                                  sgst: entry.sgst,
-                                                  discount: entry.discount,
-                                                  cgst: entry.cgst,
-                                                  igst: entry.igst,
-                                                  netAmount: entry.netAmount,
-                                                  sellingPrice:
-                                                      entry.sellingPrice,
-                                                ))
-                                            .toList();
+                                    List<PurchaseEntry> entries = (matchingPurchase.entries as List<dynamic>)
+                                        .map((entry) => PurchaseEntry(
+                                              itemName: entry.itemName,
+                                              qty: entry.qty,
+                                              rate: entry.rate,
+                                              unit: entry.unit,
+                                              amount: entry.amount,
+                                              tax: entry.tax,
+                                              sgst: entry.sgst,
+                                              discount: entry.discount,
+                                              cgst: entry.cgst,
+                                              igst: entry.igst,
+                                              netAmount: entry.netAmount,
+                                              sellingPrice: entry.sellingPrice,
+                                            ))
+                                        .toList();
 
                                     _updateWidgetList(entries);
                                   }
@@ -4500,8 +3901,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                       ),
                       const SizedBox(height: 10),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8.0, vertical: 5),
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5),
                         child: Container(
                           constraints: BoxConstraints(
                             maxHeight: MediaQuery.of(context).size.height / 2.5,
@@ -4520,8 +3920,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                 children: [
                                   if (purchase != null)
                                     Table(
-                                      border: TableBorder.all(
-                                          width: 1, color: Colors.black),
+                                      border: TableBorder.all(width: 1, color: Colors.black),
                                       columnWidths: const {
                                         0: FlexColumnWidth(3),
                                         1: FlexColumnWidth(3),
@@ -4559,8 +3958,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
                                                 text: entry.billNumber,
                                               ),
                                               buildTableCell(
-                                                text: purchaseController
-                                                    .partyController.text,
+                                                text: purchaseController.partyController.text,
                                               ),
                                               buildTableCell(
                                                 text: entry.totalAmount,
@@ -4584,25 +3982,6 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
         );
       },
     );
-  }
-
-  List<PurchaseEntry> convertEntriesToPurchaseEntries(List<dynamic> entries) {
-    return entries.map((entry) {
-      return PurchaseEntry(
-        itemName: entry.itemName,
-        qty: entry.qty,
-        rate: entry.rate,
-        unit: entry.unit,
-        amount: entry.amount,
-        tax: entry.tax,
-        sgst: entry.sgst,
-        discount: entry.discount,
-        cgst: entry.cgst,
-        igst: entry.igst,
-        netAmount: entry.netAmount,
-        sellingPrice: entry.sellingPrice,
-      );
-    }).toList();
   }
 
   Widget buildTableCell({
@@ -4634,8 +4013,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
     );
   }
 
-  void openDialog1(BuildContext context, String ledgerID, String ledgerName,
-      double debitAmount, VoidCallback onSave) {
+  void openDialog1(BuildContext context, String ledgerID, String ledgerName, double debitAmount, VoidCallback onSave) {
     showDialog(
       context: context,
       builder: (context) => PaymentBillwise(
@@ -4665,25 +4043,11 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
   void _updateWidgetList(List<PurchaseEntry> selectedEntries) {
     setState(() {
       _newWidget.clear();
-      print("enetring....updateWidget");
-      // purchaseController.noController.text = selectedPurchase!.no;
-      // purchaseController.dateController.text = selectedPurchase!.date;
-      // purchaseController.ledgerController.text = suggestionItems5.isNotEmpty
-      //     ? suggestionItems5
-      //         .firstWhere((element) => element.id == selectedPurchase!.ledger)
-      //         .name
-      //     : '';
-      // purchaseController.billNumberController.text =
-      //     selectedPurchase!.billNumber;
-      // purchaseController.date2Controller.text = selectedPurchase!.date2;
-      // purchaseController.remarksController!.text = selectedPurchase!.remarks;
-      // selectedLedgerName = selectedPurchase!.ledger;
-      // selectedState = selectedPurchase!.place;
-      // selectedStatus = selectedPurchase!.type;
-      print("after assinging");
+      print("Entering....updateWidget");
+
       for (var i = 0; i < selectedEntries.length; i++) {
         final entry = selectedEntries[i];
-        print("add all values");
+        print("Add all values");
 
         _allValues.add({
           'uniqueKey': entry.itemName,
@@ -4700,32 +4064,30 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
           'netAmount': entry.netAmount.toString(),
           'sellingPrice': entry.sellingPrice.toString(),
         });
+      }
 
-        final itemNameController = TextEditingController(text: entry.itemName);
-        final qtyController = TextEditingController(text: entry.qty.toString());
-        final rateController =
-            TextEditingController(text: entry.rate.toString());
-        final unitController = TextEditingController(text: entry.unit);
-        final amountController =
-            TextEditingController(text: entry.amount.toString());
-        final taxController = TextEditingController(text: entry.tax.toString());
-        final sgstController =
-            TextEditingController(text: entry.sgst.toString());
-        final cgstController =
-            TextEditingController(text: entry.cgst.toString());
-        final igstController =
-            TextEditingController(text: entry.igst.toString());
-        final netAmountController =
-            TextEditingController(text: entry.netAmount.toString());
-        final discountController =
-            TextEditingController(text: entry.discount.toString());
-        final sellingPriceController =
-            TextEditingController(text: entry.sellingPrice.toString());
+      for (var i = 0; i < _allValues.length; i++) {
+        final entry = _allValues[i];
+        print(entry);
+
+        final itemNameController = TextEditingController(text: entry['itemName']);
+        final searchController = TextEditingController(text: itemsList.firstWhere((element) => element.id == entry['itemName']).itemName);
+        final qtyController = TextEditingController(text: entry['qty']);
+        final rateController = TextEditingController(text: entry['rate']);
+        final unitController = TextEditingController(text: entry['unit']);
+        final amountController = TextEditingController(text: entry['amount']);
+        final taxController = TextEditingController(text: entry['tax']);
+        final sgstController = TextEditingController(text: entry['sgst']);
+        final cgstController = TextEditingController(text: entry['cgst']);
+        final igstController = TextEditingController(text: entry['igst']);
+        final netAmountController = TextEditingController(text: entry['netAmount']);
+        final discountController = TextEditingController(text: entry['discount']);
+        final sellingPriceController = TextEditingController(text: entry['sellingPrice']);
 
         _newWidget.add(
           PEntriesT(
-            key: ValueKey(entry.itemName),
-            entryId: entry.itemName,
+            key: ValueKey(entry['uniqueKey']),
+            entryId: entry['uniqueKey'],
             serialNumber: i + 1,
             itemNameControllerP: itemNameController,
             qtyControllerP: qtyController,
@@ -4739,6 +4101,7 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
             netAmountControllerP: netAmountController,
             discountControllerP: discountController,
             sellingPriceControllerP: sellingPriceController,
+            searchControllers: searchController,
             onSaveValues: saveValues,
             onDelete: (p0) {},
             item: itemsList,
@@ -4747,33 +4110,74 @@ class _PRDesktopBodyState extends State<PRDesktopBody> {
           ),
         );
       }
+      clearAllControllers();
 
       while (_newWidget.length < 5) {
-        final entryId = ValueKey(_newWidget.length);
-        _newWidget.add(PEntriesT(
-          unitControllerP: TextEditingController(),
-          entryId: entryId.toString(),
-          itemNameControllerP: TextEditingController(),
-          qtyControllerP: TextEditingController(),
-          rateControllerP: TextEditingController(),
-          amountControllerP: TextEditingController(),
-          taxControllerP: TextEditingController(),
-          sgstControllerP: TextEditingController(),
-          cgstControllerP: TextEditingController(),
-          igstControllerP: TextEditingController(),
-          netAmountControllerP: TextEditingController(),
-          discountControllerP: TextEditingController(),
-          sellingPriceControllerP: TextEditingController(),
-          onSaveValues: (p0) {},
-          onDelete: (p0) {},
-          serialNumber: _newWidget.length + 1,
-          item: itemsList,
-          measurementLimit: measurement,
-          taxCategory: taxLists,
-        ));
+        final entryId = UniqueKey().toString();
+
+        final searchController = TextEditingController();
+
+        _newWidget.add(
+          PEntriesT(
+            key: ValueKey(entryId),
+            entryId: entryId,
+            serialNumber: _newWidget.length + 1,
+            itemNameControllerP: purchaseController.itemNameController,
+            qtyControllerP: purchaseController.qtyController,
+            rateControllerP: purchaseController.rateController,
+            unitControllerP: purchaseController.unitController,
+            amountControllerP: purchaseController.amountController,
+            taxControllerP: purchaseController.taxController,
+            sgstControllerP: purchaseController.sgstController,
+            cgstControllerP: purchaseController.cgstController,
+            igstControllerP: purchaseController.igstController,
+            netAmountControllerP: purchaseController.netAmountController,
+            discountControllerP: purchaseController.discountController,
+            sellingPriceControllerP: purchaseController.sellingPriceController,
+            searchControllers: searchController,
+            onSaveValues: saveValues,
+            onDelete: (String entryId) {
+              setState(() {
+                _newWidget.removeWhere((widget) => widget.key == ValueKey(entryId));
+                Map<String, dynamic>? entryToRemove;
+                for (final entry in _allValues) {
+                  if (entry['uniqueKey'] == entryId) {
+                    entryToRemove = entry;
+                    break;
+                  }
+                }
+                if (entryToRemove != null) {
+                  _allValues.remove(entryToRemove);
+                }
+                calculateTotal();
+              });
+            },
+            item: itemsList,
+            measurementLimit: measurement,
+            taxCategory: taxLists,
+          ),
+        );
       }
+
+      selectedEntries.clear();
     });
-    print("done");
+
+    print("Done updating widget list");
+  }
+
+  void clearAllControllers() {
+    purchaseController.itemNameController.clear();
+    purchaseController.qtyController.clear();
+    purchaseController.rateController.clear();
+    purchaseController.unitController.clear();
+    purchaseController.amountController.clear();
+    purchaseController.taxController.clear();
+    purchaseController.sgstController.clear();
+    purchaseController.cgstController.clear();
+    purchaseController.igstController.clear();
+    purchaseController.netAmountController.clear();
+    purchaseController.discountController.clear();
+    purchaseController.sellingPriceController.clear();
   }
 
   void clearAll() {

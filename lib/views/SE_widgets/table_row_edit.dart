@@ -95,8 +95,7 @@ class _SEEntriesState extends State<SEEntries> {
   late TextEditingController discountRateController;
   late TextEditingController additionalInfoController;
 
-  final TextEditingController originaldiscountController =
-      TextEditingController();
+  final TextEditingController originaldiscountController = TextEditingController();
 
   // Backend Services/Repositories
   double originalNetAmount = 0.0;
@@ -147,25 +146,20 @@ class _SEEntriesState extends State<SEEntries> {
   void initState() {
     super.initState();
 
-    itemNameController =
-        TextEditingController(text: widget.itemNameControllerP.text);
+    itemNameController = TextEditingController(text: widget.itemNameControllerP.text);
     qtyController = TextEditingController(text: widget.qtyControllerP.text);
     stockController = TextEditingController(text: widget.stockControllerP.text);
     rateController = TextEditingController(text: widget.rateControllerP.text);
     rate2Controller = TextEditingController(text: widget.rate2ControllerP.text);
     unitController = TextEditingController(text: widget.unitControllerP.text);
-    amountController =
-        TextEditingController(text: widget.amountControllerP.text);
+    amountController = TextEditingController(text: widget.amountControllerP.text);
     taxController = TextEditingController(text: widget.taxControllerP.text);
     sgstController = TextEditingController(text: widget.sgstControllerP.text);
     cgstController = TextEditingController(text: widget.cgstControllerP.text);
     igstController = TextEditingController(text: widget.igstControllerP.text);
-    netAmountController =
-        TextEditingController(text: widget.netAmountControllerP.text);
-    discountRateController =
-        TextEditingController(text: widget.discountControllerP.text);
-    additionalInfoController =
-        TextEditingController(text: widget.additionalInfoControllerP.text);
+    netAmountController = TextEditingController(text: widget.netAmountControllerP.text);
+    discountRateController = TextEditingController(text: widget.discountControllerP.text);
+    additionalInfoController = TextEditingController(text: widget.additionalInfoControllerP.text);
   }
 
   // Get the ledger and store in a variable
@@ -184,11 +178,7 @@ class _SEEntriesState extends State<SEEntries> {
           title: Container(
             color: Colors.blue,
             padding: const EdgeInsets.all(16.0),
-            child: Text('${item.itemName} ADDTIONAL DETAILS',
-                style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w500,
-                    fontSize: 15)),
+            child: Text('${item.itemName} ADDTIONAL DETAILS', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500, fontSize: 15)),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -262,8 +252,7 @@ class _SEEntriesState extends State<SEEntries> {
 
   @override
   Widget build(BuildContext context) {
-    final itemProvider =
-        Provider.of<OnChangeItenProvider>(context, listen: false);
+    final itemProvider = Provider.of<OnChangeItenProvider>(context, listen: false);
     return Row(
       children: [
         Consumer<OnChangeLedgerProvider>(
@@ -279,19 +268,12 @@ class _SEEntriesState extends State<SEEntries> {
                       Container(
                         height: 40,
                         width: MediaQuery.of(context).size.width * 0.023,
-                        decoration: const BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(),
-                                top: BorderSide(),
-                                left: BorderSide())),
+                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                         child: Align(
                           alignment: Alignment.center,
                           child: Text(
                             '${widget.serialNo}',
-                            style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xff000000)),
+                            style: GoogleFonts.poppins(fontSize: 16, fontWeight: FontWeight.bold, color: const Color(0xff000000)),
                             textAlign: TextAlign.center,
                           ),
                         ),
@@ -300,22 +282,11 @@ class _SEEntriesState extends State<SEEntries> {
                       Container(
                         height: 40,
                         width: MediaQuery.of(context).size.width * 0.19,
-                        decoration: const BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(),
-                                top: BorderSide(),
-                                left: BorderSide())),
+                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                         child: DropdownButtonHideUnderline(
                           child: DropdownMenu<Item>(
                             requestFocusOnTap: true,
-                            initialSelection: itemNameController
-                                        .text.isNotEmpty &&
-                                    widget.itemsList!.isNotEmpty
-                                ? widget.itemsList!.firstWhere(
-                                    (element) =>
-                                        element.id == itemNameController.text,
-                                    orElse: () => widget.itemsList!.first)
-                                : null,
+                            initialSelection: itemNameController.text.isNotEmpty && widget.itemsList!.isNotEmpty ? widget.itemsList!.firstWhere((element) => element.id == itemNameController.text, orElse: () => widget.itemsList!.first) : null,
                             enableSearch: true,
                             trailingIcon: const SizedBox.shrink(),
                             textStyle: GoogleFonts.poppins(
@@ -326,26 +297,19 @@ class _SEEntriesState extends State<SEEntries> {
                             ),
                             menuHeight: 300,
                             enableFilter: true,
-                            searchCallback:
-                                (List<DropdownMenuEntry<Item>> entries,
-                                    String query) {
+                            searchCallback: (List<DropdownMenuEntry<Item>> entries, String query) {
                               if (query.isEmpty) {
                                 return null;
                               }
 
-                              final int index = entries
-                                  .indexWhere((DropdownMenuEntry<Item> entry) {
-                                return entry.label.toLowerCase() ==
-                                    query.toLowerCase();
+                              final int index = entries.indexWhere((DropdownMenuEntry<Item> entry) {
+                                return entry.label.toLowerCase() == query.toLowerCase();
                               });
 
                               return index != -1 ? index : null;
                             },
-                            filterCallback:
-                                (List<DropdownMenuEntry<Item>> entries,
-                                    String filter) {
-                              final String trimmedFilter =
-                                  filter.trim().toLowerCase();
+                            filterCallback: (List<DropdownMenuEntry<Item>> entries, String filter) {
+                              final String trimmedFilter = filter.trim().toLowerCase();
 
                               if (trimmedFilter.isEmpty) {
                                 return entries;
@@ -353,17 +317,14 @@ class _SEEntriesState extends State<SEEntries> {
 
                               // Filter the entries based on the query
                               return entries.where((entry) {
-                                return entry.value.itemName
-                                    .toLowerCase()
-                                    .contains(trimmedFilter);
+                                return entry.value.itemName.toLowerCase().contains(trimmedFilter);
                               }).toList();
                             },
                             width: MediaQuery.of(context).size.width * 0.19,
                             selectedTrailingIcon: const SizedBox.shrink(),
                             inputDecorationTheme: const InputDecorationTheme(
                               border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 16),
+                              contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                               isDense: true,
                               activeIndicatorBorder: BorderSide(
                                 color: Colors.transparent,
@@ -379,8 +340,7 @@ class _SEEntriesState extends State<SEEntries> {
 
                                 setState(() {
                                   itemNameController.text = selectedItemId!;
-                                  widget.itemNameControllerP.text =
-                                      itemNameController.text;
+                                  widget.itemNameControllerP.text = itemNameController.text;
                                 });
 
                                 String newId = '';
@@ -390,8 +350,7 @@ class _SEEntriesState extends State<SEEntries> {
                                   if (item.id == selectedItemId) {
                                     newId = item.taxCategory;
                                     taxController.text = item.taxCategory;
-                                    widget.taxControllerP.text =
-                                        taxController.text;
+                                    widget.taxControllerP.text = taxController.text;
                                   }
                                 }
 
@@ -399,11 +358,9 @@ class _SEEntriesState extends State<SEEntries> {
                                   if (item.id == selectedItemId) {
                                     newId2 = item.measurementUnit;
                                     unitController.text = item.measurementUnit;
-                                    widget.unitControllerP.text =
-                                        unitController.text;
+                                    widget.unitControllerP.text = unitController.text;
 
-                                    stockController.text =
-                                        item.maximumStock.toString();
+                                    stockController.text = item.maximumStock.toString();
 
                                     print(stockController.text);
                                   }
@@ -412,28 +369,21 @@ class _SEEntriesState extends State<SEEntries> {
                                 for (TaxRate tax in widget.taxLists!) {
                                   if (tax.id == newId) {
                                     setState(() {
-                                      taxController.text =
-                                          items.isNotEmpty ? tax.rate : '0';
-                                      widget.taxControllerP.text =
-                                          taxController.text;
+                                      taxController.text = items.isNotEmpty ? tax.rate : '0';
+                                      widget.taxControllerP.text = taxController.text;
                                     });
                                   }
                                 }
-                                for (MeasurementLimit meu
-                                    in widget.measurement!) {
+                                for (MeasurementLimit meu in widget.measurement!) {
                                   if (meu.id == newId2) {
                                     setState(() {
-                                      unitController.text = items.isNotEmpty
-                                          ? meu.measurement
-                                          : '0';
-                                      widget.unitControllerP.text =
-                                          unitController.text;
+                                      unitController.text = items.isNotEmpty ? meu.measurement : '0';
+                                      widget.unitControllerP.text = unitController.text;
                                     });
                                   }
                                 }
                                 // Find the selected item
-                                Item? selectedItem =
-                                    widget.itemsList!.firstWhere(
+                                Item? selectedItem = widget.itemsList!.firstWhere(
                                   (item) => item.id == selectedItemId,
                                 );
 
@@ -447,36 +397,28 @@ class _SEEntriesState extends State<SEEntries> {
                                       var item = widget.itemsList!.firstWhere(
                                         (e) => e.id == selectedItemId,
                                       );
-                                      rate2Controller.text = item != null
-                                          ? item.dealer.toString()
-                                          : '0.0';
+                                      rate2Controller.text = item != null ? item.dealer.toString() : '0.0';
                                       break;
                                     case 'SUB DEALER':
                                       // Find the item with the selectedItemId and get the sub dealer price
                                       var item = widget.itemsList!.firstWhere(
                                         (e) => e.id == selectedItemId,
                                       );
-                                      rate2Controller.text = item != null
-                                          ? item.subDealer.toString()
-                                          : '0.0';
+                                      rate2Controller.text = item != null ? item.subDealer.toString() : '0.0';
                                       break;
                                     case 'RETAIL':
                                       // Find the item with the selectedItemId and get the retail price
                                       var item = widget.itemsList!.firstWhere(
                                         (e) => e.id == selectedItemId,
                                       );
-                                      rate2Controller.text = item != null
-                                          ? item.retail.toString()
-                                          : '0.0';
+                                      rate2Controller.text = item != null ? item.retail.toString() : '0.0';
                                       break;
                                     case 'MRP':
                                       // Find the item with the selectedItemId and get the MRP
                                       var item = widget.itemsList!.firstWhere(
                                         (e) => e.id == selectedItemId,
                                       );
-                                      rate2Controller.text = item != null
-                                          ? item.mrp.toString()
-                                          : '0.0';
+                                      rate2Controller.text = item != null ? item.mrp.toString() : '0.0';
                                       break;
                                     default:
                                       rate2Controller.text = '0.0';
@@ -486,8 +428,7 @@ class _SEEntriesState extends State<SEEntries> {
                                 _showAdditionalDetailsPopup(selectedItem);
                               });
                             },
-                            dropdownMenuEntries: widget.itemsList!
-                                .map<DropdownMenuEntry<Item>>((Item value) {
+                            dropdownMenuEntries: widget.itemsList!.map<DropdownMenuEntry<Item>>((Item value) {
                               return DropdownMenuEntry<Item>(
                                 value: value,
                                 label: value.itemName,
@@ -640,9 +581,7 @@ class _SEEntriesState extends State<SEEntries> {
                             fontWeight: FontWeight.bold,
                             color: const Color(0xff000000),
                           ),
-                          inputFormatters: <TextInputFormatter>[
-                            FilteringTextInputFormatter.digitsOnly
-                          ],
+                          inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly],
                           cursorHeight: 18,
                           decoration: const InputDecoration(
                             contentPadding: EdgeInsets.all(12.0),
@@ -650,34 +589,25 @@ class _SEEntriesState extends State<SEEntries> {
                           controller: qtyController,
                           onChanged: (value) {
                             double newQty = double.tryParse(value) ?? 0;
-                            double stock =
-                                double.tryParse(stockController.text) ?? 0;
+                            double stock = double.tryParse(stockController.text) ?? 0;
 
                             if (newQty > stock) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: Text(
-                                      'Please Add Stock ${stockController.text} Left.'),
+                                  content: Text('Please Add Stock ${stockController.text} Left.'),
                                   duration: const Duration(seconds: 2),
                                 ),
                               );
                               setState(() {
-                                qtyController.text = stockController
-                                    .text; // Reset to the maximum available stock
-                                discountRateController.text =
-                                    '0.00'; // Reset discount rate to 0
-                                discountController.text =
-                                    '0.00'; // Reset discount percentage to 0
+                                qtyController.text = stockController.text; // Reset to the maximum available stock
+                                discountRateController.text = '0.00'; // Reset discount rate to 0
+                                discountController.text = '0.00'; // Reset discount percentage to 0
                               });
                             } else {
                               // double rateWithTax = 13500;
-                              double rateWithTax = double.tryParse(
-                                      rateController.text.toString()) ??
-                                  0;
-                              double tax =
-                                  double.tryParse(taxController.text) ?? 0;
-                              double qty =
-                                  double.tryParse(qtyController.text) ?? 0;
+                              double rateWithTax = double.tryParse(rateController.text.toString()) ?? 0;
+                              double tax = double.tryParse(taxController.text) ?? 0;
+                              double qty = double.tryParse(qtyController.text) ?? 0;
 
                               // Calculate base rate (excluding tax)
                               double baseRate = rateWithTax / (1 + (tax / 100));
@@ -695,27 +625,19 @@ class _SEEntriesState extends State<SEEntries> {
                               double totalAmount = amountBeforeTax + taxAmount;
 
                               setState(() {
-                                rate2Controller.text =
-                                    baseRate.toStringAsFixed(2);
+                                rate2Controller.text = baseRate.toStringAsFixed(2);
 
-                                amountController.text =
-                                    amountBeforeTax.toStringAsFixed(2);
+                                amountController.text = amountBeforeTax.toStringAsFixed(2);
                                 sgstController.text = gst.toStringAsFixed(2);
                                 cgstController.text = gst.toStringAsFixed(2);
-                                netAmountController.text =
-                                    totalAmount.toStringAsFixed(2);
+                                netAmountController.text = totalAmount.toStringAsFixed(2);
                                 originalNetAmount = totalAmount;
-                                widget.amountControllerP.text =
-                                    amountController.text;
-                                widget.sgstControllerP.text =
-                                    sgstController.text;
-                                widget.cgstControllerP.text =
-                                    cgstController.text;
-                                widget.netAmountControllerP.text =
-                                    netAmountController.text;
+                                widget.amountControllerP.text = amountController.text;
+                                widget.sgstControllerP.text = sgstController.text;
+                                widget.cgstControllerP.text = cgstController.text;
+                                widget.netAmountControllerP.text = netAmountController.text;
                                 widget.qtyControllerP.text = qtyController.text;
-                                widget.rateControllerP.text =
-                                    rateController.text;
+                                widget.rateControllerP.text = rateController.text;
                                 discountController.text = '0.00';
                                 discountRateController.text = '0.00';
                                 originaldiscountController.text = '0.00';
@@ -732,11 +654,7 @@ class _SEEntriesState extends State<SEEntries> {
                       Container(
                         height: 40,
                         width: MediaQuery.of(context).size.width * 0.061,
-                        decoration: const BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(),
-                                top: BorderSide(),
-                                left: BorderSide())),
+                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                         child: TextFormField(
                           cursorHeight: 18,
                           decoration: const InputDecoration(
@@ -759,11 +677,7 @@ class _SEEntriesState extends State<SEEntries> {
                       Container(
                         height: 40,
                         width: MediaQuery.of(context).size.width * 0.061,
-                        decoration: const BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(),
-                                top: BorderSide(),
-                                left: BorderSide())),
+                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                         child: TextFormField(
                           // itemRate.toString(),
                           cursorHeight: 18,
@@ -791,11 +705,7 @@ class _SEEntriesState extends State<SEEntries> {
                       Container(
                         height: 40,
                         width: MediaQuery.of(context).size.width * 0.061,
-                        decoration: const BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(),
-                                top: BorderSide(),
-                                left: BorderSide())),
+                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                         child: TextFormField(
                           cursorHeight: 18,
                           decoration: const InputDecoration(
@@ -816,25 +726,15 @@ class _SEEntriesState extends State<SEEntries> {
                       Container(
                         height: 40,
                         width: MediaQuery.of(context).size.width * 0.061,
-                        decoration: const BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(),
-                                top: BorderSide(),
-                                left: BorderSide())),
+                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                         child: TextFormField(
                           controller: discountRateController,
                           onEditingComplete: () {
-                            double discountAmount =
-                                double.tryParse(discountRateController.text) ??
-                                    0;
+                            double discountAmount = double.tryParse(discountRateController.text) ?? 0;
                             print('discountAmount $discountAmount');
-                            double qty =
-                                double.tryParse(qtyController.text) ?? 0;
-                            double rateWithTax = double.tryParse(
-                                    rate2Controller.text.toString()) ??
-                                0;
-                            double tax =
-                                double.tryParse(taxController.text) ?? 0;
+                            double qty = double.tryParse(qtyController.text) ?? 0;
+                            double rateWithTax = double.tryParse(rate2Controller.text.toString()) ?? 0;
+                            double tax = double.tryParse(taxController.text) ?? 0;
 
                             // Calculate base rate (excluding tax)
                             double baseRate = rateWithTax / (1 + (tax / 100));
@@ -851,47 +751,35 @@ class _SEEntriesState extends State<SEEntries> {
                             print('totalAmount $totalAmount');
 
                             // Calculate the net amount after discount
-                            double discountedNetAmount =
-                                totalAmount - discountAmount;
+                            double discountedNetAmount = totalAmount - discountAmount;
                             print('discountedNetAmount $discountedNetAmount');
 
                             // Calculate the amount before tax based on the discounted net amount
-                            double discountedAmountBeforeTax =
-                                discountedNetAmount / (1 + (tax / 100));
-                            print(
-                                'discountedAmountBeforeTax $discountedAmountBeforeTax');
+                            double discountedAmountBeforeTax = discountedNetAmount / (1 + (tax / 100));
+                            print('discountedAmountBeforeTax $discountedAmountBeforeTax');
 
                             // Calculate the new tax amount based on the discounted amount before tax
-                            double discountedTaxAmount =
-                                (tax / 100) * discountedAmountBeforeTax;
+                            double discountedTaxAmount = (tax / 100) * discountedAmountBeforeTax;
                             print('discountedTaxAmount $discountedTaxAmount');
 
                             double discountedGst = discountedTaxAmount / 2;
                             print('discountedGst $discountedGst');
 
                             // Calculate the effective discount amount on the base rate
-                            double effectiveDiscount =
-                                amountBeforeTax - discountedAmountBeforeTax;
+                            double effectiveDiscount = amountBeforeTax - discountedAmountBeforeTax;
                             print('effectiveDiscount $effectiveDiscount');
 
-                            double discountPercentage =
-                                (effectiveDiscount / amountBeforeTax) * 100;
+                            double discountPercentage = (effectiveDiscount / amountBeforeTax) * 100;
                             print('discountPercentage $discountPercentage');
 
                             setState(() {
                               // Update controllers with the new values
-                              discountController.text =
-                                  discountPercentage.toStringAsFixed(2);
-                              sgstController.text =
-                                  discountedGst.toStringAsFixed(2);
-                              cgstController.text =
-                                  discountedGst.toStringAsFixed(2);
-                              netAmountController.text =
-                                  discountedNetAmount.toStringAsFixed(2);
-                              discountRateController.text =
-                                  effectiveDiscount.toStringAsFixed(2);
-                              originaldiscountController.text =
-                                  discountAmount.toStringAsFixed(2);
+                              discountController.text = discountPercentage.toStringAsFixed(2);
+                              sgstController.text = discountedGst.toStringAsFixed(2);
+                              cgstController.text = discountedGst.toStringAsFixed(2);
+                              netAmountController.text = discountedNetAmount.toStringAsFixed(2);
+                              discountRateController.text = effectiveDiscount.toStringAsFixed(2);
+                              originaldiscountController.text = discountAmount.toStringAsFixed(2);
                             });
 
                             _saveValues();
@@ -914,15 +802,10 @@ class _SEEntriesState extends State<SEEntries> {
                         height: 40,
                         width: MediaQuery.of(context).size.width * 0.061,
                         // padding: const EdgeInsets.only(left: 0.0, bottom: 4.0),
-                        decoration: const BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(),
-                                top: BorderSide(),
-                                left: BorderSide())),
+                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                         child: TextFormField(
                           inputFormatters: <TextInputFormatter>[
-                            FilteringTextInputFormatter.allow(
-                                RegExp(r'^\d*\.?\d*$')),
+                            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')),
                           ],
                           controller: discountController,
                           readOnly: true,
@@ -930,36 +813,25 @@ class _SEEntriesState extends State<SEEntries> {
                             discountController.text = newValue!;
                           },
                           onChanged: (value) {
-                            double discountPercentage =
-                                double.tryParse(discountController.text) ?? 0;
-                            double qty =
-                                double.tryParse(qtyController.text) ?? 0;
-                            double rateWithTax = double.tryParse(
-                                    rateController.text.toString()) ??
-                                0;
-                            double tax =
-                                double.tryParse(taxController.text) ?? 0;
+                            double discountPercentage = double.tryParse(discountController.text) ?? 0;
+                            double qty = double.tryParse(qtyController.text) ?? 0;
+                            double rateWithTax = double.tryParse(rateController.text.toString()) ?? 0;
+                            double tax = double.tryParse(taxController.text) ?? 0;
                             // Calculate base rate (excluding tax)
                             double baseRate = rateWithTax / (1 + (tax / 100));
                             print('baseRate $baseRate');
                             // Calculate the discount amount as a percentage of the base rate
-                            double discountAmountPerUnit =
-                                baseRate * (discountPercentage / 100);
-                            double totalDiscountAmount =
-                                discountAmountPerUnit * qty;
-                            print(
-                                'discountAmountPerUnit $discountAmountPerUnit');
+                            double discountAmountPerUnit = baseRate * (discountPercentage / 100);
+                            double totalDiscountAmount = discountAmountPerUnit * qty;
+                            print('discountAmountPerUnit $discountAmountPerUnit');
                             print('totalDiscountAmount $totalDiscountAmount');
 
                             // Calculate the rate after applying the discount percentage
-                            double rateAfterDiscountPerUnit =
-                                baseRate - discountAmountPerUnit;
-                            print(
-                                'rateAfterDiscountPerUnit $rateAfterDiscountPerUnit');
+                            double rateAfterDiscountPerUnit = baseRate - discountAmountPerUnit;
+                            print('rateAfterDiscountPerUnit $rateAfterDiscountPerUnit');
 
                             // Calculate the amount before tax
-                            double amountBeforeTax =
-                                qty * rateAfterDiscountPerUnit;
+                            double amountBeforeTax = qty * rateAfterDiscountPerUnit;
                             print('amountBeforeTax $amountBeforeTax');
 
                             // Calculate the total tax amount on the amount before tax
@@ -974,14 +846,11 @@ class _SEEntriesState extends State<SEEntries> {
                             double gst = taxAmount / 2;
 
                             setState(() {
-                              amountController.text =
-                                  amountBeforeTax.toStringAsFixed(2);
-                              netAmountController.text =
-                                  amountAfterTax.toStringAsFixed(2);
+                              amountController.text = amountBeforeTax.toStringAsFixed(2);
+                              netAmountController.text = amountAfterTax.toStringAsFixed(2);
                               sgstController.text = gst.toStringAsFixed(2);
                               cgstController.text = gst.toStringAsFixed(2);
-                              discountRateController.text =
-                                  totalDiscountAmount.toStringAsFixed(2);
+                              discountRateController.text = totalDiscountAmount.toStringAsFixed(2);
                             });
                             _saveValues();
                           },
@@ -1001,11 +870,7 @@ class _SEEntriesState extends State<SEEntries> {
                       Container(
                         height: 40,
                         width: MediaQuery.of(context).size.width * 0.061,
-                        decoration: const BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(),
-                                top: BorderSide(),
-                                left: BorderSide())),
+                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                         child: TextFormField(
                           cursorHeight: 18,
                           decoration: const InputDecoration(
@@ -1029,11 +894,7 @@ class _SEEntriesState extends State<SEEntries> {
                       Container(
                         height: 40,
                         width: MediaQuery.of(context).size.width * 0.061,
-                        decoration: const BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(),
-                                top: BorderSide(),
-                                left: BorderSide())),
+                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                         child: TextFormField(
                           cursorHeight: 18,
                           decoration: const InputDecoration(
@@ -1053,11 +914,7 @@ class _SEEntriesState extends State<SEEntries> {
                       Container(
                         height: 40,
                         width: MediaQuery.of(context).size.width * 0.061,
-                        decoration: const BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(),
-                                top: BorderSide(),
-                                left: BorderSide())),
+                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                         child: TextFormField(
                           cursorHeight: 18,
                           decoration: const InputDecoration(
@@ -1077,11 +934,7 @@ class _SEEntriesState extends State<SEEntries> {
                       Container(
                         height: 40,
                         width: MediaQuery.of(context).size.width * 0.061,
-                        decoration: const BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(),
-                                top: BorderSide(),
-                                left: BorderSide())),
+                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(), top: BorderSide(), left: BorderSide())),
                         child: TextFormField(
                           cursorHeight: 18,
                           decoration: const InputDecoration(
@@ -1098,8 +951,7 @@ class _SEEntriesState extends State<SEEntries> {
                             color: const Color(0xff000000),
                           ),
                           inputFormatters: <TextInputFormatter>[
-                            FilteringTextInputFormatter.allow(RegExp(
-                                r'^\d*\.?\d*$')), // Allow digits and a single decimal point
+                            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*$')), // Allow digits and a single decimal point
                           ],
                         ),
                       ),
@@ -1107,12 +959,7 @@ class _SEEntriesState extends State<SEEntries> {
                       Container(
                         height: 40,
                         width: MediaQuery.of(context).size.width * 0.061,
-                        decoration: const BoxDecoration(
-                            border: Border(
-                                bottom: BorderSide(),
-                                left: BorderSide(),
-                                top: BorderSide(),
-                                right: BorderSide())),
+                        decoration: const BoxDecoration(border: Border(bottom: BorderSide(), left: BorderSide(), top: BorderSide(), right: BorderSide())),
                         child: TextFormField(
                           cursorHeight: 18,
                           decoration: const InputDecoration(

@@ -1,9 +1,14 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:billingsphere/data/models/salesEntries/sales_entrires_model.dart';
 import 'package:billingsphere/data/models/salesReturn/sales_return_model.dart';
+import 'package:billingsphere/data/repository/purchase_return_repository.dart';
+import 'package:billingsphere/data/repository/sales_enteries_repository.dart';
+// import 'package:billingsphere/data/repository/sales_enteries_repository.dart';
 import 'package:billingsphere/data/repository/sales_return_repository.dart';
 import 'package:billingsphere/utils/constant.dart';
+import 'package:billingsphere/views/PURCHASE_RETURN/widget/purchase_return_textfield.dart';
 import 'package:billingsphere/views/RV_responsive/receipt_billwise.dart';
 import 'package:billingsphere/views/Sales_Return/sales_return_List.dart';
 import 'package:billingsphere/views/Sales_Return/widget/salesEntry_table_widget.dart';
@@ -59,8 +64,8 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
   List<Billwise> billwise = [];
   final List<Map<String, dynamic>> _allValuesSundry = [];
   List<SalesReturn> fetchedSalesReturn = [];
-  SalesReturn? selectedPurchase;
-  List<SalesEntry> selectedEntries = [];
+  SalesEntry? selectedPurchase;
+  List<Entry> selectedEntries = [];
   late Timer _timer;
 
   bool isLoading = false;
@@ -106,6 +111,8 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
   ItemsService itemsService = ItemsService();
   SalesReturnService salesReturnService = SalesReturnService();
   PurchaseServices purchaseServices = PurchaseServices();
+  PurchaseReturnService purchaseReturnService = PurchaseReturnService();
+  SalesEntryService salesEntryService = SalesEntryService();
   MeasurementLimitService measurementService = MeasurementLimitService();
   TaxRateService taxRateService = TaxRateService();
 
@@ -879,7 +886,7 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
                                   height: 30,
                                   child: ElevatedButton(
                                     onPressed: () {
-                                      // showReturnInfoDialog();
+                                      showReturnInfoDialog();
                                     },
                                     style: ButtonStyle(
                                       backgroundColor:
@@ -914,7 +921,7 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
                                   height: 30,
                                   child: ElevatedButton(
                                     onPressed: () {
-                                      Navigator.of(context).pop();
+                                      showGetItemDialog();
                                     },
                                     style: ButtonStyle(
                                       backgroundColor:
@@ -1813,8 +1820,8 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
                                   },
                                   entryId: entryId,
                                   item: itemsList,
-                                  taxCategory: [],
-                                  measurementLimit: [],
+                                  measurementLimit: measurement,
+                                  taxCategory: taxLists,
                                 ),
                               );
                             });
@@ -2547,7 +2554,7 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
                         width: MediaQuery.of(context).size.width * 0,
                         child: ElevatedButton(
                           onPressed: () {
-                            // showReturnInfoDialog();
+                            showReturnInfoDialog();
                           },
                           style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all<Color>(
@@ -2582,7 +2589,7 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
                         width: MediaQuery.of(context).size.width * 0,
                         child: ElevatedButton(
                           onPressed: () {
-                            Navigator.of(context).pop();
+                            showGetItemDialog();
                           },
                           style: ButtonStyle(
                             backgroundColor: MaterialStateProperty.all<Color>(
@@ -3382,7 +3389,7 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
           purchaseController.remarksController?.text ?? 'No remark available',
       totalAmount: TfinalAmt.toStringAsFixed(2),
       entries: _allValues.map((entry) {
-        return SalesEntry(
+        return SalesEntries(
           itemName: entry['itemName'] ?? '',
           qty: int.tryParse(entry['qty']) ?? 0,
           rate: double.tryParse(entry['rate']) ?? 0,
@@ -3703,7 +3710,7 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
   }
 
   void saveSelectedPurchaseEntries(
-      {required SalesReturn sales, required List<bool> checkboxStates}) {
+      {required SalesEntry sales, required List<bool> checkboxStates}) {
     // Get the selected entries
     for (int i = 0; i < checkboxStates.length; i++) {
       if (checkboxStates[i]) {
@@ -3716,11 +3723,11 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
 
   void getDetailsDialog({
     required TextEditingController noController,
-    required SalesReturn sales,
+    required SalesEntry sales,
   }) {
-    List<TableRow> purchaseEntries = [];
+    List<TableRow> salesEntries = [];
 
-    print('Purchase Entries: ${sales.entries}');
+    print('Sales Entries: ${sales.entries}');
 
     List<bool> checkboxStates =
         List.generate(sales.entries.length, (index) => true);
@@ -3760,8 +3767,7 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
                     });
                   }
 
-                  // Construct the table rows from purchase.entries
-                  purchaseEntries = sales.entries.asMap().entries.map((entry) {
+                  salesEntries = sales.entries.asMap().entries.map((entry) {
                     int index = entry.key;
                     var entryValue = entry.value;
 
@@ -3789,7 +3795,7 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
                             child: Align(
                               alignment: Alignment.center,
                               child: Text(
-                                sales.no,
+                                sales.no.toString(),
                                 style: GoogleFonts.poppins(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -3809,7 +3815,7 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
                                     ? suggestionItems5
                                         .firstWhere(
                                           (element) =>
-                                              element.id == sales.ledger,
+                                              element.id == sales.party,
                                         )
                                         .name
                                     : '',
@@ -4205,7 +4211,7 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
                                       ],
                                     ),
                                     // Table Body with dummy details...
-                                    ...purchaseEntries,
+                                    ...salesEntries,
                                     // TableRow(children: [
                                     //   // Tablecells
                                     //   TableCell(
@@ -4441,536 +4447,1074 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
     );
   }
 
-  // void showReturnInfoDialog() {
-  //   TextEditingController originalInvoiceNoController = TextEditingController();
-  //   TextEditingController originalInvoiceDateController =
-  //       TextEditingController();
+  void showReturnInfoDialog() async {
+    List<SalesEntry>? purchase =
+        await salesEntryService.fetchSalesEntriesByParty(selectedLedgerName!);
+    TextEditingController originalInvoiceNoController = TextEditingController();
+    TextEditingController originalInvoiceDateController =
+        TextEditingController();
 
-  //   List<String> reasons = [
-  //     '01-Sales Return',
-  //     '02-Post sales discount',
-  //     '03-Deficiency In services',
-  //     '04-Correction In invoice',
-  //     '05-Change In POS',
-  //     '06-Finilization Of Provisional Assessment',
-  //   ];
-  //   showDialog(
-  //     context: context,
-  //     barrierDismissible: false,
-  //     builder: (context) {
-  //       return Center(
-  //         child: Dialog(
-  //           alignment: AlignmentDirectional.center,
-  //           backgroundColor: Colors.white,
-  //           shape: RoundedRectangleBorder(
-  //             borderRadius: BorderRadius.circular(0),
-  //           ),
-  //           child: Container(
-  //             constraints: BoxConstraints(
-  //               // maxHeight: MediaQuery.of(context).size.height / 2,
-  //               maxWidth: MediaQuery.of(context).size.width / 2,
-  //             ),
-  //             child: StatefulBuilder(
-  //               builder: (context, setState) {
-  //                 return Column(
-  //                   crossAxisAlignment: CrossAxisAlignment.start,
-  //                   mainAxisSize: MainAxisSize.min,
-  //                   children: [
-  //                     Container(
-  //                       height: 50,
-  //                       color: const Color(0xFF4169E1),
-  //                       child: Stack(
-  //                         children: [
-  //                           Center(
-  //                             child: Text(
-  //                               'Return Details',
-  //                               style: GoogleFonts.poppins(
-  //                                 fontSize: 20,
-  //                                 fontWeight: FontWeight.bold,
-  //                                 color: Colors.white,
-  //                               ),
-  //                               textAlign: TextAlign.center,
-  //                             ),
-  //                           ),
-  //                           Positioned(
-  //                             right: 0,
-  //                             child: IconButton(
-  //                               onPressed: () {
-  //                                 Navigator.pop(context);
-  //                               },
-  //                               icon: const Icon(
-  //                                 Icons.close,
-  //                                 color: Colors.white,
-  //                               ),
-  //                             ),
-  //                           ),
-  //                         ],
-  //                       ),
-  //                     ),
-  //                     const SizedBox(height: 10),
-  //                     Padding(
-  //                       padding: const EdgeInsets.symmetric(horizontal: 10),
-  //                       child: Row(
-  //                         crossAxisAlignment: CrossAxisAlignment.start,
-  //                         children: [
-  //                           const Expanded(
-  //                             flex: 2,
-  //                             child: SETopText(
-  //                               text: 'Orig. Inv No',
-  //                               padding: EdgeInsets.zero,
-  //                             ),
-  //                           ),
-  //                           const SizedBox(width: 10),
-  //                           Expanded(
-  //                             flex: 4,
-  //                             child: SizedBox(
-  //                               height: 40,
-  //                               child: SalesReturnTextField(
-  //                                 controller: originalInvoiceNoController,
-  //                                 onSaved: (newValue) {},
-  //                                 padding: const EdgeInsets.only(
-  //                                     left: 8.0, bottom: 16.0),
-  //                                 hintText: '',
-  //                               ),
-  //                             ),
-  //                           ),
-  //                           const SizedBox(width: 10),
-  //                           Expanded(
-  //                             flex: 2,
-  //                             child: InkWell(
-  //                               onTap: () async {
-  //                                 // Call the API
-  //                                 if (originalInvoiceNoController
-  //                                     .text.isEmpty) {
-  //                                   PanaraConfirmDialog.showAnimatedGrow(
-  //                                     context,
-  //                                     title: "BillingSphere",
-  //                                     message:
-  //                                         "Please enter the original invoice number",
-  //                                     confirmButtonText: "Confirm",
-  //                                     cancelButtonText: "Cancel",
-  //                                     onTapCancel: () {
-  //                                       Navigator.pop(context);
-  //                                     },
-  //                                     onTapConfirm: () {
-  //                                       // pop screen
-  //                                       Navigator.of(context).pop();
-  //                                     },
-  //                                     panaraDialogType:
-  //                                         PanaraDialogType.warning,
-  //                                   );
-  //                                 } else {
-  //                                   final Purchase? purchase =
-  //                                       await purchaseServices
-  //                                           .fetchPurchaseByBillNumber(
-  //                                               originalInvoiceNoController
-  //                                                   .text);
-  //                                   if (purchase == null) {
-  //                                     PanaraConfirmDialog.showAnimatedGrow(
-  //                                       context,
-  //                                       title: "BillingSphere",
-  //                                       message:
-  //                                           "No purchase found with the given invoice number",
-  //                                       confirmButtonText: "Confirm",
-  //                                       cancelButtonText: "Cancel",
-  //                                       onTapCancel: () {
-  //                                         Navigator.pop(context);
-  //                                       },
-  //                                       onTapConfirm: () {
-  //                                         // pop screen
-  //                                         Navigator.of(context).pop();
-  //                                       },
-  //                                       panaraDialogType:
-  //                                           PanaraDialogType.error,
-  //                                     );
-  //                                   } else {
-  //                                     print('Purchase: $purchase');
-  //                                     // Set the date
-  //                                     originalInvoiceDateController.text =
-  //                                         purchase.date;
-  //                                     getDetailsDialog(
-  //                                       noController:
-  //                                           originalInvoiceNoController,
-  //                                       sales: purchase,
-  //                                     );
-  //                                   }
-  //                                 }
-  //                               },
-  //                               child: Container(
-  //                                 decoration: BoxDecoration(
-  //                                   color: const Color(0xFFFFFACD),
-  //                                   border: Border.all(
-  //                                     color: const Color(0xFFFFFACD),
-  //                                     width: 1,
-  //                                   ),
-  //                                 ),
-  //                                 height: 40,
-  //                                 padding: const EdgeInsets.all(2.0),
-  //                                 child: Center(
-  //                                   child: Text(
-  //                                     'Get Details',
-  //                                     style: GoogleFonts.poppins(
-  //                                       color: Colors.black,
-  //                                       fontSize: 15,
-  //                                       fontWeight: FontWeight.bold,
-  //                                     ),
-  //                                   ),
-  //                                 ),
-  //                               ),
-  //                             ),
-  //                           ),
-  //                         ],
-  //                       ),
-  //                     ),
+    List<String> reasons = [
+      '01-Sales Return',
+      '02-Post sales discount',
+      '03-Deficiency In services',
+      '04-Correction In invoice',
+      '05-Change In POS',
+      '06-Finilization Of Provisional Assessment',
+    ];
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Center(
+          child: Dialog(
+            alignment: AlignmentDirectional.center,
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(0),
+            ),
+            child: Container(
+              constraints: BoxConstraints(
+                // maxHeight: MediaQuery.of(context).size.height / 2,
+                maxWidth: MediaQuery.of(context).size.width / 2,
+              ),
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        height: 50,
+                        color: const Color(0xFF4169E1),
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Text(
+                                'Return Details',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Positioned(
+                              right: 0,
+                              child: IconButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Expanded(
+                              flex: 2,
+                              child: SETopText(
+                                text: 'Orig. Inv No',
+                                padding: EdgeInsets.zero,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 4,
+                              child: SizedBox(
+                                height: 40,
+                                child: SalesReturnTextField(
+                                  controller: originalInvoiceNoController,
+                                  onSaved: (newValue) {},
+                                  padding: const EdgeInsets.only(
+                                      left: 8.0, bottom: 16.0),
+                                  hintText: '',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 2,
+                              child: InkWell(
+                                onTap: () async {
+                                  if (originalInvoiceNoController
+                                      .text.isEmpty) {
+                                    PanaraConfirmDialog.showAnimatedGrow(
+                                      context,
+                                      title: "BillingSphere",
+                                      message:
+                                          "Please enter the original invoice number",
+                                      confirmButtonText: "Confirm",
+                                      cancelButtonText: "Cancel",
+                                      onTapCancel: () {
+                                        Navigator.pop(context);
+                                      },
+                                      onTapConfirm: () {
+                                        // pop screen
+                                        Navigator.of(context).pop();
+                                      },
+                                      panaraDialogType:
+                                          PanaraDialogType.warning,
+                                    );
+                                  } else {
+                                    final SalesEntry? purchase =
+                                        await salesEntryService
+                                            .fetchSalesByBillNumber(
+                                                originalInvoiceNoController
+                                                    .text);
+                                    if (purchase == null) {
+                                      PanaraConfirmDialog.showAnimatedGrow(
+                                        context,
+                                        title: "BillingSphere",
+                                        message:
+                                            "No purchase found with the given invoice number",
+                                        confirmButtonText: "Confirm",
+                                        cancelButtonText: "Cancel",
+                                        onTapCancel: () {
+                                          Navigator.pop(context);
+                                        },
+                                        onTapConfirm: () {
+                                          // pop screen
+                                          Navigator.of(context).pop();
+                                        },
+                                        panaraDialogType:
+                                            PanaraDialogType.error,
+                                      );
+                                    } else {
+                                      print('Purchase: $purchase');
+                                      // Set the date
+                                      originalInvoiceDateController.text =
+                                          purchase.date;
+                                      getDetailsDialog(
+                                        noController:
+                                            originalInvoiceNoController,
+                                        sales: purchase,
+                                      );
+                                    }
+                                  }
+                                },
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFFFFACD),
+                                    border: Border.all(
+                                      color: const Color(0xFFFFFACD),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  height: 40,
+                                  padding: const EdgeInsets.all(2.0),
+                                  child: Center(
+                                    child: Text(
+                                      'Get Details',
+                                      style: GoogleFonts.poppins(
+                                        color: Colors.black,
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
-  //                     Padding(
-  //                       padding: const EdgeInsets.symmetric(
-  //                           horizontal: 10, vertical: 10),
-  //                       child: Row(
-  //                         crossAxisAlignment: CrossAxisAlignment.start,
-  //                         children: [
-  //                           SETopText(
-  //                             text: 'Orig. Inv Date',
-  //                             padding: EdgeInsets.zero,
-  //                             height: 40,
-  //                             width: MediaQuery.of(context).size.width * 0.12,
-  //                           ),
-  //                           const SizedBox(width: 10),
-  //                           SizedBox(
-  //                             height: 40,
-  //                             width: MediaQuery.of(context).size.width * 0.12,
-  //                             child: SalesReturnTextField(
-  //                               controller: originalInvoiceDateController,
-  //                               onSaved: (newValue) {},
-  //                               padding: const EdgeInsets.only(
-  //                                   left: 8.0, bottom: 16.0),
-  //                               hintText: '',
-  //                             ),
-  //                           ),
-  //                         ],
-  //                       ),
-  //                     ),
-  //                     Padding(
-  //                       padding: const EdgeInsets.symmetric(
-  //                           horizontal: 10, vertical: 10),
-  //                       child: Row(
-  //                         crossAxisAlignment: CrossAxisAlignment.start,
-  //                         children: [
-  //                           SETopText(
-  //                             text: 'Reason',
-  //                             padding: EdgeInsets.zero,
-  //                             height: 40,
-  //                             width: MediaQuery.of(context).size.width * 0.12,
-  //                           ),
-  //                           const SizedBox(width: 10),
-  //                           Expanded(
-  //                             flex: 4,
-  //                             child: Container(
-  //                               decoration: BoxDecoration(
-  //                                 border: Border.all(
-  //                                   color: Colors.black,
-  //                                 ),
-  //                               ),
-  //                               height: 40,
-  //                               child: DropdownButtonHideUnderline(
-  //                                 child: DropdownMenu<String>(
-  //                                   requestFocusOnTap: true,
-  //                                   initialSelection: null,
-  //                                   enableSearch: true,
-  //                                   trailingIcon: const SizedBox.shrink(),
-  //                                   textStyle: GoogleFonts.poppins(
-  //                                     fontSize: 16,
-  //                                     fontWeight: FontWeight.bold,
-  //                                     color: const Color(0xff000000),
-  //                                     decoration: TextDecoration.none,
-  //                                   ),
-  //                                   menuHeight: 300,
-  //                                   enableFilter: true,
-  //                                   // filterCallback:
-  //                                   //     (List<DropdownMenuEntry<String>> entries,
-  //                                   //         String filter) {
-  //                                   //   final String trimmedFilter =
-  //                                   //       filter.trim().toLowerCase();
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SETopText(
+                              text: 'Orig. Inv Date',
+                              padding: EdgeInsets.zero,
+                              height: 40,
+                              width: MediaQuery.of(context).size.width * 0.12,
+                            ),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              height: 40,
+                              width: MediaQuery.of(context).size.width * 0.12,
+                              child: SalesReturnTextField(
+                                controller: originalInvoiceDateController,
+                                onSaved: (newValue) {},
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, bottom: 16.0),
+                                hintText: '',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SETopText(
+                              text: 'Reason',
+                              padding: EdgeInsets.zero,
+                              height: 40,
+                              width: MediaQuery.of(context).size.width * 0.12,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 4,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                height: 40,
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownMenu<String>(
+                                    requestFocusOnTap: true,
+                                    initialSelection: null,
+                                    enableSearch: true,
+                                    trailingIcon: const SizedBox.shrink(),
+                                    textStyle: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xff000000),
+                                      decoration: TextDecoration.none,
+                                    ),
+                                    menuHeight: 300,
+                                    enableFilter: true,
+                                    // filterCallback:
+                                    //     (List<DropdownMenuEntry<String>> entries,
+                                    //         String filter) {
+                                    //   final String trimmedFilter =
+                                    //       filter.trim().toLowerCase();
 
-  //                                   //   if (trimmedFilter.isEmpty) {
-  //                                   //     return entries;
-  //                                   //   }
+                                    //   if (trimmedFilter.isEmpty) {
+                                    //     return entries;
+                                    //   }
 
-  //                                   //   // Filter the entries based on the query
-  //                                   //   return entries.where((entry) {
-  //                                   //     return entry.value.itemName
-  //                                   //         .toLowerCase()
-  //                                   //         .contains(trimmedFilter);
-  //                                   //   }).toList();
-  //                                   // },
-  //                                   width: MediaQuery.of(context).size.width *
-  //                                       0.19,
-  //                                   selectedTrailingIcon:
-  //                                       const SizedBox.shrink(),
-  //                                   inputDecorationTheme:
-  //                                       const InputDecorationTheme(
-  //                                     border: InputBorder.none,
-  //                                     contentPadding: EdgeInsets.symmetric(
-  //                                         horizontal: 8, vertical: 16),
-  //                                     isDense: true,
-  //                                     activeIndicatorBorder: BorderSide(
-  //                                       color: Colors.transparent,
-  //                                     ),
-  //                                   ),
-  //                                   expandedInsets: EdgeInsets.zero,
-  //                                   onSelected: (String? value) {},
-  //                                   dropdownMenuEntries: reasons
-  //                                       .map<DropdownMenuEntry<String>>(
-  //                                           (String value) {
-  //                                     return DropdownMenuEntry<String>(
-  //                                       value: value,
-  //                                       label: value,
-  //                                       style: ButtonStyle(
-  //                                         textStyle: WidgetStateProperty.all(
-  //                                           GoogleFonts.poppins(
-  //                                             fontSize: 16,
-  //                                             fontWeight: FontWeight.bold,
-  //                                             color: Colors.black,
-  //                                           ),
-  //                                         ),
-  //                                       ),
-  //                                     );
-  //                                   }).toList(),
-  //                                 ),
-  //                               ),
-  //                             ),
-  //                           ),
-  //                         ],
-  //                       ),
-  //                     ),
-  //                     Padding(
-  //                       padding: const EdgeInsets.symmetric(
-  //                           horizontal: 10, vertical: 10),
-  //                       child: Row(
-  //                         crossAxisAlignment: CrossAxisAlignment.start,
-  //                         mainAxisAlignment: MainAxisAlignment.end,
-  //                         children: [
-  //                           InkWell(
-  //                             onTap: () {
-  //                               _updateWidgetList(selectedEntries);
-  //                               Navigator.pop(context);
-  //                             },
-  //                             child: Container(
-  //                               decoration: BoxDecoration(
-  //                                 color: const Color(0xFFFFFACD),
-  //                                 border: Border.all(
-  //                                   color: const Color(0xFFFFFACD),
-  //                                   width: 1,
-  //                                 ),
-  //                               ),
-  //                               width: MediaQuery.of(context).size.width * 0.1,
-  //                               height: 40,
-  //                               padding: const EdgeInsets.all(2.0),
-  //                               child: Center(
-  //                                 child: Text(
-  //                                   'Save [F4]',
-  //                                   style: GoogleFonts.poppins(
-  //                                     color: Colors.black,
-  //                                     fontSize: 15,
-  //                                     fontWeight: FontWeight.bold,
-  //                                   ),
-  //                                 ),
-  //                               ),
-  //                             ),
-  //                           ),
-  //                           // const Spacer(),
-  //                           const SizedBox(width: 10),
-  //                           InkWell(
-  //                             onTap: () {},
-  //                             child: Container(
-  //                               decoration: BoxDecoration(
-  //                                 color: const Color(0xFFFFFACD),
-  //                                 border: Border.all(
-  //                                   color: const Color(0xFFFFFACD),
-  //                                   width: 1,
-  //                                 ),
-  //                               ),
-  //                               width: MediaQuery.of(context).size.width * 0.1,
-  //                               height: 40,
-  //                               padding: const EdgeInsets.all(2.0),
-  //                               child: Center(
-  //                                 child: Text(
-  //                                   'Cancel',
-  //                                   style: GoogleFonts.poppins(
-  //                                     color: Colors.black,
-  //                                     fontSize: 15,
-  //                                     fontWeight: FontWeight.bold,
-  //                                   ),
-  //                                 ),
-  //                               ),
-  //                             ),
-  //                           ),
-  //                         ],
-  //                       ),
-  //                     ),
-  //                     const SizedBox(height: 10),
-  //                     Padding(
-  //                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
-  //                       child: Text(
-  //                         'Recent Transactions [Press F12 for to Select Bill]',
-  //                         style: GoogleFonts.poppins(
-  //                           fontSize: 15,
-  //                           fontWeight: FontWeight.bold,
-  //                           color: const Color(0xFF4B0082),
-  //                         ),
-  //                       ),
-  //                     ),
-  //                     Padding(
-  //                       padding: const EdgeInsets.symmetric(
-  //                           horizontal: 8.0, vertical: 5),
-  //                       child: Container(
-  //                         constraints: BoxConstraints(
-  //                           maxHeight: MediaQuery.of(context).size.height / 2.5,
-  //                           maxWidth: MediaQuery.of(context).size.width / 2.5,
-  //                         ),
-  //                         decoration: BoxDecoration(
-  //                           border: Border.all(
-  //                             color: Colors.black,
-  //                           ),
-  //                         ),
-  //                         child: Padding(
-  //                           padding: const EdgeInsets.only(right: 10.0),
-  //                           child: Column(
-  //                             crossAxisAlignment: CrossAxisAlignment.start,
-  //                             children: [
-  //                               Table(
-  //                                 border: TableBorder.all(
-  //                                     width: 1, color: Colors.black),
-  //                                 columnWidths: const {
-  //                                   0: FlexColumnWidth(3),
-  //                                   1: FlexColumnWidth(3),
-  //                                   2: FlexColumnWidth(3),
-  //                                   3: FlexColumnWidth(3),
-  //                                   4: FlexColumnWidth(3),
-  //                                   5: FlexColumnWidth(3),
-  //                                   6: FlexColumnWidth(3),
-  //                                 },
-  //                                 children: [
-  //                                   TableRow(
-  //                                     children: [
-  //                                       TableCell(
-  //                                         child: SizedBox(
-  //                                           height: 40,
-  //                                           child: Align(
-  //                                             alignment: Alignment.center,
-  //                                             child: Padding(
-  //                                               padding:
-  //                                                   const EdgeInsets.all(4.0),
-  //                                               child: Text(
-  //                                                 "Voucher",
-  //                                                 textAlign: TextAlign.end,
-  //                                                 style: GoogleFonts.poppins(
-  //                                                   fontSize: 15,
-  //                                                   fontWeight: FontWeight.bold,
-  //                                                   color:
-  //                                                       const Color(0xff4B0082),
-  //                                                 ),
-  //                                               ),
-  //                                             ),
-  //                                           ),
-  //                                         ),
-  //                                       ),
-  //                                       TableCell(
-  //                                           child: SizedBox(
-  //                                         height: 40,
-  //                                         child: Align(
-  //                                           alignment: Alignment.center,
-  //                                           child: Text(
-  //                                             "Date",
-  //                                             textAlign: TextAlign.center,
-  //                                             style: GoogleFonts.poppins(
-  //                                               fontSize: 15,
-  //                                               fontWeight: FontWeight.bold,
-  //                                               color: const Color(0xff4B0082),
-  //                                             ),
-  //                                           ),
-  //                                         ),
-  //                                       )),
-  //                                       TableCell(
-  //                                         child: SizedBox(
-  //                                           height: 40,
-  //                                           child: Align(
-  //                                             alignment: Alignment.center,
-  //                                             child: Text(
-  //                                               "Time",
-  //                                               textAlign: TextAlign.center,
-  //                                               style: GoogleFonts.poppins(
-  //                                                 fontSize: 15,
-  //                                                 fontWeight: FontWeight.bold,
-  //                                                 color:
-  //                                                     const Color(0xff4B0082),
-  //                                               ),
-  //                                             ),
-  //                                           ),
-  //                                         ),
-  //                                       ),
-  //                                       TableCell(
-  //                                         child: SizedBox(
-  //                                           height: 40,
-  //                                           child: Align(
-  //                                             alignment: Alignment.center,
-  //                                             child: Text(
-  //                                               "No",
-  //                                               textAlign: TextAlign.center,
-  //                                               style: GoogleFonts.poppins(
-  //                                                 fontSize: 15,
-  //                                                 fontWeight: FontWeight.bold,
-  //                                                 color:
-  //                                                     const Color(0xff4B0082),
-  //                                               ),
-  //                                             ),
-  //                                           ),
-  //                                         ),
-  //                                       ),
-  //                                       TableCell(
-  //                                         child: SizedBox(
-  //                                           height: 40,
-  //                                           child: Align(
-  //                                             alignment: Alignment.center,
-  //                                             child: Padding(
-  //                                               padding:
-  //                                                   const EdgeInsets.all(4.0),
-  //                                               child: Text(
-  //                                                 "Amount",
-  //                                                 textAlign: TextAlign.end,
-  //                                                 style: GoogleFonts.poppins(
-  //                                                   fontSize: 15,
-  //                                                   fontWeight: FontWeight.bold,
-  //                                                   color:
-  //                                                       const Color(0xff4B0082),
-  //                                                 ),
-  //                                               ),
-  //                                             ),
-  //                                           ),
-  //                                         ),
-  //                                       ),
-  //                                     ],
-  //                                   ),
-  //                                   // ...Ctables,
-  //                                 ],
-  //                               ),
-  //                             ],
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     ),
+                                    //   // Filter the entries based on the query
+                                    //   return entries.where((entry) {
+                                    //     return entry.value.itemName
+                                    //         .toLowerCase()
+                                    //         .contains(trimmedFilter);
+                                    //   }).toList();
+                                    // },
+                                    width: MediaQuery.of(context).size.width *
+                                        0.19,
+                                    selectedTrailingIcon:
+                                        const SizedBox.shrink(),
+                                    inputDecorationTheme:
+                                        const InputDecorationTheme(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 16),
+                                      isDense: true,
+                                      activeIndicatorBorder: BorderSide(
+                                        color: Colors.transparent,
+                                      ),
+                                    ),
+                                    expandedInsets: EdgeInsets.zero,
+                                    onSelected: (String? value) {},
+                                    dropdownMenuEntries: reasons
+                                        .map<DropdownMenuEntry<String>>(
+                                            (String value) {
+                                      return DropdownMenuEntry<String>(
+                                        value: value,
+                                        label: value,
+                                        style: ButtonStyle(
+                                          textStyle: WidgetStateProperty.all(
+                                            GoogleFonts.poppins(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            InkWell(
+                              onTap: () {
+                                _updateWidgetList(selectedEntries);
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFFACD),
+                                  border: Border.all(
+                                    color: const Color(0xFFFFFACD),
+                                    width: 1,
+                                  ),
+                                ),
+                                width: MediaQuery.of(context).size.width * 0.1,
+                                height: 40,
+                                padding: const EdgeInsets.all(2.0),
+                                child: Center(
+                                  child: Text(
+                                    'Save [F4]',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // const Spacer(),
+                            const SizedBox(width: 10),
+                            InkWell(
+                              onTap: () {},
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFFACD),
+                                  border: Border.all(
+                                    color: const Color(0xFFFFFACD),
+                                    width: 1,
+                                  ),
+                                ),
+                                width: MediaQuery.of(context).size.width * 0.1,
+                                height: 40,
+                                padding: const EdgeInsets.all(2.0),
+                                child: Center(
+                                  child: Text(
+                                    'Cancel',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: Text(
+                          'Recent Transactions [Press F12 for to Select Bill]',
+                          style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF4B0082),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8.0, vertical: 5),
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height / 2.5,
+                            maxWidth: MediaQuery.of(context).size.width / 2.5,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.black,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 10.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Table(
+                                  border: TableBorder.all(
+                                      width: 1, color: Colors.black),
+                                  columnWidths: const {
+                                    0: FlexColumnWidth(3),
+                                    1: FlexColumnWidth(3),
+                                    2: FlexColumnWidth(3),
+                                    3: FlexColumnWidth(3),
+                                    4: FlexColumnWidth(3),
+                                    5: FlexColumnWidth(3),
+                                    6: FlexColumnWidth(3),
+                                  },
+                                  children: [
+                                    TableRow(
+                                      children: [
+                                        TableCell(
+                                          child: SizedBox(
+                                            height: 40,
+                                            child: Align(
+                                              alignment: Alignment.center,
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(4.0),
+                                                child: Text(
+                                                  "Voucher",
+                                                  textAlign: TextAlign.end,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.bold,
+                                                    color:
+                                                        const Color(0xff4B0082),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        TableCell(
+                                            child: SizedBox(
+                                          height: 40,
+                                          child: Align(
+                                            alignment: Alignment.center,
+                                            child: Text(
+                                              "Date",
+                                              textAlign: TextAlign.center,
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.bold,
+                                                color: const Color(0xff4B0082),
+                                              ),
+                                            ),
+                                          ),
+                                        )),
+                                        TableCell(
+                                          child: SizedBox(
+                                            height: 40,
+                                            child: Align(
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                "Time",
+                                                textAlign: TextAlign.center,
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.bold,
+                                                  color:
+                                                      const Color(0xff4B0082),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        TableCell(
+                                          child: SizedBox(
+                                            height: 40,
+                                            child: Align(
+                                              alignment: Alignment.center,
+                                              child: Text(
+                                                "No",
+                                                textAlign: TextAlign.center,
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.bold,
+                                                  color:
+                                                      const Color(0xff4B0082),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        TableCell(
+                                          child: SizedBox(
+                                            height: 40,
+                                            child: Align(
+                                              alignment: Alignment.center,
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(4.0),
+                                                child: Text(
+                                                  "Amount",
+                                                  textAlign: TextAlign.end,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 15,
+                                                    fontWeight: FontWeight.bold,
+                                                    color:
+                                                        const Color(0xff4B0082),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    for (var entry in purchase)
+                                      TableRow(
+                                        children: [
+                                          TableCell(
+                                            child: SizedBox(
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  "Retail Purchase",
+                                                  textAlign: TextAlign.end,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 15,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          TableCell(
+                                            child: SizedBox(
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  entry.date,
+                                                  textAlign: TextAlign.center,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 15,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          TableCell(
+                                            child: SizedBox(
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  entry.date,
+                                                  textAlign: TextAlign.center,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 15,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          TableCell(
+                                            child: SizedBox(
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: Text(
+                                                  entry.dcNo,
+                                                  textAlign: TextAlign.center,
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 15,
+                                                    color: Colors.black,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          TableCell(
+                                            child: SizedBox(
+                                              height: 40,
+                                              child: Align(
+                                                alignment: Alignment.center,
+                                                child: Padding(
+                                                  padding:
+                                                      const EdgeInsets.all(4.0),
+                                                  child: Text(
+                                                    entry.totalamount,
+                                                    textAlign: TextAlign.end,
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 15,
+                                                      color: Colors.black,
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
 
-  //                     // Add your content here
-  //                   ],
-  //                 );
-  //               },
-  //             ),
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
+                      // Add your content here
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void showGetItemDialog() async {
+    TextEditingController originalInvoiceNoController = TextEditingController();
+    TextEditingController vchController = TextEditingController();
+
+    List<String> reasons = [
+      'Bill OF SUPPLY',
+      'Credit Note',
+      'Debit Note',
+      'Delivery Challan',
+      'Inward Challan',
+      'Production',
+      'Proforma Invoice',
+      'Purchase Enquiry',
+      'Purchase Order',
+      'Purchase Return',
+      'Retail Purchase',
+      'Sales Order',
+      'Sales Quotation',
+      'Sales Return',
+      'Tax INVOICE',
+      'Tax Purchase',
+    ];
+
+    List<dynamic>? purchase;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return Center(
+          child: Dialog(
+            alignment: AlignmentDirectional.center,
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(0),
+            ),
+            child: Container(
+              constraints: BoxConstraints(
+                maxWidth: MediaQuery.of(context).size.width / 2.5,
+              ),
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        height: 50,
+                        color: const Color(0xFF4169E1),
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Text(
+                                'Import Items From Voucher',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Positioned(
+                              right: 0,
+                              child: IconButton(
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                                icon: const Icon(
+                                  Icons.close,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SETopText(
+                              text: 'From Voucher',
+                              padding: EdgeInsets.zero,
+                              height: 40,
+                              width: MediaQuery.of(context).size.width * 0.12,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              flex: 4,
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                height: 40,
+                                child: DropdownButtonHideUnderline(
+                                  child: DropdownMenu<String>(
+                                    requestFocusOnTap: true,
+                                    initialSelection: null,
+                                    enableSearch: true,
+                                    trailingIcon: const SizedBox.shrink(),
+                                    textStyle: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xff000000),
+                                      decoration: TextDecoration.none,
+                                    ),
+                                    menuHeight: 300,
+                                    enableFilter: true,
+                                    width: MediaQuery.of(context).size.width *
+                                        0.19,
+                                    selectedTrailingIcon:
+                                        const SizedBox.shrink(),
+                                    inputDecorationTheme:
+                                        const InputDecorationTheme(
+                                      border: InputBorder.none,
+                                      contentPadding: EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 16),
+                                      isDense: true,
+                                      activeIndicatorBorder: BorderSide(
+                                        color: Colors.transparent,
+                                      ),
+                                    ),
+                                    expandedInsets: EdgeInsets.zero,
+                                    onSelected: (String? value) async {
+                                      List<dynamic>? fetchedData;
+                                      if (value == "Retail Purchase") {
+                                        fetchedData = await purchaseServices
+                                            .fetchPurchaseEntries();
+                                      } else if (value == "Purchase Return") {
+                                        fetchedData =
+                                            await purchaseReturnService
+                                                .fetchAllPurchaseReturns();
+                                      } else if (value == "Bill OF SUPPLY") {
+                                        fetchedData = await salesEntryService
+                                            .fetchSalesEntriesByParty(
+                                                selectedLedgerName!);
+                                      } else if (value == "Sales Return") {
+                                        fetchedData = await salesReturnService
+                                            .fetchAllSalesReturns();
+                                      }
+
+                                      setState(() {
+                                        purchase = fetchedData;
+                                        print(purchase);
+                                      });
+                                    },
+                                    dropdownMenuEntries: reasons
+                                        .map<DropdownMenuEntry<String>>(
+                                            (String value) {
+                                      return DropdownMenuEntry<String>(
+                                        value: value,
+                                        label: value,
+                                        style: ButtonStyle(
+                                          textStyle: WidgetStateProperty.all(
+                                            GoogleFonts.poppins(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SETopText(
+                              text: 'Vch No',
+                              padding: EdgeInsets.zero,
+                              height: 40,
+                              width: MediaQuery.of(context).size.width * 0.12,
+                            ),
+                            const SizedBox(width: 10),
+                            SizedBox(
+                              height: 40,
+                              width: MediaQuery.of(context).size.width * 0.12,
+                              child: PRTopTextfield(
+                                controller: vchController,
+                                onSaved: (newValue) {},
+                                padding: const EdgeInsets.only(
+                                    left: 8.0, bottom: 16.0),
+                                hintText: '',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            InkWell(
+                              onTap: () async {
+                                if (vchController.text.isEmpty) {
+                                  PanaraConfirmDialog.showAnimatedGrow(
+                                    context,
+                                    title: "BillingSphere",
+                                    message: "From Voucher is Empty",
+                                    confirmButtonText: "Confirm",
+                                    cancelButtonText: "Cancel",
+                                    onTapCancel: () {
+                                      Navigator.pop(context);
+                                    },
+                                    onTapConfirm: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    panaraDialogType: PanaraDialogType.warning,
+                                  );
+                                } else {
+                                  var matchingPurchase = purchase?.firstWhere(
+                                    (entry) =>
+                                        entry.billNumber == vchController.text,
+                                  );
+
+                                  if (matchingPurchase == null) {
+                                    PanaraConfirmDialog.showAnimatedGrow(
+                                      context,
+                                      title: "BillingSphere",
+                                      message:
+                                          "No purchase found with the given invoice number",
+                                      confirmButtonText: "Confirm",
+                                      cancelButtonText: "Cancel",
+                                      onTapCancel: () {
+                                        Navigator.pop(context);
+                                      },
+                                      onTapConfirm: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      panaraDialogType: PanaraDialogType.error,
+                                    );
+                                  } else {
+                                    print(matchingPurchase.entries);
+                                    List<Entry> entries = (matchingPurchase
+                                            .entries as List<dynamic>)
+                                        .map((entry) => Entry(
+                                            itemName: entry.itemName,
+                                            qty: entry.qty,
+                                            rate: entry.rate,
+                                            unit: entry.unit,
+                                            amount: entry.amount,
+                                            tax: entry.tax,
+                                            sgst: entry.sgst,
+                                            discount: entry.discount,
+                                            cgst: entry.cgst,
+                                            igst: entry.igst,
+                                            netAmount: entry.netAmount,
+                                            baseRate: 12,
+                                            originaldiscount: 12,
+                                            additionalInfo: ""))
+                                        .toList();
+
+                                    _updateWidgetList(entries);
+                                  }
+                                }
+                                Navigator.pop(context);
+                              },
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFFACD),
+                                  border: Border.all(
+                                    color: const Color(0xFFFFFACD),
+                                    width: 1,
+                                  ),
+                                ),
+                                width: MediaQuery.of(context).size.width * 0.1,
+                                height: 40,
+                                padding: const EdgeInsets.all(2.0),
+                                child: Center(
+                                  child: Text(
+                                    'Import [F4]',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // const Spacer(),
+                            const SizedBox(width: 10),
+                            InkWell(
+                              onTap: () {},
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFFACD),
+                                  border: Border.all(
+                                    color: const Color(0xFFFFFACD),
+                                    width: 1,
+                                  ),
+                                ),
+                                width: MediaQuery.of(context).size.width * 0.1,
+                                height: 40,
+                                padding: const EdgeInsets.all(2.0),
+                                child: Center(
+                                  child: Text(
+                                    'Cancel',
+                                    style: GoogleFonts.poppins(
+                                      color: Colors.black,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8.0, vertical: 5),
+                        child: Container(
+                          constraints: BoxConstraints(
+                            maxHeight: MediaQuery.of(context).size.height / 2.5,
+                            maxWidth: MediaQuery.of(context).size.width / 2.5,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: Colors.black,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 10.0),
+                            child: SingleChildScrollView(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (purchase != null)
+                                    Table(
+                                      border: TableBorder.all(
+                                          width: 1, color: Colors.black),
+                                      columnWidths: const {
+                                        0: FlexColumnWidth(3),
+                                        1: FlexColumnWidth(3),
+                                        2: FlexColumnWidth(3),
+                                        3: FlexColumnWidth(3),
+                                      },
+                                      children: [
+                                        TableRow(
+                                          children: [
+                                            buildTableCell(
+                                              text: "Date",
+                                              isHeader: true,
+                                            ),
+                                            buildTableCell(
+                                              text: "No",
+                                              isHeader: true,
+                                            ),
+                                            buildTableCell(
+                                              text: "Particular",
+                                              isHeader: true,
+                                            ),
+                                            buildTableCell(
+                                              text: "Amount",
+                                              isHeader: true,
+                                            ),
+                                          ],
+                                        ),
+                                        for (var entry in purchase!)
+                                          TableRow(
+                                            children: [
+                                              buildTableCell(
+                                                text: entry.date,
+                                              ),
+                                              buildTableCell(
+                                                text: entry.billNumber,
+                                              ),
+                                              buildTableCell(
+                                                  // text: suggestionItems5
+                                                  //     .firstWhere(
+                                                  //       (ledger) =>
+                                                  //           ledger.id ==
+                                                  //           entry.ledger,
+                                                  //     )
+                                                  //     .name,
+                                                  text: entry.ledger),
+                                              buildTableCell(
+                                                text: entry.totalAmount,
+                                              ),
+                                            ],
+                                          ),
+                                      ],
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget buildTableCell({
+    required String text,
+    Alignment alignment = Alignment.center,
+    TextAlign textAlign = TextAlign.center,
+    bool isHeader = false,
+    EdgeInsets padding = const EdgeInsets.all(4.0),
+  }) {
+    return TableCell(
+      child: SizedBox(
+        height: 40,
+        child: Align(
+          alignment: alignment,
+          child: Padding(
+            padding: padding,
+            child: Text(
+              text,
+              textAlign: textAlign,
+              style: GoogleFonts.poppins(
+                fontSize: 15,
+                fontWeight: isHeader ? FontWeight.bold : FontWeight.normal,
+                color: isHeader ? const Color(0xff4B0082) : Colors.black,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
   void openDialog1(BuildContext context, String ledgerID, String ledgerName,
       double debitAmount, VoidCallback onSave) {
@@ -5001,48 +5545,68 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
     );
   }
 
-  void _updateWidgetList(List<SalesEntry> selectedEntries) {
+  void _updateWidgetList(List<Entry> selectedEntries) {
     setState(() {
       _newWidget.clear();
-      purchaseController.noController.text = selectedPurchase!.no;
-      purchaseController.dateController.text = selectedPurchase!.date;
-      purchaseController.ledgerController.text = suggestionItems5.isNotEmpty
-          ? suggestionItems5
-              .firstWhere((element) => element.id == selectedPurchase!.ledger)
-              .name
-          : '';
-      purchaseController.billNumberController.text =
-          selectedPurchase!.billNumber;
-      purchaseController.date2Controller.text = selectedPurchase!.date2;
-      purchaseController.remarksController!.text = selectedPurchase!.remarks!;
-      selectedLedgerName = selectedPurchase!.ledger;
-      selectedState = selectedPurchase!.place;
-      selectedStatus = selectedPurchase!.type;
-
+      _allValues.clear();
+      print(".........1");
       for (var i = 0; i < selectedEntries.length; i++) {
         final entry = selectedEntries[i];
+        _allValues.add({
+          'uniqueKey': entry.itemName,
+          'itemName': entry.itemName,
+          'qty': entry.qty.toString(),
+          'rate': entry.rate.toString(),
+          'unit': entry.unit,
+          'amount': entry.amount.toString(),
+          'tax': entry.tax,
+          'sgst': entry.sgst.toString(),
+          'cgst': entry.cgst.toString(),
+          'igst': entry.igst.toString(),
+          'discount': entry.discount.toString(),
+          'netAmount': entry.netAmount.toString(),
+        });
+
+        print(".........2");
+
+        final itemNameController = TextEditingController(text: entry.itemName);
+        final qtyController = TextEditingController(text: entry.qty.toString());
+        final rateController =
+            TextEditingController(text: entry.rate.toString());
+        final unitController = TextEditingController(text: entry.unit);
+        final amountController =
+            TextEditingController(text: entry.amount.toString());
+        final taxController = TextEditingController(text: entry.tax.toString());
+        final sgstController =
+            TextEditingController(text: entry.sgst.toString());
+        final cgstController =
+            TextEditingController(text: entry.cgst.toString());
+        final igstController =
+            TextEditingController(text: entry.igst.toString());
+        final netAmountController =
+            TextEditingController(text: entry.netAmount.toString());
+        final discountController =
+            TextEditingController(text: entry.discount.toString());
+        final sellingPriceController = TextEditingController(text: "0");
+        print(".........3");
         _newWidget.add(
           SalesReturnTable(
-            key: ValueKey(entry.itemName), // or another unique key
+            key: ValueKey(entry.itemName),
             entryId: entry.itemName,
             serialNumber: i + 1,
-            itemNameControllerP: TextEditingController(text: entry.itemName),
-            qtyControllerP: TextEditingController(text: entry.qty.toString()),
-            rateControllerP: TextEditingController(text: entry.rate.toString()),
-            unitControllerP: TextEditingController(text: entry.unit),
-            amountControllerP:
-                TextEditingController(text: entry.amount.toString()),
-            taxControllerP: TextEditingController(text: entry.tax.toString()),
-            sgstControllerP: TextEditingController(text: entry.sgst.toString()),
-            cgstControllerP: TextEditingController(text: entry.cgst.toString()),
-            igstControllerP: TextEditingController(text: entry.igst.toString()),
-            netAmountControllerP:
-                TextEditingController(text: entry.netAmount.toString()),
-            discountControllerP:
-                TextEditingController(text: entry.discount.toString()),
-            sellingPriceControllerP:
-                TextEditingController(text: entry.sellingPrice.toString()),
-            onSaveValues: (p0) {},
+            itemNameControllerP: itemNameController,
+            qtyControllerP: qtyController,
+            rateControllerP: rateController,
+            unitControllerP: unitController,
+            amountControllerP: amountController,
+            taxControllerP: taxController,
+            sgstControllerP: sgstController,
+            cgstControllerP: cgstController,
+            igstControllerP: igstController,
+            netAmountControllerP: netAmountController,
+            discountControllerP: discountController,
+            sellingPriceControllerP: sellingPriceController,
+            onSaveValues: saveValues,
             onDelete: (p0) {},
             item: itemsList,
             measurementLimit: measurement,
@@ -5051,31 +5615,58 @@ class _SalesReturnPageState extends State<SalesReturnPage> {
         );
       }
 
+      print(".........4");
+
       while (_newWidget.length < 5) {
+        print("enter");
         final entryId = ValueKey(_newWidget.length);
-        _newWidget.add(SalesReturnTable(
-          unitControllerP: TextEditingController(),
-          entryId: entryId.toString(),
-          itemNameControllerP: TextEditingController(),
-          qtyControllerP: TextEditingController(),
-          rateControllerP: TextEditingController(),
-          amountControllerP: TextEditingController(),
-          taxControllerP: TextEditingController(),
-          sgstControllerP: TextEditingController(),
-          cgstControllerP: TextEditingController(),
-          igstControllerP: TextEditingController(),
-          netAmountControllerP: TextEditingController(),
-          discountControllerP: TextEditingController(),
-          sellingPriceControllerP: TextEditingController(),
-          onSaveValues: (p0) {},
-          onDelete: (p0) {},
-          serialNumber: _newWidget.length + 1,
-          item: itemsList,
-          measurementLimit: measurement,
-          taxCategory: taxLists,
-        ));
+        _newWidget.add(
+          SalesReturnTable(
+            key: ValueKey(entryId),
+            serialNumber: _newWidget.length + 1,
+            itemNameControllerP: purchaseController.itemNameController,
+            qtyControllerP: purchaseController.qtyController,
+            rateControllerP: purchaseController.rateController,
+            unitControllerP: purchaseController.unitController,
+            amountControllerP: purchaseController.amountController,
+            taxControllerP: purchaseController.taxController,
+            discountControllerP: purchaseController.discountController,
+            sgstControllerP: purchaseController.sgstController,
+            cgstControllerP: purchaseController.cgstController,
+            igstControllerP: purchaseController.igstController,
+            netAmountControllerP: purchaseController.netAmountController,
+            sellingPriceControllerP: purchaseController.sellingPriceController,
+            onSaveValues: saveValues,
+            onDelete: (String entryId) {
+              setState(
+                () {
+                  _newWidget
+                      .removeWhere((widget) => widget.key == ValueKey(entryId));
+                  Map<String, dynamic>? entryToRemove;
+                  for (final entry in _allValues) {
+                    if (entry['uniqueKey'] == entryId) {
+                      entryToRemove = entry;
+                      break;
+                    }
+                  }
+
+                  // Remove the map from _allValues if found
+                  if (entryToRemove != null) {
+                    _allValues.remove(entryToRemove);
+                  }
+                  // calculateTotal();
+                },
+              );
+            },
+            entryId: entryId.toString(),
+            item: itemsList,
+            measurementLimit: measurement,
+            taxCategory: taxLists,
+          ),
+        );
       }
     });
+    print("done");
   }
 
   void clearAll() {

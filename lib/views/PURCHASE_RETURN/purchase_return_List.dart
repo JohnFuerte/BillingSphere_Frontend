@@ -8,6 +8,7 @@ import 'package:billingsphere/utils/constant.dart';
 import 'package:billingsphere/views/PEresponsive/PE_edit_desktop_body.dart';
 import 'package:billingsphere/views/PEresponsive/PE_receipt_print.dart';
 import 'package:billingsphere/views/PURCHASE_RETURN/PR_desktop_body.dart';
+import 'package:billingsphere/views/PURCHASE_RETURN/PR_receipt_print.dart';
 import 'package:billingsphere/views/PURCHASE_RETURN/purchase_return_edit_page.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -62,8 +63,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
       isLoading = true;
     });
     try {
-      final List<PurchaseReturn> purchase =
-          await purchaseReturnService.fetchAllPurchaseReturns();
+      final List<PurchaseReturn> purchase = await purchaseReturnService.fetchAllPurchaseReturns();
 
       setState(() {
         fetchedPurchaseReturn = purchase;
@@ -79,8 +79,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
   }
 
   Future<void> fetchUserGroup() async {
-    final List<UserGroup> userGroupFetch =
-        await userGroupServices.getUserGroups();
+    final List<UserGroup> userGroupFetch = await userGroupServices.getUserGroups();
 
     setState(() {
       userGroupM = userGroupFetch;
@@ -135,10 +134,8 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
   final TextEditingController _printSearchController = TextEditingController();
   final TextEditingController _refNoSearchController = TextEditingController();
   final TextEditingController _refNo2SearchController = TextEditingController();
-  final TextEditingController _particularsSearchController =
-      TextEditingController();
-  final TextEditingController _remarksSearchController =
-      TextEditingController();
+  final TextEditingController _particularsSearchController = TextEditingController();
+  final TextEditingController _remarksSearchController = TextEditingController();
   final TextEditingController _amountSearchController = TextEditingController();
 
   // FocusNodes
@@ -156,50 +153,35 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
   // For Date
   void searchDate(String value) {
     setState(() {
-      fetchedPurchaseReturn = fetchedPurchaseReturn2
-          .where(
-              (sales) => sales.date.toLowerCase().contains(value.toLowerCase()))
-          .toList();
+      fetchedPurchaseReturn = fetchedPurchaseReturn2.where((sales) => sales.date.toLowerCase().contains(value.toLowerCase())).toList();
     });
   }
 
   // For No
   void searchNo(String value) {
     setState(() {
-      fetchedPurchaseReturn = fetchedPurchaseReturn2
-          .where((sales) =>
-              sales.billNumber.toLowerCase().contains(value.toLowerCase()))
-          .toList();
+      fetchedPurchaseReturn = fetchedPurchaseReturn2.where((sales) => sales.billNumber.toLowerCase().contains(value.toLowerCase())).toList();
     });
   }
 
   // For Type
   void searchType(String value) {
     setState(() {
-      fetchedPurchaseReturn = fetchedPurchaseReturn2
-          .where(
-              (sales) => sales.type.toLowerCase().contains(value.toLowerCase()))
-          .toList();
+      fetchedPurchaseReturn = fetchedPurchaseReturn2.where((sales) => sales.type.toLowerCase().contains(value.toLowerCase())).toList();
     });
   }
 
   // For Print
   void searchPrint(String value) {
     setState(() {
-      fetchedPurchaseReturn = fetchedPurchaseReturn2
-          .where(
-              (sales) => sales.id!.toLowerCase().contains(value.toLowerCase()))
-          .toList();
+      fetchedPurchaseReturn = fetchedPurchaseReturn2.where((sales) => sales.id!.toLowerCase().contains(value.toLowerCase())).toList();
     });
   }
 
   // For RefNo
   void searchRefNo(String value) {
     setState(() {
-      fetchedPurchaseReturn = fetchedPurchaseReturn2
-          .where((sales) =>
-              sales.billNumber.toLowerCase().contains(value.toLowerCase()))
-          .toList();
+      fetchedPurchaseReturn = fetchedPurchaseReturn2.where((sales) => sales.billNumber.toLowerCase().contains(value.toLowerCase())).toList();
     });
   }
 
@@ -207,53 +189,52 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
     setState(() {
       // Get the ledger name from the fetchedLedger list
       fetchedPurchaseReturn = fetchedPurchaseReturn2.where((sales) {
-        final ledger =
-            fetchedLedger.firstWhere((ledger) => ledger.id == sales.ledger,
-                orElse: () => Ledger(
-                      id: '',
-                      name: '',
-                      ledgerGroup: '',
-                      printName: '',
-                      aliasName: '',
-                      date: '',
-                      bilwiseAccounting: '',
-                      creditDays: 0,
-                      openingBalance: 0,
-                      debitBalance: 0,
-                      ledgerType: '',
-                      priceListCategory: '',
-                      remarks: '',
-                      status: '',
-                      ledgerCode: 0,
-                      mailingName: '',
-                      address: '',
-                      city: '',
-                      region: '',
-                      state: '',
-                      pincode: 0,
-                      tel: 0,
-                      fax: 0,
-                      mobile: 0,
-                      sms: 0,
-                      email: '',
-                      contactPerson: '',
-                      bankName: '',
-                      branchName: '',
-                      ifsc: '',
-                      accName: '',
-                      accNo: '',
-                      panNo: '',
-                      gst: '',
-                      gstDated: '',
-                      cstNo: '',
-                      cstDated: '',
-                      lstNo: '',
-                      lstDated: '',
-                      serviceTaxNo: '',
-                      serviceTaxDated: '',
-                      registrationType: '',
-                      registrationTypeDated: '',
-                    ));
+        final ledger = fetchedLedger.firstWhere((ledger) => ledger.id == sales.ledger,
+            orElse: () => Ledger(
+                  id: '',
+                  name: '',
+                  ledgerGroup: '',
+                  printName: '',
+                  aliasName: '',
+                  date: '',
+                  bilwiseAccounting: '',
+                  creditDays: 0,
+                  openingBalance: 0,
+                  debitBalance: 0,
+                  ledgerType: '',
+                  priceListCategory: '',
+                  remarks: '',
+                  status: '',
+                  ledgerCode: 0,
+                  mailingName: '',
+                  address: '',
+                  city: '',
+                  region: '',
+                  state: '',
+                  pincode: 0,
+                  tel: 0,
+                  fax: 0,
+                  mobile: 0,
+                  sms: 0,
+                  email: '',
+                  contactPerson: '',
+                  bankName: '',
+                  branchName: '',
+                  ifsc: '',
+                  accName: '',
+                  accNo: '',
+                  panNo: '',
+                  gst: '',
+                  gstDated: '',
+                  cstNo: '',
+                  cstDated: '',
+                  lstNo: '',
+                  lstDated: '',
+                  serviceTaxNo: '',
+                  serviceTaxDated: '',
+                  registrationType: '',
+                  registrationTypeDated: '',
+                ));
         return ledger.name.toLowerCase().contains(value.toLowerCase());
       }).toList();
     });
@@ -262,30 +243,24 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
   // For Remarks
   void searchRemarks(String value) {
     setState(() {
-      fetchedPurchaseReturn = fetchedPurchaseReturn2
-          .where((sales) =>
-              sales.remarks!.toLowerCase().contains(value.toLowerCase()))
-          .toList();
+      fetchedPurchaseReturn = fetchedPurchaseReturn2.where((sales) => sales.remarks!.toLowerCase().contains(value.toLowerCase())).toList();
     });
   }
 
   void searchAmount(String value) {
     setState(() {
-      fetchedPurchaseReturn = fetchedPurchaseReturn2
-          .where((sales) =>
-              sales.totalAmount.toLowerCase().contains(value.toLowerCase()))
-          .toList();
+      fetchedPurchaseReturn = fetchedPurchaseReturn2.where((sales) => sales.totalAmount.toLowerCase().contains(value.toLowerCase())).toList();
     });
   }
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
+  // @override
+  // void didChangeDependencies() {
+  //   super.didChangeDependencies();
 
-    if (mounted) {
-      FocusScope.of(context).requestFocus(_dateFocusNode);
-    }
-  }
+  //   if (mounted) {
+  //     FocusScope.of(context).requestFocus(_dateFocusNode);
+  //   }
+  // }
 
   @override
   void initState() {
@@ -363,28 +338,20 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 8.0),
+                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                 child: Text(
                                   '${fetchedPurchaseReturn.length} Records',
-                                  style: GoogleFonts.poppins(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w500,
-                                      color:
-                                          const Color.fromARGB(255, 0, 24, 43)),
+                                  style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w500, color: const Color.fromARGB(255, 0, 24, 43)),
                                 ),
                               ),
                               Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8.0),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                   child: Row(
                                     children: [
                                       // CheckBox and then text for 'Auto Refresh'
                                       Checkbox(
                                         value: isChecked,
-                                        fillColor: MaterialStateProperty.all(
-                                            const Color.fromARGB(
-                                                255, 0, 24, 43)),
+                                        fillColor: MaterialStateProperty.all(const Color.fromARGB(255, 0, 24, 43)),
                                         onChanged: (value) {
                                           setState(() {
                                             isChecked = value!;
@@ -428,108 +395,63 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                         TableCell(
                                           child: Text(
                                             "Date",
-                                            style: GoogleFonts.poppins(
-                                                color: const Color.fromARGB(
-                                                    255, 0, 36, 66),
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w800,
-                                                height: 2),
+                                            style: GoogleFonts.poppins(color: const Color.fromARGB(255, 0, 36, 66), fontSize: 16, fontWeight: FontWeight.w800, height: 2),
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
                                         TableCell(
                                           child: Text(
                                             "No",
-                                            style: GoogleFonts.poppins(
-                                                color: const Color.fromARGB(
-                                                    255, 0, 36, 66),
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w800,
-                                                height: 2),
+                                            style: GoogleFonts.poppins(color: const Color.fromARGB(255, 0, 36, 66), fontSize: 16, fontWeight: FontWeight.w800, height: 2),
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
                                         TableCell(
                                           child: Text(
                                             "Type",
-                                            style: GoogleFonts.poppins(
-                                                color: const Color.fromARGB(
-                                                    255, 0, 36, 66),
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w800,
-                                                height: 2),
+                                            style: GoogleFonts.poppins(color: const Color.fromARGB(255, 0, 36, 66), fontSize: 16, fontWeight: FontWeight.w800, height: 2),
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
                                         TableCell(
                                           child: Text(
                                             "Print",
-                                            style: GoogleFonts.poppins(
-                                                color: const Color.fromARGB(
-                                                    255, 0, 36, 66),
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w800,
-                                                height: 2),
+                                            style: GoogleFonts.poppins(color: const Color.fromARGB(255, 0, 36, 66), fontSize: 16, fontWeight: FontWeight.w800, height: 2),
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
                                         TableCell(
                                           child: Text(
                                             "RefNo",
-                                            style: GoogleFonts.poppins(
-                                                color: const Color.fromARGB(
-                                                    255, 0, 36, 66),
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w800,
-                                                height: 2),
+                                            style: GoogleFonts.poppins(color: const Color.fromARGB(255, 0, 36, 66), fontSize: 16, fontWeight: FontWeight.w800, height: 2),
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
                                         TableCell(
                                           child: Text(
                                             "RefNo2",
-                                            style: GoogleFonts.poppins(
-                                                color: const Color.fromARGB(
-                                                    255, 0, 36, 66),
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w800,
-                                                height: 2),
+                                            style: GoogleFonts.poppins(color: const Color.fromARGB(255, 0, 36, 66), fontSize: 16, fontWeight: FontWeight.w800, height: 2),
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
                                         TableCell(
                                           child: Text(
                                             "Particulars",
-                                            style: GoogleFonts.poppins(
-                                                color: const Color.fromARGB(
-                                                    255, 0, 36, 66),
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w800,
-                                                height: 2),
+                                            style: GoogleFonts.poppins(color: const Color.fromARGB(255, 0, 36, 66), fontSize: 16, fontWeight: FontWeight.w800, height: 2),
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
                                         TableCell(
                                           child: Text(
                                             "Remarks",
-                                            style: GoogleFonts.poppins(
-                                                color: const Color.fromARGB(
-                                                    255, 0, 36, 66),
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w800,
-                                                height: 2),
+                                            style: GoogleFonts.poppins(color: const Color.fromARGB(255, 0, 36, 66), fontSize: 16, fontWeight: FontWeight.w800, height: 2),
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
                                         TableCell(
                                           child: Text(
                                             "Amount",
-                                            style: GoogleFonts.poppins(
-                                                color: const Color.fromARGB(
-                                                    255, 0, 36, 66),
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w800,
-                                                height: 2),
+                                            style: GoogleFonts.poppins(color: const Color.fromARGB(255, 0, 36, 66), fontSize: 16, fontWeight: FontWeight.w800, height: 2),
                                             textAlign: TextAlign.center,
                                           ),
                                         ),
@@ -558,8 +480,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                     TableRow(
                                       children: [
                                         SearchCell(
-                                          searchController:
-                                              _dateSearchController,
+                                          searchController: _dateSearchController,
                                           onChanged: searchDate,
                                           // focusNode: _dateFocusNode,
                                         ),
@@ -569,46 +490,39 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                           // focusNode: _noFocusNode,
                                         ),
                                         SearchCell(
-                                          searchController:
-                                              _typeSearchController,
+                                          searchController: _typeSearchController,
                                           onChanged: searchType,
                                           // focusNode: _typeFocusNode,
                                         ),
                                         SearchCell(
-                                          searchController:
-                                              _printSearchController,
+                                          searchController: _printSearchController,
                                           onChanged: searchPrint,
                                           // focusNode: _printFocusNode,
                                         ),
                                         SearchCell(
-                                          searchController:
-                                              _refNoSearchController,
+                                          searchController: _refNoSearchController,
                                           onChanged: searchRefNo,
                                           // focusNode: _refNoFocusNode,
                                         ),
                                         SearchCell(
-                                          searchController:
-                                              _refNo2SearchController,
+                                          searchController: _refNo2SearchController,
                                           onChanged: searchRefNo,
                                           // focusNode: _refNo2FocusNode,
                                         ),
                                         SearchCell(
-                                          searchController:
-                                              _particularsSearchController,
+                                          searchController: _particularsSearchController,
                                           textAlign: TextAlign.start,
                                           onChanged: searchParticulars,
                                           // focusNode: _particularsFocusNode,
                                         ),
                                         SearchCell(
-                                          searchController:
-                                              _remarksSearchController,
+                                          searchController: _remarksSearchController,
                                           textAlign: TextAlign.start,
                                           onChanged: searchRemarks,
                                           // focusNode: _remarksFocusNode,
                                         ),
                                         SearchCell(
-                                          searchController:
-                                              _amountSearchController,
+                                          searchController: _amountSearchController,
                                           textAlign: TextAlign.end,
                                           onChanged: searchAmount,
                                           // focusNode: _amountFocusNode,
@@ -619,8 +533,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                 ),
                               ),
                               SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height * 0.60,
+                                height: MediaQuery.of(context).size.height * 0.60,
                                 width: 1510,
                                 child: SingleChildScrollView(
                                   scrollDirection: Axis.vertical,
@@ -639,149 +552,87 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                           8: FlexColumnWidth(1),
                                         },
                                         border: const TableBorder.symmetric(
-                                          inside:
-                                              BorderSide(color: Colors.black),
-                                          outside:
-                                              BorderSide(color: Colors.black),
+                                          inside: BorderSide(color: Colors.black),
+                                          outside: BorderSide(color: Colors.black),
                                         ),
                                         children: [
                                           // Iterate over fetchedPurchaseReturn list and display each sales entry
-                                          for (int i = 0;
-                                              i < fetchedPurchaseReturn.length;
-                                              i++)
+                                          for (int i = 0; i < fetchedPurchaseReturn.length; i++)
                                             TableRow(
                                               children: [
                                                 InkWell(
                                                   onTap: () {
                                                     setState(() {
-                                                      selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
-                                                              .id;
+                                                      selectedId = fetchedPurchaseReturn[i].id;
                                                       index = i;
                                                     });
                                                   },
                                                   onDoubleTap: () {
                                                     print('Double Tapped');
-                                                    selectedId =
-                                                        fetchedPurchaseReturn[i]
-                                                            .id;
+                                                    selectedId = fetchedPurchaseReturn[i].id;
                                                     Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            PurchaseReturnEditPage(
-                                                          data:
-                                                              fetchedPurchaseReturn[
-                                                                      i]
-                                                                  .id!,
+                                                        builder: (context) => PurchaseReturnEditPage(
+                                                          data: fetchedPurchaseReturn[i].id!,
                                                         ),
                                                       ),
                                                     );
                                                   },
                                                   child: Container(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.20,
-                                                    color: selectedId ==
-                                                            fetchedPurchaseReturn[
-                                                                    i]
-                                                                .id
-                                                        ? Colors.blue[500]
-                                                        : Colors.white,
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    width: MediaQuery.of(context).size.width * 0.20,
+                                                    color: selectedId == fetchedPurchaseReturn[i].id ? Colors.blue[500] : Colors.white,
                                                     child: Text(
                                                       maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      fetchedPurchaseReturn[i]
-                                                          .date,
-                                                      style:
-                                                          GoogleFonts.poppins(
+                                                      overflow: TextOverflow.ellipsis,
+                                                      fetchedPurchaseReturn[i].date,
+                                                      style: GoogleFonts.poppins(
                                                         fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        color: selectedId ==
-                                                                fetchedPurchaseReturn[
-                                                                        i]
-                                                                    .id
-                                                            ? Colors.white
-                                                            : Colors.black,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: selectedId == fetchedPurchaseReturn[i].id ? Colors.white : Colors.black,
                                                       ),
-                                                      textAlign:
-                                                          TextAlign.center,
+                                                      textAlign: TextAlign.center,
                                                     ),
                                                   ),
                                                 ),
                                                 InkWell(
                                                   onTap: () {
                                                     setState(() {
-                                                      selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
-                                                              .id;
+                                                      selectedId = fetchedPurchaseReturn[i].id;
                                                       index = i;
                                                     });
                                                   },
                                                   onDoubleTap: () {
                                                     print('Double Tapped');
-                                                    selectedId =
-                                                        fetchedPurchaseReturn[i]
-                                                            .id;
+                                                    selectedId = fetchedPurchaseReturn[i].id;
                                                     Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            PurchaseReturnEditPage(
-                                                          data:
-                                                              fetchedPurchaseReturn[
-                                                                      i]
-                                                                  .id!,
+                                                        builder: (context) => PurchaseReturnEditPage(
+                                                          data: fetchedPurchaseReturn[i].id!,
                                                         ),
                                                       ),
                                                     );
                                                   },
                                                   child: Container(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    color: selectedId ==
-                                                            fetchedPurchaseReturn[
-                                                                    i]
-                                                                .id
-                                                        ? Colors.blue[500]
-                                                        : Colors.white,
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    color: selectedId == fetchedPurchaseReturn[i].id ? Colors.blue[500] : Colors.white,
                                                     child: Text(
-                                                      fetchedPurchaseReturn[i]
-                                                          .billNumber,
-                                                      style:
-                                                          GoogleFonts.poppins(
+                                                      fetchedPurchaseReturn[i].billNumber,
+                                                      style: GoogleFonts.poppins(
                                                         fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        color: selectedId ==
-                                                                fetchedPurchaseReturn[
-                                                                        i]
-                                                                    .id
-                                                            ? Colors.white
-                                                            : Colors.black,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: selectedId == fetchedPurchaseReturn[i].id ? Colors.white : Colors.black,
                                                       ),
-                                                      textAlign:
-                                                          TextAlign.center,
+                                                      textAlign: TextAlign.center,
                                                     ),
                                                   ),
                                                 ),
                                                 InkWell(
                                                   onTap: () {
                                                     setState(() {
-                                                      selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
-                                                              .id;
+                                                      selectedId = fetchedPurchaseReturn[i].id;
                                                       index = i;
                                                     });
                                                   },
@@ -790,61 +641,33 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                     Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            PurchaseReturnEditPage(
-                                                          data:
-                                                              fetchedPurchaseReturn[
-                                                                      i]
-                                                                  .id!,
+                                                        builder: (context) => PurchaseReturnEditPage(
+                                                          data: fetchedPurchaseReturn[i].id!,
                                                         ),
                                                       ),
                                                     );
                                                   },
                                                   child: Container(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.20,
-                                                    color: selectedId ==
-                                                            fetchedPurchaseReturn[
-                                                                    i]
-                                                                .id
-                                                        ? Colors.blue[500]
-                                                        : Colors.white,
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    width: MediaQuery.of(context).size.width * 0.20,
+                                                    color: selectedId == fetchedPurchaseReturn[i].id ? Colors.blue[500] : Colors.white,
                                                     child: Text(
                                                       maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      fetchedPurchaseReturn[i]
-                                                          .type,
-                                                      style:
-                                                          GoogleFonts.poppins(
+                                                      overflow: TextOverflow.ellipsis,
+                                                      fetchedPurchaseReturn[i].type,
+                                                      style: GoogleFonts.poppins(
                                                         fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        color: selectedId ==
-                                                                fetchedPurchaseReturn[
-                                                                        i]
-                                                                    .id
-                                                            ? Colors.white
-                                                            : Colors.black,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: selectedId == fetchedPurchaseReturn[i].id ? Colors.white : Colors.black,
                                                       ),
-                                                      textAlign:
-                                                          TextAlign.center,
+                                                      textAlign: TextAlign.center,
                                                     ),
                                                   ),
                                                 ),
                                                 InkWell(
                                                   onTap: () {
                                                     setState(() {
-                                                      selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
-                                                              .id;
+                                                      selectedId = fetchedPurchaseReturn[i].id;
                                                       index = i;
                                                     });
                                                   },
@@ -853,52 +676,30 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                     Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            PurchaseReturnEditPage(
-                                                          data:
-                                                              fetchedPurchaseReturn[
-                                                                      i]
-                                                                  .id!,
+                                                        builder: (context) => PurchaseReturnEditPage(
+                                                          data: fetchedPurchaseReturn[i].id!,
                                                         ),
                                                       ),
                                                     );
                                                   },
                                                   child: Container(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    color: selectedId ==
-                                                            fetchedPurchaseReturn[
-                                                                    i]
-                                                                .id
-                                                        ? Colors.blue[500]
-                                                        : Colors.white,
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    color: selectedId == fetchedPurchaseReturn[i].id ? Colors.blue[500] : Colors.white,
                                                     child: Text(
                                                       '0',
-                                                      style:
-                                                          GoogleFonts.poppins(
+                                                      style: GoogleFonts.poppins(
                                                         fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        color: selectedId ==
-                                                                fetchedPurchaseReturn[
-                                                                        i]
-                                                                    .id
-                                                            ? Colors.white
-                                                            : Colors.black,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: selectedId == fetchedPurchaseReturn[i].id ? Colors.white : Colors.black,
                                                       ),
-                                                      textAlign:
-                                                          TextAlign.center,
+                                                      textAlign: TextAlign.center,
                                                     ),
                                                   ),
                                                 ),
                                                 InkWell(
                                                   onTap: () {
                                                     setState(() {
-                                                      selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
-                                                              .id;
+                                                      selectedId = fetchedPurchaseReturn[i].id;
                                                       index = i;
                                                     });
                                                   },
@@ -907,53 +708,30 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                     Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            PurchaseReturnEditPage(
-                                                          data:
-                                                              fetchedPurchaseReturn[
-                                                                      i]
-                                                                  .id!,
+                                                        builder: (context) => PurchaseReturnEditPage(
+                                                          data: fetchedPurchaseReturn[i].id!,
                                                         ),
                                                       ),
                                                     );
                                                   },
                                                   child: Container(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    color: selectedId ==
-                                                            fetchedPurchaseReturn[
-                                                                    i]
-                                                                .id
-                                                        ? Colors.blue[500]
-                                                        : Colors.white,
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    color: selectedId == fetchedPurchaseReturn[i].id ? Colors.blue[500] : Colors.white,
                                                     child: Text(
-                                                      fetchedPurchaseReturn[i]
-                                                          .billNumber,
-                                                      style:
-                                                          GoogleFonts.poppins(
+                                                      fetchedPurchaseReturn[i].billNumber,
+                                                      style: GoogleFonts.poppins(
                                                         fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        color: selectedId ==
-                                                                fetchedPurchaseReturn[
-                                                                        i]
-                                                                    .id
-                                                            ? Colors.white
-                                                            : Colors.black,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: selectedId == fetchedPurchaseReturn[i].id ? Colors.white : Colors.black,
                                                       ),
-                                                      textAlign:
-                                                          TextAlign.center,
+                                                      textAlign: TextAlign.center,
                                                     ),
                                                   ),
                                                 ),
                                                 InkWell(
                                                   onTap: () {
                                                     setState(() {
-                                                      selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
-                                                              .id;
+                                                      selectedId = fetchedPurchaseReturn[i].id;
                                                       index = i;
                                                     });
                                                   },
@@ -962,53 +740,30 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                     Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            PurchaseReturnEditPage(
-                                                          data:
-                                                              fetchedPurchaseReturn[
-                                                                      i]
-                                                                  .id!,
+                                                        builder: (context) => PurchaseReturnEditPage(
+                                                          data: fetchedPurchaseReturn[i].id!,
                                                         ),
                                                       ),
                                                     );
                                                   },
                                                   child: Container(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    color: selectedId ==
-                                                            fetchedPurchaseReturn[
-                                                                    i]
-                                                                .id
-                                                        ? Colors.blue[500]
-                                                        : Colors.white,
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    color: selectedId == fetchedPurchaseReturn[i].id ? Colors.blue[500] : Colors.white,
                                                     child: Text(
-                                                      fetchedPurchaseReturn[i]
-                                                          .billNumber,
-                                                      style:
-                                                          GoogleFonts.poppins(
+                                                      fetchedPurchaseReturn[i].billNumber,
+                                                      style: GoogleFonts.poppins(
                                                         fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        color: selectedId ==
-                                                                fetchedPurchaseReturn[
-                                                                        i]
-                                                                    .id
-                                                            ? Colors.white
-                                                            : Colors.black,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: selectedId == fetchedPurchaseReturn[i].id ? Colors.white : Colors.black,
                                                       ),
-                                                      textAlign:
-                                                          TextAlign.center,
+                                                      textAlign: TextAlign.center,
                                                     ),
                                                   ),
                                                 ),
                                                 InkWell(
                                                   onTap: () {
                                                     setState(() {
-                                                      selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
-                                                              .id;
+                                                      selectedId = fetchedPurchaseReturn[i].id;
                                                       index = i;
                                                     });
                                                   },
@@ -1017,62 +772,28 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                     Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            PurchaseReturnEditPage(
-                                                          data:
-                                                              fetchedPurchaseReturn[
-                                                                      index]
-                                                                  .id!,
+                                                        builder: (context) => PurchaseReturnEditPage(
+                                                          data: fetchedPurchaseReturn[index].id!,
                                                         ),
                                                       ),
                                                     );
                                                   },
                                                   child: Container(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
+                                                    padding: const EdgeInsets.all(8.0),
                                                     // width
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.20,
-                                                    color: selectedId ==
-                                                            fetchedPurchaseReturn[
-                                                                    i]
-                                                                .id
-                                                        ? Colors.blue[500]
-                                                        : Colors.white,
-                                                    child: fetchedLedger
-                                                            .isNotEmpty
+                                                    width: MediaQuery.of(context).size.width * 0.20,
+                                                    color: selectedId == fetchedPurchaseReturn[i].id ? Colors.blue[500] : Colors.white,
+                                                    child: fetchedLedger.isNotEmpty
                                                         ? Text(
                                                             maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            fetchedLedger
-                                                                .firstWhere((ledger) =>
-                                                                    ledger.id ==
-                                                                    fetchedPurchaseReturn[
-                                                                            i]
-                                                                        .ledger)
-                                                                .name,
-                                                            style: GoogleFonts
-                                                                .poppins(
+                                                            overflow: TextOverflow.ellipsis,
+                                                            fetchedLedger.firstWhere((ledger) => ledger.id == fetchedPurchaseReturn[i].ledger).name,
+                                                            style: GoogleFonts.poppins(
                                                               fontSize: 15,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w500,
-                                                              color: selectedId ==
-                                                                      fetchedPurchaseReturn[
-                                                                              i]
-                                                                          .id
-                                                                  ? Colors.white
-                                                                  : Colors
-                                                                      .black,
+                                                              fontWeight: FontWeight.w500,
+                                                              color: selectedId == fetchedPurchaseReturn[i].id ? Colors.white : Colors.black,
                                                             ),
-                                                            textAlign:
-                                                                TextAlign.start,
+                                                            textAlign: TextAlign.start,
                                                           )
                                                         : const Text('No Data'),
                                                   ),
@@ -1080,10 +801,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                 InkWell(
                                                   onTap: () {
                                                     setState(() {
-                                                      selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
-                                                              .id;
+                                                      selectedId = fetchedPurchaseReturn[i].id;
                                                       index = i;
                                                     });
                                                   },
@@ -1092,61 +810,33 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                     Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            PurchaseReturnEditPage(
-                                                          data:
-                                                              fetchedPurchaseReturn[
-                                                                      index]
-                                                                  .id!,
+                                                        builder: (context) => PurchaseReturnEditPage(
+                                                          data: fetchedPurchaseReturn[index].id!,
                                                         ),
                                                       ),
                                                     );
                                                   },
                                                   child: Container(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    width:
-                                                        MediaQuery.of(context)
-                                                                .size
-                                                                .width *
-                                                            0.20,
-                                                    color: selectedId ==
-                                                            fetchedPurchaseReturn[
-                                                                    i]
-                                                                .id
-                                                        ? Colors.blue[500]
-                                                        : Colors.white,
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    width: MediaQuery.of(context).size.width * 0.20,
+                                                    color: selectedId == fetchedPurchaseReturn[i].id ? Colors.blue[500] : Colors.white,
                                                     child: Text(
                                                       maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      fetchedPurchaseReturn[i]
-                                                          .remarks!,
-                                                      style:
-                                                          GoogleFonts.poppins(
+                                                      overflow: TextOverflow.ellipsis,
+                                                      fetchedPurchaseReturn[i].remarks!,
+                                                      style: GoogleFonts.poppins(
                                                         fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        color: selectedId ==
-                                                                fetchedPurchaseReturn[
-                                                                        i]
-                                                                    .id
-                                                            ? Colors.white
-                                                            : Colors.black,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: selectedId == fetchedPurchaseReturn[i].id ? Colors.white : Colors.black,
                                                       ),
-                                                      textAlign:
-                                                          TextAlign.start,
+                                                      textAlign: TextAlign.start,
                                                     ),
                                                   ),
                                                 ),
                                                 InkWell(
                                                   onTap: () {
                                                     setState(() {
-                                                      selectedId =
-                                                          fetchedPurchaseReturn[
-                                                                  i]
-                                                              .id;
+                                                      selectedId = fetchedPurchaseReturn[i].id;
                                                       index = i;
                                                     });
                                                   },
@@ -1155,40 +845,21 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                     Navigator.push(
                                                       context,
                                                       MaterialPageRoute(
-                                                        builder: (context) =>
-                                                            PurchaseReturnEditPage(
-                                                          data:
-                                                              fetchedPurchaseReturn[
-                                                                      index]
-                                                                  .id!,
+                                                        builder: (context) => PurchaseReturnEditPage(
+                                                          data: fetchedPurchaseReturn[index].id!,
                                                         ),
                                                       ),
                                                     );
                                                   },
                                                   child: Container(
-                                                    padding:
-                                                        const EdgeInsets.all(
-                                                            8.0),
-                                                    color: selectedId ==
-                                                            fetchedPurchaseReturn[
-                                                                    i]
-                                                                .id
-                                                        ? Colors.blue[500]
-                                                        : Colors.white,
+                                                    padding: const EdgeInsets.all(8.0),
+                                                    color: selectedId == fetchedPurchaseReturn[i].id ? Colors.blue[500] : Colors.white,
                                                     child: Text(
-                                                      fetchedPurchaseReturn[i]
-                                                          .totalAmount,
-                                                      style:
-                                                          GoogleFonts.poppins(
+                                                      fetchedPurchaseReturn[i].totalAmount,
+                                                      style: GoogleFonts.poppins(
                                                         fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                        color: selectedId ==
-                                                                fetchedPurchaseReturn[
-                                                                        i]
-                                                                    .id
-                                                            ? Colors.white
-                                                            : Colors.black,
+                                                        fontWeight: FontWeight.w500,
+                                                        color: selectedId == fetchedPurchaseReturn[i].id ? Colors.white : Colors.black,
                                                       ),
                                                       textAlign: TextAlign.end,
                                                     ),
@@ -1214,16 +885,13 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     border: Border.all(
-                                      color:
-                                          const Color.fromARGB(255, 0, 24, 43),
+                                      color: const Color.fromARGB(255, 0, 24, 43),
                                       width: 2,
                                     ),
                                   ),
                                   child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       const BottomButtons(
                                         title: 'List Prn',
@@ -1236,15 +904,13 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) =>
-                                                  PRDesktopBody(),
+                                              builder: (context) => PRDesktopBody(),
                                             ),
                                           );
                                         },
                                       ),
                                       Visibility(
-                                        visible: (userGroup == "Admin" ||
-                                            userGroup == "Owner"),
+                                        visible: (userGroup == "Admin" || userGroup == "Owner"),
                                         child: BottomButtons(
                                           title: 'Edit',
                                           subtitle: 'F3',
@@ -1252,11 +918,8 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (context) =>
-                                                    PurchaseReturnEditPage(
-                                                  data: fetchedPurchaseReturn[
-                                                          index]
-                                                      .id!,
+                                                builder: (context) => PurchaseReturnEditPage(
+                                                  data: fetchedPurchaseReturn[index].id!,
                                                 ),
                                               ),
                                             );
@@ -1278,11 +941,8 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) =>
-                                                  PurchasePrintBigReceipt(
-                                                purchaseID:
-                                                    fetchedPurchaseReturn[index]
-                                                        .id!,
+                                              builder: (context) => PurchaseReturnPrint(
+                                                purchaseID: fetchedPurchaseReturn[index].id!,
                                                 'Print Receipt',
                                               ),
                                             ),
@@ -1296,8 +956,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                       StatefulBuilder(
                                         builder: (context, setState) {
                                           return Visibility(
-                                            visible: (userGroup == "Admin" ||
-                                                userGroup == "Owner"),
+                                            visible: (userGroup == "Admin" || userGroup == "Owner"),
                                             child: BottomButtons(
                                               title: 'DEL(Range)',
                                               onPressed: () {
@@ -1305,24 +964,18 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                   context: context,
                                                   builder: (context) {
                                                     return AlertDialog(
-                                                      title: const Text(
-                                                          'Delete Sales'),
-                                                      content: const Text(
-                                                          'Are you sure you want to delete this sales?'),
+                                                      title: const Text('Delete Sales'),
+                                                      content: const Text('Are you sure you want to delete this sales?'),
                                                       actions: [
                                                         TextButton(
                                                           onPressed: () {
-                                                            Navigator.of(
-                                                                    context)
-                                                                .pop();
+                                                            Navigator.of(context).pop();
                                                           },
-                                                          child:
-                                                              const Text('No'),
+                                                          child: const Text('No'),
                                                         ),
                                                         TextButton(
                                                           onPressed: () {},
-                                                          child:
-                                                              const Text('Yes'),
+                                                          child: const Text('Yes'),
                                                         ),
                                                       ],
                                                     );
@@ -1348,16 +1001,13 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                   decoration: BoxDecoration(
                                     color: Colors.white,
                                     border: Border.all(
-                                      color:
-                                          const Color.fromARGB(255, 0, 24, 43),
+                                      color: const Color.fromARGB(255, 0, 24, 43),
                                       width: 3,
                                     ),
                                   ),
                                   child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       const BottomButtons(),
                                       const BottomButtons(
@@ -1371,15 +1021,13 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) =>
-                                                  PRDesktopBody(),
+                                              builder: (context) => PRDesktopBody(),
                                             ),
                                           );
                                         },
                                       ),
                                       Visibility(
-                                        visible: (userGroup == "Admin" ||
-                                            userGroup == "Owner"),
+                                        visible: (userGroup == "Admin" || userGroup == "Owner"),
                                         child: BottomButtons(
                                           title: 'Edit',
                                           subtitle: 'F3',
@@ -1387,11 +1035,8 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                             Navigator.push(
                                               context,
                                               MaterialPageRoute(
-                                                builder: (context) =>
-                                                    PurchaseReturnEditPage(
-                                                  data: fetchedPurchaseReturn[
-                                                          index]
-                                                      .id!,
+                                                builder: (context) => PurchaseReturnEditPage(
+                                                  data: fetchedPurchaseReturn[index].id!,
                                                 ),
                                               ),
                                             );
@@ -1413,11 +1058,8 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (context) =>
-                                                  PurchasePrintBigReceipt(
-                                                purchaseID:
-                                                    fetchedPurchaseReturn[index]
-                                                        .id!,
+                                              builder: (context) => PurchaseReturnPrint(
+                                                purchaseID: fetchedPurchaseReturn[index].id!,
                                                 'Print Receipt',
                                               ),
                                             ),
@@ -1431,8 +1073,7 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                       StatefulBuilder(
                                         builder: (context, setState) {
                                           return Visibility(
-                                            visible: (userGroup == "Admin" ||
-                                                userGroup == "Owner"),
+                                            visible: (userGroup == "Admin" || userGroup == "Owner"),
                                             child: BottomButtons(
                                               title: 'DEL(Range)',
                                               onPressed: () {
@@ -1440,24 +1081,18 @@ class _ListOfPurchaseReturnState extends State<ListOfPurchaseReturn> {
                                                   context: context,
                                                   builder: (context) {
                                                     return AlertDialog(
-                                                      title: const Text(
-                                                          'Delete Sales'),
-                                                      content: const Text(
-                                                          'Are you sure you want to delete this sales?'),
+                                                      title: const Text('Delete Sales'),
+                                                      content: const Text('Are you sure you want to delete this sales?'),
                                                       actions: [
                                                         TextButton(
                                                           onPressed: () {
-                                                            Navigator.of(
-                                                                    context)
-                                                                .pop();
+                                                            Navigator.of(context).pop();
                                                           },
-                                                          child:
-                                                              const Text('No'),
+                                                          child: const Text('No'),
                                                         ),
                                                         TextButton(
                                                           onPressed: () {},
-                                                          child:
-                                                              const Text('Yes'),
+                                                          child: const Text('Yes'),
                                                         ),
                                                       ],
                                                     );

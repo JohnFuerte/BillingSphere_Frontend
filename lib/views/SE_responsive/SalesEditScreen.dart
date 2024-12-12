@@ -90,8 +90,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
 
   // Sales
   SalesEntry? salesEntry;
-  SalesEntryFormController salesEntryFormController =
-      SalesEntryFormController();
+  SalesEntryFormController salesEntryFormController = SalesEntryFormController();
 
   ItemsService itemService = ItemsService();
   SundryFormController sundryFormController = SundryFormController();
@@ -137,8 +136,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
     final String uniqueKey = values['uniqueKey'];
 
     // Check if an entry with the same uniqueKey exists
-    final existingEntryIndex =
-        _allValues.indexWhere((entry) => entry['uniqueKey'] == uniqueKey);
+    final existingEntryIndex = _allValues.indexWhere((entry) => entry['uniqueKey'] == uniqueKey);
 
     setState(() {
       if (existingEntryIndex != -1) {
@@ -154,8 +152,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
     final String uniqueKey = values['uniqueKey'];
 
     // Check if an entry with the same uniqueKey exists
-    final existingEntryIndex =
-        _allValuesSundry.indexWhere((entry) => entry['uniqueKey'] == uniqueKey);
+    final existingEntryIndex = _allValuesSundry.indexWhere((entry) => entry['uniqueKey'] == uniqueKey);
 
     setState(() {
       if (existingEntryIndex != -1) {
@@ -211,10 +208,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
       discount += double.tryParse(values['discount']) ?? 0;
     }
     double originalTotalAmount = netAmount + Ttotal;
-    double roundedTotalAmount =
-        (originalTotalAmount - originalTotalAmount.floor()) >= 0.50
-            ? originalTotalAmount.ceil().toDouble()
-            : originalTotalAmount.floor().toDouble();
+    double roundedTotalAmount = (originalTotalAmount - originalTotalAmount.floor()) >= 0.50 ? originalTotalAmount.ceil().toDouble() : originalTotalAmount.floor().toDouble();
     double roundOffAmount = roundedTotalAmount - originalTotalAmount;
 
     setState(() {
@@ -231,8 +225,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
         TfinalAmt = TnetAmount + TRoundOff;
         roundOffController.text = TRoundOff.toStringAsFixed(2);
       } else {
-        TfinalAmt =
-            TnetAmount + (double.tryParse(roundOffController.text) ?? 0.00);
+        TfinalAmt = TnetAmount + (double.tryParse(roundOffController.text) ?? 0.00);
       }
     });
   }
@@ -283,11 +276,9 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
       final List<Ledger> ledger = await ledgerService.fetchLedgers();
 
       setState(() {
-        suggestionItems5 =
-            ledger.where((element) => element.status == 'Yes').toList();
+        suggestionItems5 = ledger.where((element) => element.status == 'Yes').toList();
 
-        selectedLedgerName =
-            suggestionItems5.isNotEmpty ? suggestionItems5.first.id : null;
+        selectedLedgerName = suggestionItems5.isNotEmpty ? suggestionItems5.first.id : null;
       });
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -305,8 +296,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
 
       suggestionItems = item;
 
-      selectedItemName =
-          suggestionItems.isNotEmpty ? suggestionItems.first.id : null;
+      selectedItemName = suggestionItems.isNotEmpty ? suggestionItems.first.id : null;
     } catch (error) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -329,8 +319,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
 
   Future<void> fetchMeasurementLimit() async {
     try {
-      final List<MeasurementLimit> measurements =
-          await measurementService.fetchMeasurementLimits();
+      final List<MeasurementLimit> measurements = await measurementService.fetchMeasurementLimits();
 
       measurement = measurements;
     } catch (error) {
@@ -340,12 +329,10 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
 
   Future<void> fetchPriceCategoryType() async {
     try {
-      final List<PriceCategory> priceType =
-          await pricetypeService.fetchPriceCategories();
+      final List<PriceCategory> priceType = await pricetypeService.fetchPriceCategories();
 
       pricecategory = priceType;
-      selectedPriceTypeId =
-          pricecategory.isNotEmpty ? pricecategory.first.id : null;
+      selectedPriceTypeId = pricecategory.isNotEmpty ? pricecategory.first.id : null;
     } catch (error) {
       print('Failed to fetch Price Type: $error');
     }
@@ -376,32 +363,19 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
           }
         }
         final entryId = UniqueKey().toString();
-        TextEditingController itemControllerM =
-            TextEditingController(text: entry.itemName);
-        TextEditingController qtyControllerM =
-            TextEditingController(text: entry.qty.toString());
-        TextEditingController rateControllerM =
-            TextEditingController(text: entry.baseRate.toString());
-        TextEditingController rate2ControllerM =
-            TextEditingController(text: entry.rate.toString());
-        TextEditingController unitControllerM =
-            TextEditingController(text: entry.unit.toString());
-        TextEditingController amountControllerM =
-            TextEditingController(text: entry.amount.toString());
-        TextEditingController taxControllerM =
-            TextEditingController(text: entry.tax.toString());
-        TextEditingController sgstControllerM =
-            TextEditingController(text: entry.sgst.toString());
-        TextEditingController cgstControllerM =
-            TextEditingController(text: entry.cgst.toString());
-        TextEditingController igstControllerM =
-            TextEditingController(text: entry.igst.toString());
-        TextEditingController netAmountControllerM =
-            TextEditingController(text: entry.netAmount.toString());
-        TextEditingController discountControllerM =
-            TextEditingController(text: entry.discount.toString());
-        TextEditingController additionalInfoControllerM =
-            TextEditingController(text: entry.additionalInfo.toString());
+        TextEditingController itemControllerM = TextEditingController(text: entry.itemName);
+        TextEditingController qtyControllerM = TextEditingController(text: entry.qty.toString());
+        TextEditingController rateControllerM = TextEditingController(text: entry.baseRate.toString());
+        TextEditingController rate2ControllerM = TextEditingController(text: entry.rate.toString());
+        TextEditingController unitControllerM = TextEditingController(text: entry.unit.toString());
+        TextEditingController amountControllerM = TextEditingController(text: entry.amount.toString());
+        TextEditingController taxControllerM = TextEditingController(text: entry.tax.toString());
+        TextEditingController sgstControllerM = TextEditingController(text: entry.sgst.toString());
+        TextEditingController cgstControllerM = TextEditingController(text: entry.cgst.toString());
+        TextEditingController igstControllerM = TextEditingController(text: entry.igst.toString());
+        TextEditingController netAmountControllerM = TextEditingController(text: entry.netAmount.toString());
+        TextEditingController discountControllerM = TextEditingController(text: entry.discount.toString());
+        TextEditingController additionalInfoControllerM = TextEditingController(text: entry.additionalInfo.toString());
 
         // Add values to the list
         _allValues.add({
@@ -447,8 +421,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
             taxLists: taxLists,
             onDelete: (String entryId) {
               setState(() {
-                _newWidget
-                    .removeWhere((widget) => widget.key == ValueKey(entryId));
+                _newWidget.removeWhere((widget) => widget.key == ValueKey(entryId));
                 Map<String, dynamic>? entryToRemove;
                 for (final entry in _allValues) {
                   if (entry['uniqueKey'] == entryId) {
@@ -495,8 +468,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
             taxLists: taxLists,
             onDelete: (String entryId) {
               setState(() {
-                _newWidget
-                    .removeWhere((widget) => widget.key == ValueKey(entryId));
+                _newWidget.removeWhere((widget) => widget.key == ValueKey(entryId));
                 // Calculate total
                 calculateTotal();
               });
@@ -508,14 +480,10 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
       }
 
       for (final moredetails in sales.moredetails) {
-        TextEditingController advpaymentController =
-            TextEditingController(text: moredetails.advpayment);
-        TextEditingController advpaymentdateController =
-            TextEditingController(text: moredetails.advpaymentdate);
-        TextEditingController installmentController =
-            TextEditingController(text: moredetails.installment);
-        TextEditingController toteldebitamountController =
-            TextEditingController(text: moredetails.toteldebitamount);
+        TextEditingController advpaymentController = TextEditingController(text: moredetails.advpayment);
+        TextEditingController advpaymentdateController = TextEditingController(text: moredetails.advpaymentdate);
+        TextEditingController installmentController = TextEditingController(text: moredetails.installment);
+        TextEditingController toteldebitamountController = TextEditingController(text: moredetails.toteldebitamount);
 
         setState(() {
           _advpaymentControllerM = advpaymentController;
@@ -547,8 +515,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
             entryId: entryId,
             onDelete: (String entryId) {
               setState(() {
-                _newSundry
-                    .removeWhere((widget) => widget.key == ValueKey(entryId));
+                _newSundry.removeWhere((widget) => widget.key == ValueKey(entryId));
 
                 Map<String, dynamic>? entryToRemove;
                 for (final entry in _allValuesSundry) {
@@ -642,12 +609,8 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
         date2: salesEntryFormController.dateController2.text,
         totalamount: TfinalAmt.toStringAsFixed(2),
         remark: salesEntryFormController.remarkController?.text ?? 'No remark',
-        cashAmount: salesEntryFormController.cashAmountController.text == ''
-            ? '0'
-            : salesEntryFormController.cashAmountController.text,
-        dueAmount: salesEntryFormController.dueAmountController.text == ''
-            ? '0'
-            : salesEntryFormController.dueAmountController.text,
+        cashAmount: salesEntryFormController.cashAmountController.text == '' ? '0' : salesEntryFormController.cashAmountController.text,
+        dueAmount: salesEntryFormController.dueAmountController.text == '' ? '0' : salesEntryFormController.dueAmountController.text,
         roundoffDiff: double.parse(roundOffController.text),
         entries: _allValues.map((entry) {
           return Entry(
@@ -734,8 +697,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
       salesEntryFormController.dueAmountController.text = '0';
     } else {
       if (selectedStatus == 'DEBIT') {
-        salesEntryFormController.dueAmountController.text =
-            TfinalAmt.toStringAsFixed(2);
+        salesEntryFormController.dueAmountController.text = TfinalAmt.toStringAsFixed(2);
       } else if (selectedStatus == 'MULTI MODE') {
         // Convert debit to a string
         String? debit = multimodeDetails['debit']?.toString();
@@ -890,26 +852,13 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
     roundOffController = TextEditingController();
     roundOffFocusNode = FocusNode();
 
-    roundOffController.text =
-        TRoundOff.toStringAsFixed(2); // Initial value from TRoundOff
+    roundOffController.text = TRoundOff.toStringAsFixed(2); // Initial value from TRoundOff
 
     roundOffController.addListener(() {
       if (roundOffFocusNode.hasFocus) {
         isManualRoundOffChange = true;
       }
     });
-  }
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-
-    if (mounted) {
-      FocusScope.of(context).requestFocus(noFocus);
-      setState(() {
-        isLoading = false;
-      });
-    }
   }
 
   @override
@@ -936,84 +885,58 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 SETopText(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.05,
+                                  width: MediaQuery.of(context).size.width * 0.05,
                                   height: 40,
                                   text: 'No',
-                                  padding: EdgeInsets.only(
-                                      top: MediaQuery.of(context).size.width *
-                                          0.00),
+                                  padding: EdgeInsets.only(top: MediaQuery.of(context).size.width * 0.00),
                                 ),
                                 SETopTextfield(
                                   // focusNode: noFocus,
-                                  controller:
-                                      salesEntryFormController.noController,
+                                  controller: salesEntryFormController.noController,
                                   onSaved: (newValue) {
-                                    salesEntryFormController.noController.text =
-                                        newValue!;
+                                    salesEntryFormController.noController.text = newValue!;
                                   },
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.07,
+                                  width: MediaQuery.of(context).size.width * 0.07,
                                   height: 40,
-                                  padding: const EdgeInsets.only(
-                                      left: 8.0, bottom: 16.0),
+                                  padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
                                   hintText: '',
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.only(left: 8.0),
                                   child: SETopText(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.04,
+                                    width: MediaQuery.of(context).size.width * 0.04,
                                     height: 40,
                                     text: 'Date',
                                     padding: EdgeInsets.only(
-                                      top: MediaQuery.of(context).size.width *
-                                          0.00,
-                                      left: MediaQuery.of(context).size.width *
-                                          0.0005,
+                                      top: MediaQuery.of(context).size.width * 0.00,
+                                      left: MediaQuery.of(context).size.width * 0.0005,
                                     ),
                                   ),
                                 ),
                                 SETopTextfield(
                                   // focusNode: dateFocus,
-                                  controller:
-                                      salesEntryFormController.dateController1,
+                                  controller: salesEntryFormController.dateController1,
                                   onSaved: (newValue) {
-                                    salesEntryFormController
-                                        .dateController1.text = newValue!;
+                                    salesEntryFormController.dateController1.text = newValue!;
                                   },
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.09,
+                                  width: MediaQuery.of(context).size.width * 0.09,
                                   height: 40,
-                                  padding: const EdgeInsets.only(
-                                      left: 8.0, bottom: 16.0),
-                                  hintText: _selectedDate == null
-                                      ? '12/12/2023'
-                                      : formatter.format(_selectedDate!),
+                                  padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
+                                  hintText: _selectedDate == null ? '12/12/2023' : formatter.format(_selectedDate!),
                                 ),
                                 SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.03,
-                                  child: IconButton(
-                                      onPressed: _presentDatePICKER,
-                                      icon: const Icon(Icons.calendar_month)),
+                                  width: MediaQuery.of(context).size.width * 0.03,
+                                  child: IconButton(onPressed: _presentDatePICKER, icon: const Icon(Icons.calendar_month)),
                                 ),
                                 SETopText(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.04,
+                                  width: MediaQuery.of(context).size.width * 0.04,
                                   height: 40,
                                   text: 'Type',
-                                  padding: EdgeInsets.only(
-                                      left: MediaQuery.of(context).size.width *
-                                          0.0005,
-                                      top: MediaQuery.of(context).size.width *
-                                          0.00),
+                                  padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.0005, top: MediaQuery.of(context).size.width * 0.00),
                                 ),
                                 Container(
-                                  decoration:
-                                      BoxDecoration(border: Border.all()),
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.1,
+                                  decoration: BoxDecoration(border: Border.all()),
+                                  width: MediaQuery.of(context).size.width * 0.1,
                                   height: 40,
                                   padding: const EdgeInsets.all(2.0),
                                   child: DropdownButtonHideUnderline(
@@ -1030,15 +953,11 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                         fontWeight: FontWeight.bold,
                                         decoration: TextDecoration.none,
                                       ),
-                                      selectedTrailingIcon:
-                                          const SizedBox.shrink(),
+                                      selectedTrailingIcon: const SizedBox.shrink(),
 
-                                      inputDecorationTheme:
-                                          InputDecorationTheme(
+                                      inputDecorationTheme: InputDecorationTheme(
                                         border: InputBorder.none,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 8),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                         isDense: true,
                                         activeIndicatorBorder: const BorderSide(
                                           color: Colors.transparent,
@@ -1046,37 +965,27 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                         counterStyle: GoogleFonts.poppins(
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
-                                          color: typeFocus.hasFocus
-                                              ? Colors.white
-                                              : Colors.black,
+                                          color: typeFocus.hasFocus ? Colors.white : Colors.black,
                                         ),
                                       ),
                                       expandedInsets: EdgeInsets.zero,
                                       onSelected: (String? value) {
-                                        FocusScope.of(context)
-                                            .requestFocus(partyFocus);
+                                        FocusScope.of(context).requestFocus(partyFocus);
                                         setState(() {
                                           selectedStatus = value!;
-                                          salesEntryFormController
-                                              .typeController
-                                              .text = selectedStatus;
+                                          salesEntryFormController.typeController.text = selectedStatus;
                                         });
                                       },
-                                      dropdownMenuEntries: status
-                                          .map<DropdownMenuEntry<String>>(
-                                              (String value) {
+                                      dropdownMenuEntries: status.map<DropdownMenuEntry<String>>((String value) {
                                         return DropdownMenuEntry<String>(
                                             value: value,
                                             label: value,
                                             style: ButtonStyle(
-                                              textStyle:
-                                                  WidgetStateProperty.all(
+                                              textStyle: WidgetStateProperty.all(
                                                 GoogleFonts.poppins(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold,
-                                                  color: typeFocus.hasFocus
-                                                      ? Colors.white
-                                                      : Colors.black,
+                                                  color: typeFocus.hasFocus ? Colors.white : Colors.black,
                                                 ),
                                               ),
                                             ));
@@ -1100,36 +1009,22 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 SETopText(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.05,
+                                  width: MediaQuery.of(context).size.width * 0.05,
                                   height: 30,
                                   text: 'Party',
-                                  padding: EdgeInsets.only(
-                                      right: MediaQuery.of(context).size.width *
-                                          0.00,
-                                      top: MediaQuery.of(context).size.width *
-                                          0.00),
+                                  padding: EdgeInsets.only(right: MediaQuery.of(context).size.width * 0.00, top: MediaQuery.of(context).size.width * 0.00),
                                 ),
 
                                 Container(
-                                  decoration:
-                                      BoxDecoration(border: Border.all()),
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.377,
+                                  decoration: BoxDecoration(border: Border.all()),
+                                  width: MediaQuery.of(context).size.width * 0.377,
                                   height: 40,
                                   padding: const EdgeInsets.all(2.0),
 
                                   child: DropdownButtonHideUnderline(
                                     child: DropdownMenu<Ledger>(
                                       requestFocusOnTap: true,
-                                      initialSelection:
-                                          suggestionItems5.isNotEmpty &&
-                                                  selectedLedgerName!.isNotEmpty
-                                              ? suggestionItems5.firstWhere(
-                                                  (element) =>
-                                                      element.id ==
-                                                      selectedLedgerName)
-                                              : null,
+                                      initialSelection: suggestionItems5.isNotEmpty && selectedLedgerName!.isNotEmpty ? suggestionItems5.firstWhere((element) => element.id == selectedLedgerName) : null,
                                       enableSearch: true,
                                       trailingIcon: const SizedBox.shrink(),
                                       textStyle: GoogleFonts.poppins(
@@ -1138,25 +1033,18 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                         decoration: TextDecoration.none,
                                       ),
                                       menuHeight: 300,
-                                      selectedTrailingIcon:
-                                          const SizedBox.shrink(),
-                                      inputDecorationTheme:
-                                          const InputDecorationTheme(
+                                      selectedTrailingIcon: const SizedBox.shrink(),
+                                      inputDecorationTheme: const InputDecorationTheme(
                                         border: InputBorder.none,
-                                        contentPadding: EdgeInsets.symmetric(
-                                            horizontal: 8, vertical: 16),
+                                        contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 16),
                                         isDense: true,
                                         activeIndicatorBorder: BorderSide(
                                           color: Colors.transparent,
                                         ),
                                       ),
                                       enableFilter: true,
-                                      filterCallback:
-                                          (List<DropdownMenuEntry<Ledger>>
-                                                  entries,
-                                              String filter) {
-                                        final String trimmedFilter =
-                                            filter.trim().toLowerCase();
+                                      filterCallback: (List<DropdownMenuEntry<Ledger>> entries, String filter) {
+                                        final String trimmedFilter = filter.trim().toLowerCase();
 
                                         if (trimmedFilter.isEmpty) {
                                           return entries;
@@ -1164,9 +1052,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
 
                                         // Filter the entries based on the query
                                         return entries.where((entry) {
-                                          return entry.value.name
-                                              .toLowerCase()
-                                              .contains(trimmedFilter);
+                                          return entry.value.name.toLowerCase().contains(trimmedFilter);
                                         }).toList();
                                       },
                                       expandedInsets: EdgeInsets.zero,
@@ -1175,15 +1061,12 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                           selectedLedgerName = value!.id;
                                         });
                                       },
-                                      dropdownMenuEntries: suggestionItems5
-                                          .map<DropdownMenuEntry<Ledger>>(
-                                              (Ledger value) {
+                                      dropdownMenuEntries: suggestionItems5.map<DropdownMenuEntry<Ledger>>((Ledger value) {
                                         return DropdownMenuEntry<Ledger>(
                                           value: value,
                                           label: value.name,
                                           trailingIcon: Text(
-                                            value.debitBalance
-                                                .toStringAsFixed(2),
+                                            value.debitBalance.toStringAsFixed(2),
                                             style: GoogleFonts.poppins(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
@@ -1231,25 +1114,16 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                 ),
 
                                 SETopText(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.05,
+                                  width: MediaQuery.of(context).size.width * 0.05,
                                   height: 30,
                                   text: 'Place',
-                                  padding: EdgeInsets.only(
-                                      left: MediaQuery.of(context).size.width *
-                                          0.01,
-                                      right: MediaQuery.of(context).size.width *
-                                          0.00,
-                                      top: MediaQuery.of(context).size.width *
-                                          0.00),
+                                  padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.01, right: MediaQuery.of(context).size.width * 0.00, top: MediaQuery.of(context).size.width * 0.00),
                                 ),
                                 // Custom Textfield
 
                                 Container(
-                                  decoration:
-                                      BoxDecoration(border: Border.all()),
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.14,
+                                  decoration: BoxDecoration(border: Border.all()),
+                                  width: MediaQuery.of(context).size.width * 0.14,
                                   height: 40,
                                   padding: const EdgeInsets.all(2.0),
                                   child: DropdownButtonHideUnderline(
@@ -1264,21 +1138,15 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                       textStyle: GoogleFonts.poppins(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: placeFocus.hasFocus
-                                            ? Colors.white
-                                            : Colors.black,
+                                        color: placeFocus.hasFocus ? Colors.white : Colors.black,
                                         decoration: TextDecoration.none,
                                       ),
                                       menuHeight: 300,
-                                      selectedTrailingIcon:
-                                          const SizedBox.shrink(),
+                                      selectedTrailingIcon: const SizedBox.shrink(),
 
-                                      inputDecorationTheme:
-                                          InputDecorationTheme(
+                                      inputDecorationTheme: InputDecorationTheme(
                                         border: InputBorder.none,
-                                        contentPadding:
-                                            const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 8),
+                                        contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                                         isDense: true,
                                         activeIndicatorBorder: const BorderSide(
                                           color: Colors.transparent,
@@ -1293,21 +1161,16 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                       onSelected: (String? value) {
                                         setState(() {
                                           selectedPlaceState = value!;
-                                          salesEntryFormController
-                                              .placeController
-                                              .text = selectedPlaceState;
+                                          salesEntryFormController.placeController.text = selectedPlaceState;
                                           // Set Type
                                         });
                                       },
-                                      dropdownMenuEntries: placestate
-                                          .map<DropdownMenuEntry<String>>(
-                                              (String value) {
+                                      dropdownMenuEntries: placestate.map<DropdownMenuEntry<String>>((String value) {
                                         return DropdownMenuEntry<String>(
                                             value: value,
                                             label: value,
                                             style: ButtonStyle(
-                                              textStyle:
-                                                  WidgetStateProperty.all(
+                                              textStyle: WidgetStateProperty.all(
                                                 GoogleFonts.poppins(
                                                   fontSize: 16,
                                                   fontWeight: FontWeight.bold,
@@ -1360,77 +1223,52 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 SETopText(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.05,
+                                  width: MediaQuery.of(context).size.width * 0.05,
                                   height: 30,
                                   text: 'Bill No',
-                                  padding: EdgeInsets.only(
-                                      right: MediaQuery.of(context).size.width *
-                                          0.00,
-                                      top: MediaQuery.of(context).size.width *
-                                          0.00),
+                                  padding: EdgeInsets.only(right: MediaQuery.of(context).size.width * 0.00, top: MediaQuery.of(context).size.width * 0.00),
                                 ),
                                 SETopTextfield(
                                   // focusNode: dcNoFocus,
-                                  controller:
-                                      salesEntryFormController.dcNoController,
+                                  controller: salesEntryFormController.dcNoController,
                                   onSaved: (newValue) {
-                                    salesEntryFormController
-                                        .dcNoController.text = newValue!;
+                                    salesEntryFormController.dcNoController.text = newValue!;
                                   },
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.248,
+                                  width: MediaQuery.of(context).size.width * 0.248,
                                   height: 40,
-                                  padding: const EdgeInsets.only(
-                                      left: 8.0, bottom: 16.0),
+                                  padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
                                   hintText: '',
                                 ),
                                 const SizedBox(width: 20),
                                 Padding(
                                   padding: const EdgeInsets.only(right: 8.0),
                                   child: SETopText(
-                                    width: MediaQuery.of(context).size.width *
-                                        0.05,
+                                    width: MediaQuery.of(context).size.width * 0.05,
                                     height: 30,
                                     text: 'Date',
-                                    padding: EdgeInsets.only(
-                                        left:
-                                            MediaQuery.of(context).size.width *
-                                                0.0005,
-                                        top: MediaQuery.of(context).size.width *
-                                            0.00),
+                                    padding: EdgeInsets.only(left: MediaQuery.of(context).size.width * 0.0005, top: MediaQuery.of(context).size.width * 0.00),
                                   ),
                                 ),
                                 SETopTextfield(
                                   // focusNode: dateFocus2,
-                                  controller:
-                                      salesEntryFormController.dateController2,
+                                  controller: salesEntryFormController.dateController2,
                                   onSaved: (newValue) {
-                                    salesEntryFormController
-                                        .dateController2.text = newValue!;
+                                    salesEntryFormController.dateController2.text = newValue!;
                                   },
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.09,
+                                  width: MediaQuery.of(context).size.width * 0.09,
                                   height: 40,
-                                  padding: const EdgeInsets.only(
-                                      left: 8.0, bottom: 16.0),
-                                  hintText: _pickedDateData == null
-                                      ? '12/12/2023'
-                                      : formatter.format(_pickedDateData!),
+                                  padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
+                                  hintText: _pickedDateData == null ? '12/12/2023' : formatter.format(_pickedDateData!),
                                 ),
                                 SizedBox(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.03,
-                                  child: IconButton(
-                                      onPressed: _showDataPICKER,
-                                      icon: const Icon(Icons.calendar_month)),
+                                  width: MediaQuery.of(context).size.width * 0.03,
+                                  child: IconButton(onPressed: _showDataPICKER, icon: const Icon(Icons.calendar_month)),
                                 ),
                                 const Spacer(),
                                 Padding(
                                   padding: const EdgeInsets.all(8.0),
                                   child: SEFormButton(
-                                    width:
-                                        MediaQuery.of(context).size.width * 0.1,
+                                    width: MediaQuery.of(context).size.width * 0.1,
                                     height: 30,
                                     onPressed: () {
                                       showDialog(
@@ -1443,89 +1281,49 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                               height: 350,
                                               child: Scaffold(
                                                 appBar: AppBar(
-                                                  backgroundColor:
-                                                      const Color(0xFF4169E1),
-                                                  automaticallyImplyLeading:
-                                                      false,
+                                                  backgroundColor: const Color(0xFF4169E1),
+                                                  automaticallyImplyLeading: false,
                                                   centerTitle: true,
                                                   title: Text(
                                                     'More Details',
-                                                    style: GoogleFonts.poppins(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: Colors.white),
+                                                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: Colors.white),
                                                   ),
                                                 ),
                                                 body: Column(
                                                   children: [
                                                     Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              8.0),
+                                                      padding: const EdgeInsets.all(8.0),
                                                       child: Row(
                                                         children: [
                                                           SizedBox(
                                                             width: 200,
                                                             child: Text(
                                                               '1. ADVANCE PAYMENT',
-                                                              style: GoogleFonts.poppins(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color: const Color
-                                                                      .fromARGB(
-                                                                      255,
-                                                                      109,
-                                                                      17,
-                                                                      189)),
+                                                              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 109, 17, 189)),
                                                             ),
                                                           ),
                                                           Flexible(
                                                             child: Container(
                                                               width: 400,
                                                               height: 30,
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                border: Border.all(
-                                                                    color: Colors
-                                                                        .black),
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            0),
+                                                              decoration: BoxDecoration(
+                                                                border: Border.all(color: Colors.black),
+                                                                borderRadius: BorderRadius.circular(0),
                                                               ),
                                                               child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .only(
-                                                                        left:
-                                                                            8.0,
-                                                                        bottom:
-                                                                            16.0),
-                                                                child:
-                                                                    TextFormField(
-                                                                  controller:
-                                                                      _advpaymentControllerM,
-                                                                  onSaved:
-                                                                      (newValue) {
-                                                                    _advpaymentControllerM
-                                                                            .text =
-                                                                        newValue!;
+                                                                padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
+                                                                child: TextFormField(
+                                                                  controller: _advpaymentControllerM,
+                                                                  onSaved: (newValue) {
+                                                                    _advpaymentControllerM.text = newValue!;
                                                                   },
-                                                                  style:
-                                                                      const TextStyle(
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold,
-                                                                    fontSize:
-                                                                        17,
+                                                                  style: const TextStyle(
+                                                                    fontWeight: FontWeight.bold,
+                                                                    fontSize: 17,
                                                                     height: 1,
                                                                   ),
-                                                                  decoration:
-                                                                      const InputDecoration(
-                                                                    border:
-                                                                        InputBorder
-                                                                            .none,
+                                                                  decoration: const InputDecoration(
+                                                                    border: InputBorder.none,
                                                                   ),
                                                                 ),
                                                               ),
@@ -1535,73 +1333,38 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                                       ),
                                                     ),
                                                     Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              8.0),
+                                                      padding: const EdgeInsets.all(8.0),
                                                       child: Row(
                                                         children: [
                                                           SizedBox(
                                                             width: 200,
                                                             child: Text(
                                                               '2. ADVANCE PAYMENT DATE',
-                                                              style: GoogleFonts.poppins(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color: const Color
-                                                                      .fromARGB(
-                                                                      255,
-                                                                      109,
-                                                                      17,
-                                                                      189)),
+                                                              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 109, 17, 189)),
                                                             ),
                                                           ),
                                                           Flexible(
                                                             child: Container(
                                                               width: 400,
                                                               height: 30,
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                border: Border.all(
-                                                                    color: Colors
-                                                                        .black),
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            0),
+                                                              decoration: BoxDecoration(
+                                                                border: Border.all(color: Colors.black),
+                                                                borderRadius: BorderRadius.circular(0),
                                                               ),
                                                               child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .only(
-                                                                        left:
-                                                                            8.0,
-                                                                        bottom:
-                                                                            16.0),
-                                                                child:
-                                                                    TextFormField(
-                                                                  controller:
-                                                                      _advpaymentdateControllerM,
-                                                                  onSaved:
-                                                                      (newValue) {
-                                                                    _advpaymentdateControllerM
-                                                                            .text =
-                                                                        newValue!;
+                                                                padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
+                                                                child: TextFormField(
+                                                                  controller: _advpaymentdateControllerM,
+                                                                  onSaved: (newValue) {
+                                                                    _advpaymentdateControllerM.text = newValue!;
                                                                   },
-                                                                  style:
-                                                                      const TextStyle(
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold,
-                                                                    fontSize:
-                                                                        17,
+                                                                  style: const TextStyle(
+                                                                    fontWeight: FontWeight.bold,
+                                                                    fontSize: 17,
                                                                     height: 1,
                                                                   ),
-                                                                  decoration:
-                                                                      const InputDecoration(
-                                                                    border:
-                                                                        InputBorder
-                                                                            .none,
+                                                                  decoration: const InputDecoration(
+                                                                    border: InputBorder.none,
                                                                   ),
                                                                 ),
                                                               ),
@@ -1611,73 +1374,38 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                                       ),
                                                     ),
                                                     Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              8.0),
+                                                      padding: const EdgeInsets.all(8.0),
                                                       child: Row(
                                                         children: [
                                                           SizedBox(
                                                             width: 200,
                                                             child: Text(
                                                               '3. INSTALLMENT',
-                                                              style: GoogleFonts.poppins(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color: const Color
-                                                                      .fromARGB(
-                                                                      255,
-                                                                      109,
-                                                                      17,
-                                                                      189)),
+                                                              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 109, 17, 189)),
                                                             ),
                                                           ),
                                                           Flexible(
                                                             child: Container(
                                                               width: 400,
                                                               height: 30,
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                border: Border.all(
-                                                                    color: Colors
-                                                                        .black),
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            0),
+                                                              decoration: BoxDecoration(
+                                                                border: Border.all(color: Colors.black),
+                                                                borderRadius: BorderRadius.circular(0),
                                                               ),
                                                               child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .only(
-                                                                        left:
-                                                                            8.0,
-                                                                        bottom:
-                                                                            16.0),
-                                                                child:
-                                                                    TextFormField(
-                                                                  controller:
-                                                                      _installmentControllerM,
-                                                                  onSaved:
-                                                                      (newValue) {
-                                                                    _installmentControllerM
-                                                                            .text =
-                                                                        newValue!;
+                                                                padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
+                                                                child: TextFormField(
+                                                                  controller: _installmentControllerM,
+                                                                  onSaved: (newValue) {
+                                                                    _installmentControllerM.text = newValue!;
                                                                   },
-                                                                  style:
-                                                                      const TextStyle(
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold,
-                                                                    fontSize:
-                                                                        17,
+                                                                  style: const TextStyle(
+                                                                    fontWeight: FontWeight.bold,
+                                                                    fontSize: 17,
                                                                     height: 1,
                                                                   ),
-                                                                  decoration:
-                                                                      const InputDecoration(
-                                                                    border:
-                                                                        InputBorder
-                                                                            .none,
+                                                                  decoration: const InputDecoration(
+                                                                    border: InputBorder.none,
                                                                   ),
                                                                 ),
                                                               ),
@@ -1687,73 +1415,38 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                                       ),
                                                     ),
                                                     Padding(
-                                                      padding:
-                                                          const EdgeInsets.all(
-                                                              8.0),
+                                                      padding: const EdgeInsets.all(8.0),
                                                       child: Row(
                                                         children: [
                                                           SizedBox(
                                                             width: 200,
                                                             child: Text(
                                                               '4. TOTAL DEBIT AMOUNT',
-                                                              style: GoogleFonts.poppins(
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .bold,
-                                                                  color: const Color
-                                                                      .fromARGB(
-                                                                      255,
-                                                                      109,
-                                                                      17,
-                                                                      189)),
+                                                              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: const Color.fromARGB(255, 109, 17, 189)),
                                                             ),
                                                           ),
                                                           Flexible(
                                                             child: Container(
                                                               width: 400,
                                                               height: 30,
-                                                              decoration:
-                                                                  BoxDecoration(
-                                                                border: Border.all(
-                                                                    color: Colors
-                                                                        .black),
-                                                                borderRadius:
-                                                                    BorderRadius
-                                                                        .circular(
-                                                                            0),
+                                                              decoration: BoxDecoration(
+                                                                border: Border.all(color: Colors.black),
+                                                                borderRadius: BorderRadius.circular(0),
                                                               ),
                                                               child: Padding(
-                                                                padding:
-                                                                    const EdgeInsets
-                                                                        .only(
-                                                                        left:
-                                                                            8.0,
-                                                                        bottom:
-                                                                            16.0),
-                                                                child:
-                                                                    TextFormField(
-                                                                  controller:
-                                                                      _toteldebitamountControllerM,
-                                                                  onSaved:
-                                                                      (newValue) {
-                                                                    _toteldebitamountControllerM
-                                                                            .text =
-                                                                        newValue!;
+                                                                padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
+                                                                child: TextFormField(
+                                                                  controller: _toteldebitamountControllerM,
+                                                                  onSaved: (newValue) {
+                                                                    _toteldebitamountControllerM.text = newValue!;
                                                                   },
-                                                                  style:
-                                                                      const TextStyle(
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold,
-                                                                    fontSize:
-                                                                        17,
+                                                                  style: const TextStyle(
+                                                                    fontWeight: FontWeight.bold,
+                                                                    fontSize: 17,
                                                                     height: 1,
                                                                   ),
-                                                                  decoration:
-                                                                      const InputDecoration(
-                                                                    border:
-                                                                        InputBorder
-                                                                            .none,
+                                                                  decoration: const InputDecoration(
+                                                                    border: InputBorder.none,
                                                                   ),
                                                                 ),
                                                               ),
@@ -1764,38 +1457,22 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                                     ),
                                                     const SizedBox(height: 50),
                                                     Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .center,
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .center,
+                                                      mainAxisAlignment: MainAxisAlignment.center,
+                                                      crossAxisAlignment: CrossAxisAlignment.center,
                                                       children: [
                                                         SEFormButton(
-                                                          width: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .width *
-                                                              0.1,
+                                                          width: MediaQuery.of(context).size.width * 0.1,
                                                           height: 30,
-                                                          onPressed:
-                                                              saveMoreDetailsValues,
+                                                          onPressed: saveMoreDetailsValues,
                                                           buttonText: 'Save',
                                                         ),
-                                                        const SizedBox(
-                                                            width: 10),
+                                                        const SizedBox(width: 10),
                                                         SEFormButton(
-                                                          width: MediaQuery.of(
-                                                                      context)
-                                                                  .size
-                                                                  .width *
-                                                              0.1,
+                                                          width: MediaQuery.of(context).size.width * 0.1,
                                                           height: 30,
                                                           onPressed: () {
                                                             moreDetails.clear();
-                                                            Navigator.of(
-                                                                    context)
-                                                                .pop();
+                                                            Navigator.of(context).pop();
                                                           },
                                                           buttonText: 'Cancel',
                                                         )
@@ -1864,62 +1541,38 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                           Row(
                                             children: [
                                               SizedBox(
-                                                width: MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.06,
+                                                width: MediaQuery.of(context).size.width * 0.06,
                                                 child: Text(
                                                   'Remarks',
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 16,
                                                     fontWeight: FontWeight.bold,
-                                                    color:
-                                                        const Color(0xFF4B0082),
+                                                    color: const Color(0xFF4B0082),
                                                   ),
                                                 ),
                                               ),
                                               Flexible(
                                                 child: Container(
-                                                  width: MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.5,
+                                                  width: MediaQuery.of(context).size.width * 0.5,
                                                   height: 40,
                                                   decoration: BoxDecoration(
-                                                    border: Border.all(
-                                                        color: Colors.black),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            0),
+                                                    border: Border.all(color: Colors.black),
+                                                    borderRadius: BorderRadius.circular(0),
                                                   ),
                                                   child: Padding(
-                                                    padding:
-                                                        const EdgeInsets.only(
-                                                            left: 8.0,
-                                                            bottom: 16.0),
+                                                    padding: const EdgeInsets.only(left: 8.0, bottom: 16.0),
                                                     child: TextFormField(
-                                                      controller:
-                                                          salesEntryFormController
-                                                              .remarkController,
+                                                      controller: salesEntryFormController.remarkController,
                                                       onSaved: (newValue) {
-                                                        salesEntryFormController
-                                                            .remarkController!
-                                                            .text = newValue!;
+                                                        salesEntryFormController.remarkController!.text = newValue!;
                                                       },
-                                                      style:
-                                                          GoogleFonts.poppins(
+                                                      style: GoogleFonts.poppins(
                                                         fontSize: 16,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color:
-                                                            remarkFocus.hasFocus
-                                                                ? Colors.white
-                                                                : Colors.black,
+                                                        fontWeight: FontWeight.bold,
+                                                        color: remarkFocus.hasFocus ? Colors.white : Colors.black,
                                                       ),
-                                                      decoration:
-                                                          const InputDecoration(
-                                                        border:
-                                                            InputBorder.none,
+                                                      decoration: const InputDecoration(
+                                                        border: InputBorder.none,
                                                       ),
                                                     ),
                                                   ),
@@ -1938,8 +1591,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                 height: 210,
                                 decoration: BoxDecoration(
                                   border: Border.all(
-                                    color:
-                                        const Color.fromARGB(255, 44, 43, 43),
+                                    color: const Color.fromARGB(255, 44, 43, 43),
                                     width: 1,
                                   ),
                                 ),
@@ -2193,57 +1845,35 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                               child: ListView.builder(
                                                 itemCount: _allValues.length,
                                                 itemBuilder: (context, index) {
-                                                  Map<String, dynamic> e =
-                                                      _allValues[index];
+                                                  Map<String, dynamic> e = _allValues[index];
                                                   return Row(
                                                     children: [
                                                       Container(
                                                         width: 145,
                                                         height: 30,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          border: Border.all(
-                                                              color:
-                                                                  Colors.red),
+                                                        decoration: BoxDecoration(
+                                                          border: Border.all(color: Colors.red),
                                                         ),
                                                         child: Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .all(2.0),
+                                                          padding: const EdgeInsets.all(2.0),
                                                           child: Text(
-                                                            suggestionItems
-                                                                .firstWhere((item) =>
-                                                                    item.id ==
-                                                                    e['itemName'])
-                                                                .itemName,
-                                                            style:
-                                                                const TextStyle(
-                                                                    fontSize:
-                                                                        18),
+                                                            suggestionItems.firstWhere((item) => item.id == e['itemName']).itemName,
+                                                            style: const TextStyle(fontSize: 18),
                                                           ),
                                                         ),
                                                       ),
                                                       Container(
                                                         width: 145,
                                                         height: 30,
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          border: Border.all(
-                                                              color:
-                                                                  Colors.red),
+                                                        decoration: BoxDecoration(
+                                                          border: Border.all(color: Colors.red),
                                                         ),
                                                         child: Padding(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .all(2.0),
+                                                          padding: const EdgeInsets.all(2.0),
                                                           child: Text(
                                                             '${e['netAmount']}',
-                                                            style:
-                                                                const TextStyle(
-                                                                    fontSize:
-                                                                        18),
-                                                            textAlign:
-                                                                TextAlign.end,
+                                                            style: const TextStyle(fontSize: 18),
+                                                            textAlign: TextAlign.end,
                                                           ),
                                                         ),
                                                       ),
@@ -2269,8 +1899,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                             )
                           ],
                         ),
-                        SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.002),
+                        SizedBox(width: MediaQuery.of(context).size.width * 0.002),
                         Column(
                           children: [
                             SEFormButton(
@@ -2283,8 +1912,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                             )
                           ],
                         ),
-                        SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.002),
+                        SizedBox(width: MediaQuery.of(context).size.width * 0.002),
                         Column(
                           children: [
                             SEFormButton(
@@ -2315,8 +1943,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                             )
                           ],
                         ),
-                        SizedBox(
-                            width: MediaQuery.of(context).size.width * 0.15),
+                        SizedBox(width: MediaQuery.of(context).size.width * 0.15),
                         Column(
                           children: [
                             Row(
@@ -2325,8 +1952,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                   padding: const EdgeInsets.all(8.0),
                                   child: SizedBox(
                                     height: 20,
-                                    width: MediaQuery.of(context).size.width *
-                                        0.05,
+                                    width: MediaQuery.of(context).size.width * 0.05,
                                     child: Text(
                                       'Round-Off: ',
                                       style: GoogleFonts.poppins(
@@ -2341,8 +1967,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                   padding: const EdgeInsets.all(8.0),
                                   child: Container(
                                     height: 20,
-                                    width:
-                                        MediaQuery.of(context).size.width * 0.1,
+                                    width: MediaQuery.of(context).size.width * 0.1,
                                     decoration: const BoxDecoration(
                                       border: Border(
                                         bottom: BorderSide(
@@ -2356,20 +1981,15 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                       ),
                                       controller: roundOffController,
                                       focusNode: roundOffFocusNode,
-                                      keyboardType:
-                                          const TextInputType.numberWithOptions(
-                                              signed: true, decimal: true),
+                                      keyboardType: const TextInputType.numberWithOptions(signed: true, decimal: true),
                                       textAlign: TextAlign.center,
                                       style: GoogleFonts.poppins(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: roundOffFocusNode.hasFocus
-                                            ? Colors.white
-                                            : Colors.black,
+                                        color: roundOffFocusNode.hasFocus ? Colors.white : Colors.black,
                                       ),
                                       onChanged: (value) {
-                                        double newRoundOff =
-                                            double.tryParse(value) ?? 0.00;
+                                        double newRoundOff = double.tryParse(value) ?? 0.00;
                                         setState(() {
                                           TRoundOff = newRoundOff;
                                           TfinalAmt = TnetAmount + TRoundOff;
@@ -2387,8 +2007,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                   padding: const EdgeInsets.all(8.0),
                                   child: SizedBox(
                                     height: 20,
-                                    width: MediaQuery.of(context).size.width *
-                                        0.05,
+                                    width: MediaQuery.of(context).size.width * 0.05,
                                     child: Text(
                                       'Net Amount: ',
                                       style: GoogleFonts.poppins(
@@ -2403,20 +2022,15 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                   padding: const EdgeInsets.all(8.0),
                                   child: Container(
                                     height: 20,
-                                    width:
-                                        MediaQuery.of(context).size.width * 0.1,
-                                    decoration: const BoxDecoration(
-                                        border: Border(
-                                            bottom: BorderSide(width: 2))),
+                                    width: MediaQuery.of(context).size.width * 0.1,
+                                    decoration: const BoxDecoration(border: Border(bottom: BorderSide(width: 2))),
                                     child: Text(
                                       TfinalAmt.toStringAsFixed(2),
                                       textAlign: TextAlign.center,
                                       style: GoogleFonts.poppins(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
-                                        color: netAmountFocus.hasFocus
-                                            ? Colors.white
-                                            : Colors.black,
+                                        color: netAmountFocus.hasFocus ? Colors.white : Colors.black,
                                       ),
                                     ),
                                   ),
@@ -2438,8 +2052,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                 child: Focus(
                   autofocus: true,
                   onKey: (node, event) {
-                    if (event is RawKeyDownEvent &&
-                        event.logicalKey == LogicalKeyboardKey.f2) {
+                    if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.f2) {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => SalesHome(
@@ -2448,71 +2061,51 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                         ),
                       );
                       return KeyEventResult.handled;
-                    } else if (event is RawKeyDownEvent &&
-                        event.logicalKey == LogicalKeyboardKey.keyB) {
+                    } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyB) {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const BarcodePrintD(),
                         ),
                       );
-                    } else if (event is RawKeyDownEvent &&
-                        event.logicalKey == LogicalKeyboardKey.keyM) {
+                    } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyM) {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const NIMyDesktopBody(),
                         ),
                       );
-                    } else if (event is RawKeyDownEvent &&
-                        event.logicalKey == LogicalKeyboardKey.keyL) {
+                    } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyL) {
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (context) => const LGMyDesktopBody(),
                         ),
                       );
-                    } else if (event is RawKeyDownEvent &&
-                        event.logicalKey == LogicalKeyboardKey.keyP) {
+                    } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyP) {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => PrintBigReceipt(
                             sales: widget.salesEntryId,
-                            ledger: suggestionItems5.firstWhere(
-                                (item) => item.id == selectedLedgerName),
+                            ledger: suggestionItems5.firstWhere((item) => item.id == selectedLedgerName),
                             'Print Sales Receipt',
                           ),
                         ),
                       );
-                    } else if (event is RawKeyDownEvent &&
-                        event.logicalKey == LogicalKeyboardKey.keyA) {
+                    } else if (event is RawKeyDownEvent && event.logicalKey == LogicalKeyboardKey.keyA) {
                       final entryId = UniqueKey().toString();
-                      TextEditingController itemNameController =
-                          TextEditingController();
-                      TextEditingController qtyController =
-                          TextEditingController();
-                      TextEditingController rateController =
-                          TextEditingController();
-                      TextEditingController rate2Controller =
-                          TextEditingController();
-                      TextEditingController unitController =
-                          TextEditingController();
-                      TextEditingController amountController =
-                          TextEditingController();
-                      TextEditingController taxController =
-                          TextEditingController();
-                      TextEditingController sgstController =
-                          TextEditingController();
-                      TextEditingController cgstController =
-                          TextEditingController();
-                      TextEditingController igstController =
-                          TextEditingController();
-                      TextEditingController netAmountController =
-                          TextEditingController();
-                      TextEditingController stockController =
-                          TextEditingController();
-                      TextEditingController discountController =
-                          TextEditingController();
-                      TextEditingController additionalInfoController =
-                          TextEditingController();
+                      TextEditingController itemNameController = TextEditingController();
+                      TextEditingController qtyController = TextEditingController();
+                      TextEditingController rateController = TextEditingController();
+                      TextEditingController rate2Controller = TextEditingController();
+                      TextEditingController unitController = TextEditingController();
+                      TextEditingController amountController = TextEditingController();
+                      TextEditingController taxController = TextEditingController();
+                      TextEditingController sgstController = TextEditingController();
+                      TextEditingController cgstController = TextEditingController();
+                      TextEditingController igstController = TextEditingController();
+                      TextEditingController netAmountController = TextEditingController();
+                      TextEditingController stockController = TextEditingController();
+                      TextEditingController discountController = TextEditingController();
+                      TextEditingController additionalInfoController = TextEditingController();
                       setState(() {
                         _newWidget.add(SEEntries(
                           serialNo: _newWidget.length + 1,
@@ -2534,8 +2127,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                           onSaveValues: saveValues,
                           onDelete: (String entryId) {
                             setState(() {
-                              _newWidget.removeWhere(
-                                  (widget) => widget.key == ValueKey(entryId));
+                              _newWidget.removeWhere((widget) => widget.key == ValueKey(entryId));
                               Map<String, dynamic>? entryToRemove;
                               for (final entry in _allValues) {
                                 if (entry['uniqueKey'] == entryId) {
@@ -2597,9 +2189,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                 MaterialPageRoute(
                                   builder: (context) => PrintBigReceipt(
                                     sales: widget.salesEntryId,
-                                    ledger: suggestionItems5.firstWhere(
-                                        (item) =>
-                                            item.id == selectedLedgerName),
+                                    ledger: suggestionItems5.firstWhere((item) => item.id == selectedLedgerName),
                                     'Print Sales Receipt',
                                   ),
                                 ),
@@ -2610,34 +2200,20 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                           name: "Add",
                           onTap: () {
                             final entryId = UniqueKey().toString();
-                            TextEditingController itemNameController =
-                                TextEditingController();
-                            TextEditingController qtyController =
-                                TextEditingController();
-                            TextEditingController rateController =
-                                TextEditingController();
-                            TextEditingController rate2Controller =
-                                TextEditingController();
-                            TextEditingController unitController =
-                                TextEditingController();
-                            TextEditingController amountController =
-                                TextEditingController();
-                            TextEditingController taxController =
-                                TextEditingController();
-                            TextEditingController sgstController =
-                                TextEditingController();
-                            TextEditingController cgstController =
-                                TextEditingController();
-                            TextEditingController igstController =
-                                TextEditingController();
-                            TextEditingController netAmountController =
-                                TextEditingController();
-                            TextEditingController stockController =
-                                TextEditingController();
-                            TextEditingController discountController =
-                                TextEditingController();
-                            TextEditingController additionalInfoController =
-                                TextEditingController();
+                            TextEditingController itemNameController = TextEditingController();
+                            TextEditingController qtyController = TextEditingController();
+                            TextEditingController rateController = TextEditingController();
+                            TextEditingController rate2Controller = TextEditingController();
+                            TextEditingController unitController = TextEditingController();
+                            TextEditingController amountController = TextEditingController();
+                            TextEditingController taxController = TextEditingController();
+                            TextEditingController sgstController = TextEditingController();
+                            TextEditingController cgstController = TextEditingController();
+                            TextEditingController igstController = TextEditingController();
+                            TextEditingController netAmountController = TextEditingController();
+                            TextEditingController stockController = TextEditingController();
+                            TextEditingController discountController = TextEditingController();
+                            TextEditingController additionalInfoController = TextEditingController();
 
                             setState(() {
                               _newWidget.add(SEEntries(
@@ -2656,13 +2232,11 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                                 netAmountControllerP: netAmountController,
                                 discountControllerP: discountController,
                                 selectedLegerId: selectedLedgerName!,
-                                additionalInfoControllerP:
-                                    additionalInfoController,
+                                additionalInfoControllerP: additionalInfoController,
                                 onSaveValues: saveValues,
                                 onDelete: (String entryId) {
                                   setState(() {
-                                    _newWidget.removeWhere((widget) =>
-                                        widget.key == ValueKey(entryId));
+                                    _newWidget.removeWhere((widget) => widget.key == ValueKey(entryId));
                                     Map<String, dynamic>? entryToRemove;
                                     for (final entry in _allValues) {
                                       if (entry['uniqueKey'] == entryId) {
@@ -2684,8 +2258,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                             });
                           },
                         ),
-                        CustomList(
-                            Skey: "F5", name: "Change Type", onTap: () {}),
+                        CustomList(Skey: "F5", name: "Change Type", onTap: () {}),
                         CustomList(Skey: "", name: "", onTap: () {}),
                         CustomList(
                             Skey: "B",
@@ -2728,18 +2301,14 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                           },
                         ),
                         CustomList(Skey: "F12", name: "Discount", onTap: () {}),
-                        CustomList(
-                            Skey: "F12", name: "Audit Trail", onTap: () {}),
-                        CustomList(
-                            Skey: "PgUp", name: "Previous", onTap: () {}),
+                        CustomList(Skey: "F12", name: "Audit Trail", onTap: () {}),
+                        CustomList(Skey: "PgUp", name: "Previous", onTap: () {}),
                         CustomList(Skey: "PgDn", name: "Next", onTap: () {}),
                         CustomList(Skey: "", name: "", onTap: () {}),
-                        CustomList(
-                            Skey: "G", name: "Attach. Img", onTap: () {}),
+                        CustomList(Skey: "G", name: "Attach. Img", onTap: () {}),
                         CustomList(Skey: "", name: "", onTap: () {}),
                         CustomList(Skey: "G", name: "Vch Setup", onTap: () {}),
-                        CustomList(
-                            Skey: "T", name: "Print Setup", onTap: () {}),
+                        CustomList(Skey: "T", name: "Print Setup", onTap: () {}),
                         CustomList(Skey: "", name: "", onTap: () {}),
                       ],
                     ),
@@ -2765,8 +2334,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
     if (pickedDate != null) {
       setState(() {
         _selectedDate = pickedDate;
-        salesEntryFormController.dateController1.text =
-            formatter.format(pickedDate);
+        salesEntryFormController.dateController1.text = formatter.format(pickedDate);
       });
     }
   }
@@ -2782,8 +2350,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
     if (pickedDate != null) {
       setState(() {
         _pickedDateData = pickedDate;
-        salesEntryFormController.dateController2.text =
-            formatter.format(pickedDate);
+        salesEntryFormController.dateController2.text = formatter.format(pickedDate);
       });
     }
   }
