@@ -62,8 +62,7 @@ class SalesEntryService {
     if (responseData['success'] == true) {
       final salesEntriesData = responseData['data'];
 
-      final List<SalesEntry> salesEntries =
-          List.from(salesEntriesData.map((entry) => SalesEntry.fromMap(entry)));
+      final List<SalesEntry> salesEntries = List.from(salesEntriesData.map((entry) => SalesEntry.fromMap(entry)));
 
       return salesEntries;
     } else {
@@ -108,9 +107,7 @@ class SalesEntryService {
     );
     final responseData = json.decode(response.body);
 
-    if (response.statusCode == 200 ||
-        responseData['status'] == 'success' ||
-        response.statusCode == 201) {
+    if (response.statusCode == 200 || responseData['status'] == 'success' || response.statusCode == 201) {
       final salesData = responseData['data'];
       await _prefs.setString("purchaseLength", "${salesData.length}");
       final List<SalesEntry> sales = List.from(salesData.map((entry) {
@@ -160,8 +157,7 @@ class SalesEntryService {
   //   }
   // }
 
-  Future<bool> addSalesEntry(
-      SalesEntry salesEntry, BuildContext context) async {
+  Future<bool> addSalesEntry(SalesEntry salesEntry, BuildContext context) async {
     String? token = await getToken();
     String? id = await getID();
     final String? userType = await getUserType();
@@ -170,8 +166,7 @@ class SalesEntryService {
 
     final List<UserGroup> usersGroups = await userGroupServices.getUserGroups();
 
-    bool canCreateMaster = usersGroups.any((userGroup) =>
-        userGroup.userGroupName == userType && userGroup.addMaster == "Yes");
+    bool canCreateMaster = usersGroups.any((userGroup) => userGroup.userGroupName == userType && userGroup.addMaster == "Yes");
 
     if (!canCreateMaster) {
       showSnackBar(context, "You do not have permission to create Item data.");
@@ -210,8 +205,7 @@ class SalesEntryService {
     final responseData = json.decode(response.body);
     print(responseData);
     if (responseData['success'] == true) {
-      //  Flutter toast
-      Get.snackbar('Success', 'Sales Entry Deleted Successfully');
+      print("Data deleted Successfully");
     } else {
       throw Exception('Failed to delete sales entry');
     }
@@ -253,8 +247,7 @@ class SalesEntryService {
     String? token = await getToken();
     try {
       final response = await http.get(
-        Uri.parse(
-            '${Constants.baseUrl}/sales/fetch-sales-by-BillNumber/$billNumber'),
+        Uri.parse('${Constants.baseUrl}/sales/fetch-sales-by-BillNumber/$billNumber'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': '$token',

@@ -260,6 +260,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
   }
 
   Future<void> setCompanyCode() async {
+    print("2");
     List<String>? code = await getCompanyCode();
     setState(() {
       companyCode = code;
@@ -272,6 +273,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
   LedgerService ledgerService = LedgerService();
 // fetch ledger
   Future<void> fetchLedgers2() async {
+    print("3");
     try {
       final List<Ledger> ledger = await ledgerService.fetchLedgers();
 
@@ -292,6 +294,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
 
   Future<void> fetchItem() async {
     try {
+      print("1");
       final List<Item> item = await itemService.fetchItems();
 
       suggestionItems = item;
@@ -308,6 +311,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
   }
 
   Future<void> fetchAndSetTaxRates() async {
+    print("4");
     try {
       final List<TaxRate> taxRates = await taxRateService.fetchTaxRates();
 
@@ -318,6 +322,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
   }
 
   Future<void> fetchMeasurementLimit() async {
+    print("5");
     try {
       final List<MeasurementLimit> measurements = await measurementService.fetchMeasurementLimits();
 
@@ -339,8 +344,9 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
   }
 
   Future<void> fetchSalesData() async {
+    print("last");
     final sales = widget.salesEntryId;
-
+    print(sales);
     setState(() {
       salesEntry = sales;
       salesEntryFormController.noController.text = sales.no.toString();
@@ -353,8 +359,6 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
       selectedLedgerName = sales.party;
       selectedStatus = sales.type.toString();
 
-      // Map through new entry and add to _newWidget
-      // Iterate over the entries in sales
       for (final entry in sales.entries) {
         TextEditingController stockController = TextEditingController();
         for (Item item in suggestionItems) {
@@ -544,6 +548,7 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
     setState(() {
       isLoading = true;
     });
+    print("start");
     try {
       await Future.wait([
         fetchItem(),
@@ -556,7 +561,11 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
 
       await fetchSalesData();
     } catch (e) {
-    } finally {}
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   void printData() {
@@ -1938,7 +1947,14 @@ class _SalesEditScreenState extends State<SalesEditScreen> {
                             SEFormButton(
                               width: MediaQuery.of(context).size.width * 0.14,
                               height: 30,
-                              onPressed: () {},
+                              onPressed: () async {
+                                await salesEntryService.deleteSalesEntry(widget.salesEntryId.id);
+                                Navigator.pushReplacement(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => SEMyDesktopBody(),
+                                    ));
+                              },
                               buttonText: 'Delete',
                             )
                           ],

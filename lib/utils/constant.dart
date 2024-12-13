@@ -18,6 +18,7 @@ class Constants {
     height: 120,
     fit: BoxFit.cover,
   );
+
   static Widget loadingBar = SpinKitThreeBounce(
     size: 35,
     itemBuilder: (BuildContext context, int index) {
